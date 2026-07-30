@@ -1,0 +1,11 @@
+services:
+  cdss-backend:
+    build: .
+    container_name: medigenie_cdss
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    restart: always
+    environment:
+      - PORT=8000
