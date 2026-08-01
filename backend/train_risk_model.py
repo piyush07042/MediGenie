@@ -81,11 +81,15 @@ def train_and_save_model():
     model_path = os.path.join(output_dir, "disease_risk_model.pkl")
     
     artifacts = {
-        "model": model,
-        "explainer": explainer,
-        "feature_names": list(X.columns),
-        "metrics": {"accuracy": acc, "roc_auc": auc}
-    }
+    "model": model,
+    "explainer": explainer,
+    "feature_names": list(X.columns),
+    "metrics": {
+        "accuracy": float(acc),
+        "roc_auc": float(auc),
+    },
+    "version": "1.0.0",
+}
     
     with open(model_path, "wb") as f:
         pickle.dump(artifacts, f)
