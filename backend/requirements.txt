@@ -101,3 +101,6 @@ loguru>=0.7.2
 # Utilities
 # ----------------------------
 typing_extensions>=4.11.0
+
+alembic
+psycopg[binary]

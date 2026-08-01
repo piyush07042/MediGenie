@@ -1,5 +1,5 @@
 """
-Clinical Analysis API
+AI Clinical Chat API
 """
 
 from __future__ import annotations
@@ -10,32 +10,40 @@ from fastapi import (
     HTTPException,
     status,
 )
+from pydantic import BaseModel
 
 from app.agents.agent_state import AgentState
-from app.core.deps import get_supervisor
 from app.agents.supervisor.supervisor import Supervisor
-from app.schemas.cdss import (
-    AnalysisRequestSchema,
-)
+from app.core.deps import get_supervisor
 from app.schemas.common import ApiResponse
 
 router = APIRouter(
-    prefix="/clinical",
-    tags=["Clinical Decision Support"],
+    prefix="/chat",
+    tags=["AI Clinical Chat"],
 )
+
+
+class ChatRequest(BaseModel):
+    """
+    Clinical chat request.
+    """
+
+    message: str
+
+    patient_context: dict | None = None
 
 
 @router.post(
-    "/analyze",
+    "/",
     response_model=ApiResponse,
     status_code=status.HTTP_200_OK,
 )
-async def analyze_clinical_case(
-    request: AnalysisRequestSchema,
+async def clinical_chat(
+    request: ChatRequest,
     supervisor: Supervisor = Depends(get_supervisor),
 ):
     """
-    Execute the complete MediGenie Supervisor workflow.
+    Clinical AI chat endpoint.
     """
 
     try:
@@ -43,23 +51,21 @@ async def analyze_clinical_case(
         state = AgentState()
 
         state.patient_context = (
-            request.patient_context.model_dump()
+            request.patient_context or {}
         )
 
-        state.raw_report_text = (
-            request.raw_report_text
-        )
+        state.chat_message = request.message
 
-        final_state, results, metrics = (
-            await supervisor.run(state)
+        final_state, results, metrics = await supervisor.run(
+            state
         )
 
         return ApiResponse(
-            message="Clinical analysis completed successfully.",
+            message="Chat response generated successfully.",
             data={
                 "workflow_state": final_state,
                 "agent_results": results,
-                "metrics": metrics,
+                "workflow_metrics": metrics,
             },
         )
 
@@ -67,5 +73,5 @@ async def analyze_clinical_case(
 
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Clinical workflow failed: {exc}",
+            detail=f"Chat processing failed: {exc}",
         )
