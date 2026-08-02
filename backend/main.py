@@ -4,6 +4,7 @@ MediGenie FastAPI Application
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -24,15 +25,22 @@ async def lifespan(app: FastAPI):
     Application startup/shutdown lifecycle.
     """
 
-    configure_logging()
+    try:
+        configure_logging()
+        validate_environment()
+        create_database()
+    except asyncio.CancelledError:
+        raise
+    except Exception:
+        app.state.startup_error = True
+        app.state.startup_error_details = "startup initialization failed"
 
-    validate_environment()
-
-    create_database()
-
-    yield
-
-    # Shutdown tasks (if required)
+    try:
+        yield
+    except asyncio.CancelledError:
+        return
+    except Exception:
+        raise
 
 
 app = FastAPI(

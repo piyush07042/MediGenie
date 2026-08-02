@@ -69,8 +69,9 @@ async def upload_report(
 
         state = AgentState()
 
-        state.patient_context = patient_context
-        state.report_file_path = str(destination)
+        state.patient = patient_context
+        state.uploaded_reports = [str(destination)]
+        state.report_text = str(destination)
 
         final_state, results, metrics = await supervisor.run(
             state

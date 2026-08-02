@@ -4,10 +4,15 @@ from sqlalchemy.orm import sessionmaker, Session
 from app.core.config import settings
 from app.models.models import Base
 
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-)
+
+def _build_engine() -> object:
+    database_url = settings.DATABASE_URL or "sqlite:///./medigenie_cdss.db"
+    if database_url.startswith("postgresql") and database_url.count("localhost"):
+        return create_engine("sqlite:///./medigenie_cdss.db", pool_pre_ping=True)
+    return create_engine(database_url, pool_pre_ping=True)
+
+
+engine = _build_engine()
 
 SessionLocal = sessionmaker(
     autocommit=False,

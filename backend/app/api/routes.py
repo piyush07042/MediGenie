@@ -21,6 +21,14 @@ try:
     from app.api.fhir import router as fhir_router
 except Exception:
     fhir_router = None
+try:
+    from app.api.clinical import router as clinical_router
+except Exception:
+    clinical_router = None
+try:
+    from app.api.fhir import router as fhir_router
+except Exception:
+    fhir_router = None
 from app.api.health import router as health_router
 try:
     from app.api.patients import router as patients_router

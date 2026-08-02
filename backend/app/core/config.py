@@ -4,7 +4,7 @@ Application configuration.
 
 from __future__ import annotations
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -103,6 +103,19 @@ class Settings(BaseSettings):
     # ==========================================================
 
     REDIS_URL: str | None = None
+
+    @field_validator("DEBUG", "ALLOW_CREDENTIALS", mode="before")
+    @classmethod
+    def parse_bool_fields(cls, value):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            lowered = value.strip().lower()
+            if lowered in {"1", "true", "yes", "on", "debug", "release"}:
+                return lowered in {"1", "true", "yes", "on", "debug"}
+            if lowered in {"0", "false", "no", "off", "none", "null", ""}:
+                return False
+        return value
 
 
 settings = Settings()

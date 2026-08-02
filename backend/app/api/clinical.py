@@ -41,13 +41,14 @@ async def analyze_clinical_case(
 
         state = AgentState()
 
-        state.patient_context = (
-            request.patient_context.model_dump()
-        )
+        state.patient = request.patient_context.model_dump()
+        state.patient["name"] = state.patient.get("name", "")
+        state.patient["age"] = state.patient.get("age", 0)
+        state.patient["gender"] = state.patient.get("gender", "")
 
-        state.raw_report_text = (
-            request.raw_report_text
-        )
+        if request.raw_report_text:
+            state.uploaded_reports = [request.raw_report_text]
+            state.report_text = request.raw_report_text
 
         final_state, results, metrics = (
             await supervisor.run(state)
