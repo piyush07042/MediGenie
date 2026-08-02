@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from functools import lru_cache
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+
+from app.core.security import SECRET_KEY, ALGORITHM
 from app.core.startup import app_state
 from app.db.session import get_db
 from app.models.models import User
-from app.core.security import SECRET_KEY, ALGORITHM
-
-from app.agents.supervisor.supervisor import Supervisor
 
 
 # ---------------------------------------------------------------------
@@ -68,18 +65,14 @@ def get_current_user(
 # Supervisor Dependency
 # ---------------------------------------------------------------------
 
-@lru_cache(maxsize=1)
-def get_supervisor() -> Supervisor:
-    """
-    Returns a singleton Supervisor instance.
-
-    The Supervisor owns the complete
-    multi-agent workflow.
-    """
-
-    return Supervisor()
-
 def get_supervisor():
+    """
+    Return the shared supervisor instance for the workflow.
+    """
+
     if app_state.supervisor is None:
-        raise RuntimeError("Supervisor has not been initialized.")
+        from app.agents.supervisor.supervisor import Supervisor
+
+        app_state.supervisor = Supervisor()
+
     return app_state.supervisor

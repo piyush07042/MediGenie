@@ -11,9 +11,8 @@ from fastapi import (
     status,
 )
 
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_state import AgentState
 from app.core.deps import get_supervisor
-from app.agents.supervisor.supervisor import Supervisor
 from app.schemas.cdss import (
     AnalysisRequestSchema,
 )
@@ -32,7 +31,7 @@ router = APIRouter(
 )
 async def analyze_clinical_case(
     request: AnalysisRequestSchema,
-    supervisor: Supervisor = Depends(get_supervisor),
+    supervisor=Depends(get_supervisor),
 ):
     """
     Execute the complete MediGenie Supervisor workflow.

@@ -13,8 +13,8 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.agents.base.base_agent import BaseAgent
-from app.agents.agent_result import AgentResult
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_result import AgentResult
+from app.agents.base.agent_state import AgentState
 
 
 class ReportGenerationAgent(BaseAgent):

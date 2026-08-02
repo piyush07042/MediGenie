@@ -10,13 +10,12 @@ from fastapi import FastAPI
 
 from app.api.routes import api_router
 from app.core.config import settings
+from app.core.compression import configure_compression
+from app.core.cors import configure_cors
 from app.core.logging import configure_logging
 from app.core.startup import validate_environment
+from app.core.security_headers import configure_security_headers
 from app.db.session import create_database
-
-from app.middleware.cors import configure_cors
-from app.middleware.gzip import configure_compression
-from app.middleware.security_headers import configure_security_headers
 
 
 @asynccontextmanager

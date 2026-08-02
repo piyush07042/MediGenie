@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 from app.core.config import settings
+from app.models.models import Base
 
 engine = create_engine(
     settings.DATABASE_URL,
@@ -13,3 +14,19 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
 )
+
+
+def create_database():
+    """Create tables if the database is available."""
+    Base.metadata.create_all(bind=engine)
+
+
+def get_db():
+    """
+    FastAPI dependency that provides a database session.
+    """
+    db: Session = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

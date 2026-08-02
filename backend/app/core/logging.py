@@ -11,7 +11,7 @@ from pathlib import Path
 from app.core.config import settings
 
 
-LOG_DIRECTORY = Path(settings.LOG_DIRECTORY)
+LOG_DIRECTORY = Path(getattr(settings, "LOG_DIRECTORY", "logs"))
 LOG_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 

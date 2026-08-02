@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import logging
 
-from app.agents.agent_result import AgentResult
-from app.agents.agent_state import AgentState
-from app.agents.base_agent import BaseAgent
+from app.agents.base.agent_result import AgentResult
+from app.agents.base.agent_state import AgentState
+from app.agents.base.base_agent import BaseAgent
 from app.agents.supervisor.metrics import WorkflowMetrics
 
 logger = logging.getLogger(__name__)

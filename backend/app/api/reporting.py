@@ -10,8 +10,8 @@ from app.db.session import get_db
 from app.core.pdf_generator import generate_clinical_pdf_report
 
 from app.models.models import (
+    AIReport,
     Patient,
-    ClinicalSummary,
 )
 
 router = APIRouter(
@@ -45,10 +45,11 @@ def generate_pdf(
         )
 
     summary = (
-        db.query(ClinicalSummary)
+        db.query(AIReport)
         .filter(
-            ClinicalSummary.patient_id == patient.id
+            AIReport.patient_id == patient.id
         )
+        .order_by(AIReport.id.desc())
         .first()
     )
 

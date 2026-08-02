@@ -19,7 +19,7 @@ from fastapi import (
     status,
 )
 
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_state import AgentState
 from app.agents.supervisor.supervisor import Supervisor
 from app.core.deps import get_supervisor
 from app.core.file_validation import validate_upload

@@ -59,3 +59,20 @@ def process_medical_report(file_path: str) -> str:
         raise ValueError(f"Unsupported file format: {ext}")
         
     return text.strip()
+
+class OCRService:
+    """
+    Thin wrapper around OCR helper functions.
+    """
+
+    def extract(self, file_path: str) -> str:
+        return extract_text(file_path)
+
+    def extract_text(self, file_path: str) -> str:
+        return extract_text(file_path)
+
+    def extract_from_image(self, image_path: str) -> str:
+        return extract_text_from_image(image_path)
+
+    def extract_from_pdf(self, pdf_path: str) -> str:
+        return extract_text_from_pdf(pdf_path)

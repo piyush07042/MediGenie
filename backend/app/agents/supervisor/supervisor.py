@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import logging
 
-from app.agents.agent_state import AgentState
-from app.agents.agent_result import AgentResult
+from app.agents.base.agent_state import AgentState
+from app.agents.base.agent_result import AgentResult
 
 from app.agents.supervisor.metrics import WorkflowMetrics
 from app.agents.supervisor.orchestrator import WorkflowOrchestrator

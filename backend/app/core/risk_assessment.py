@@ -1,59 +1,119 @@
-import numpy as np
-import pandas as pd
-import xgboost as xgb
+"""
+Risk assessment utilities.
+"""
 
-def evaluate_disease_risk(patient_metrics: dict) -> dict:
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+
+def evaluate_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
     """
-    Evaluates patient disease risk scores using tabular ML criteria
-    and outputs feature contribution (Explainable AI - XAI).
+    Evaluate disease risk from structured patient metrics.
+
+    Returns:
+        Dictionary containing risk score, category,
+        contributing factors, and recommendations.
     """
-    # Sample extractable numerical metrics
-    glucose = patient_metrics.get("glucose", 100)
-    bmi = patient_metrics.get("bmi", 24.0)
-    age = patient_metrics.get("age", 40)
-    systolic_bp = patient_metrics.get("systolic_bp", 120)
 
-    # Simplified rule-weighted feature scoring representing trained model behavior
-    risk_score = 0.0
-    xai_factors = []
+    score = 0.0
+    factors: list[str] = []
 
-    # Glucose Evaluation
-    if glucose >= 126:
-        risk_score += 0.4
-        xai_factors.append({"feature": "Fasting Glucose", "value": f"{glucose} mg/dL", "impact": "High Risk", "reasoning": "Elevated glucose above 126 mg/dL indicates potential hyperglycemia/diabetes."})
-    elif glucose >= 100:
-        risk_score += 0.2
-        xai_factors.append({"feature": "Fasting Glucose", "value": f"{glucose} mg/dL", "impact": "Moderate Risk", "reasoning": "Glucose between 100-125 mg/dL indicates impaired fasting glucose."})
+    # -------------------------------
+    # Age
+    # -------------------------------
+    age = patient_metrics.get("age")
+    if isinstance(age, (int, float)) and age >= 60:
+        score += 0.20
+        factors.append("age")
 
-    # BMI Evaluation
-    if bmi >= 30:
-        risk_score += 0.25
-        xai_factors.append({"feature": "BMI", "value": f"{bmi}", "impact": "High Risk", "reasoning": "BMI >= 30 increases metabolic and cardiovascular risk factors."})
+    # -------------------------------
+    # Blood Pressure
+    # -------------------------------
+    systolic_bp = patient_metrics.get("systolic_bp")
+    if isinstance(systolic_bp, (int, float)) and systolic_bp >= 140:
+        score += 0.25
+        factors.append("blood_pressure")
 
-    # Systolic BP Evaluation
-    if systolic_bp >= 140:
-        risk_score += 0.25
-        xai_factors.append({"feature": "Systolic BP", "value": f"{systolic_bp} mmHg", "impact": "High Risk", "reasoning": "Systolic blood pressure >= 140 mmHg indicates Stage 2 Hypertension."})
+    # -------------------------------
+    # Cholesterol
+    # -------------------------------
+    cholesterol = patient_metrics.get("cholesterol")
+    if isinstance(cholesterol, (int, float)) and cholesterol >= 240:
+        score += 0.25
+        factors.append("cholesterol")
 
-    # Age Factor
-    if age >= 50:
-        risk_score += 0.1
-        xai_factors.append({"feature": "Age", "value": f"{age}", "impact": "Low-Moderate Risk", "reasoning": "Age >= 50 is a non-modifiable risk contributing factor."})
+    # -------------------------------
+    # Blood Sugar
+    # -------------------------------
+    glucose = (
+        patient_metrics.get("fasting_blood_sugar")
+        or patient_metrics.get("glucose")
+    )
 
-    # Calculate final risk percentage bounded between 0% and 99%
-    final_percentage = min(round(risk_score * 100, 1), 99.0)
-    
-    risk_category = "Low"
-    if final_percentage >= 70:
-        risk_category = "High"
-    elif final_percentage >= 40:
-        risk_category = "Moderate"
+    if isinstance(glucose, (int, float)) and glucose >= 126:
+        score += 0.15
+        factors.append("blood_glucose")
+
+    # -------------------------------
+    # BMI
+    # -------------------------------
+    bmi = patient_metrics.get("bmi")
+    if isinstance(bmi, (int, float)) and bmi >= 30:
+        score += 0.15
+        factors.append("bmi")
+
+    # -------------------------------
+    # Final Risk
+    # -------------------------------
+    score = min(score, 1.0)
+
+    if score >= 0.70:
+        risk_level = "high"
+    elif score >= 0.40:
+        risk_level = "moderate"
+    else:
+        risk_level = "low"
 
     return {
-        "disease_risk_assessment": {
-            "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
-            "estimated_risk_score_percent": final_percentage,
-            "risk_category": risk_category,
-            "explainable_ai_factors": xai_factors
-        }
+        "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
+        "risk_score": round(score, 3),
+        "estimated_risk_score_percent": round(score * 100, 1),
+        "risk_level": risk_level,
+        "risk_category": risk_level,
+        "drivers": factors,
+        "explainable_ai_factors": factors,
+        "recommendations": [
+            "Review modifiable cardiovascular risk factors.",
+            "Maintain a healthy diet and regular physical activity.",
+            "Monitor blood pressure, cholesterol, and blood glucose regularly.",
+            "Consult a clinician if symptoms are present.",
+        ],
     }
+
+
+@dataclass
+class RiskAssessmentEngine:
+    """
+    Compatibility wrapper for the DiseaseRiskAgent.
+    """
+
+    def predict(
+        self,
+        patient: dict[str, Any] | None = None,
+        metrics: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """
+        Predict disease risk from patient information.
+        """
+
+        assessment_input: dict[str, Any] = {}
+
+        if patient:
+            assessment_input.update(patient)
+
+        if metrics:
+            assessment_input.update(metrics)
+
+        return evaluate_disease_risk(assessment_input)

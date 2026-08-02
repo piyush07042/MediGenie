@@ -5,7 +5,7 @@ Workflow Entry Point
 
 from __future__ import annotations
 
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_state import AgentState
 from app.agents.supervisor.supervisor import Supervisor
 
 

@@ -9,10 +9,10 @@ This module defines the execution order for the workflow.
 
 from __future__ import annotations
 
-from app.agents.base_agent import BaseAgent
+from app.agents.base.base_agent import BaseAgent
 
 from app.agents.intake.patient_intake_agent import PatientIntakeAgent
-from app.agents.report_analysis.report_analysis_agent import (
+from app.agents.report_analysis.medical_report_analysis_agent import (
     MedicalReportAnalysisAgent,
 )
 from app.agents.risk.disease_risk_agent import DiseaseRiskAgent

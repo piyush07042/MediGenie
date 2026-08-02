@@ -1,22 +1,45 @@
 import chromadb
 from chromadb.utils import embedding_functions
 
-# Initialize persistent ChromaDB storage inside the backend directory
-chroma_client = chromadb.PersistentClient(path="./medigenie_rag_db")
 
-# Local embedding model using Sentence Transformers
-ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+chroma_client = None
+collection = None
+embedding_function = None
 
-# Get or create guidelines collection
-collection = chroma_client.get_or_create_collection(
-    name="clinical_guidelines", 
-    embedding_function=ef
-)
+
+def _get_collection():
+    """Lazily initialize the Chroma collection to avoid blocking startup."""
+    global chroma_client, collection, embedding_function
+
+    if collection is not None:
+        return collection
+
+    chroma_client = chromadb.PersistentClient(path="./medigenie_rag_db")
+
+    try:
+        if embedding_function is None:
+            embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+                model_name="all-MiniLM-L6-v2"
+            )
+    except Exception:
+        embedding_function = None
+
+    if embedding_function is None:
+        collection = chroma_client.get_or_create_collection(name="clinical_guidelines")
+    else:
+        collection = chroma_client.get_or_create_collection(
+            name="clinical_guidelines",
+            embedding_function=embedding_function,
+        )
+
+    return collection
+
 
 def seed_sample_guidelines():
-    """Seeds sample clinical guidelines into ChromaDB if empty."""
-    if collection.count() == 0:
-        collection.add(
+    """Seed sample clinical guidelines into ChromaDB if empty."""
+    current_collection = _get_collection()
+    if current_collection.count() == 0:
+        current_collection.add(
             documents=[
                 "IDSA/ATS CAP Guidelines: First-line outpatient treatment for Community-Acquired Pneumonia without comorbidities is Amoxicillin 1g TID or Doxycycline 100mg BID. With comorbidities, use Amoxicillin/clavulanate plus a macrolide or Respiratory Fluoroquinolone.",
                 "ACC/AHA Hypertension Guidelines: First-line pharmacotherapy includes thiazide diuretics, CCBs, and ACE inhibitors or ARBs. Monitor potassium and renal function.",
@@ -33,9 +56,11 @@ def seed_sample_guidelines():
         )
         print("✅ Vector DB initialized with clinical practice guidelines!")
 
+
 def query_knowledge_base(query_text: str, n_results: int = 2) -> list:
-    """Retrieves relevant guideline snippets based on semantic similarity."""
-    results = collection.query(query_texts=[query_text], n_results=n_results)
+    """Retrieve relevant guideline snippets based on semantic similarity."""
+    current_collection = _get_collection()
+    results = current_collection.query(query_texts=[query_text], n_results=n_results)
     if results and "documents" in results and len(results["documents"]) > 0:
         return results["documents"][0]
     return []
