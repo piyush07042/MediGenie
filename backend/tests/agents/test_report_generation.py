@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_state import AgentState
 from app.agents.report_generation.report_generation_agent import (
     ReportGenerationAgent,
 )

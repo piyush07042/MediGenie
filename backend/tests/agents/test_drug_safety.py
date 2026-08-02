@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.agents.agent_state import AgentState
+from app.agents.base.agent_state import AgentState
 from app.agents.drug_safety.drug_safety_agent import (
     DrugSafetyAgent,
 )
