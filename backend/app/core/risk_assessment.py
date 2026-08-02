@@ -4,19 +4,91 @@ Risk assessment utilities.
 
 from __future__ import annotations
 
+import pickle
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+MODEL_PATHS = [
+    Path(__file__).resolve().parents[2] / "app" / "ml" / "models" / "disease_risk_model.pkl",
+    Path(__file__).resolve().parents[1] / "ml" / "models" / "disease_risk_model.pkl",
+]
 
-def evaluate_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
-    """
-    Evaluate disease risk from structured patient metrics.
 
-    Returns:
-        Dictionary containing risk score, category,
-        contributing factors, and recommendations.
-    """
+def _load_model_artifact(path: str | Path | None = None) -> dict[str, Any] | None:
+    """Load the persisted risk model artifact if it exists."""
+    candidate_paths = [Path(path)] if path is not None else MODEL_PATHS
 
+    for candidate in candidate_paths:
+        if not candidate.exists():
+            continue
+        with candidate.open("rb") as handle:
+            return pickle.load(handle)
+
+    return None
+
+
+def _build_feature_vector(patient_metrics: dict[str, Any]) -> list[float]:
+    """Normalize the patient metrics into the model feature order."""
+    return [
+        float(patient_metrics.get("age", 0) or 0),
+        float(patient_metrics.get("glucose", patient_metrics.get("fasting_blood_sugar", 0)) or 0),
+        float(patient_metrics.get("bmi", 0) or 0),
+        float(patient_metrics.get("systolic_bp", patient_metrics.get("blood_pressure", 0)) or 0),
+        float(patient_metrics.get("cholesterol", 0) or 0),
+    ]
+
+
+def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate disease risk using the trained model when available."""
+    artifact = _load_model_artifact()
+    if artifact is not None:
+        model = artifact.get("model")
+        if model is not None:
+            feature_vector = _build_feature_vector(patient_metrics)
+            probabilities = model.predict_proba([feature_vector])[0]
+            positive_probability = float(probabilities[-1])
+            score = min(max(positive_probability, 0.0), 1.0)
+            if score >= 0.70:
+                risk_level = "high"
+            elif score >= 0.40:
+                risk_level = "moderate"
+            else:
+                risk_level = "low"
+            return {
+                "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
+                "risk_score": round(score, 3),
+                "estimated_risk_score_percent": round(score * 100, 1),
+                "risk_level": risk_level,
+                "risk_category": risk_level,
+                "drivers": [name for name, value in {
+                    "age": patient_metrics.get("age", 0),
+                    "glucose": patient_metrics.get("glucose", patient_metrics.get("fasting_blood_sugar", 0)),
+                    "bmi": patient_metrics.get("bmi", 0),
+                    "systolic_bp": patient_metrics.get("systolic_bp", patient_metrics.get("blood_pressure", 0)),
+                    "cholesterol": patient_metrics.get("cholesterol", 0),
+                }.items() if value is not None and value != 0],
+                "explainable_ai_factors": [
+                    "age",
+                    "glucose",
+                    "bmi",
+                    "systolic_bp",
+                    "cholesterol",
+                ],
+                "recommendations": [
+                    "Review modifiable cardiovascular risk factors.",
+                    "Maintain a healthy diet and regular physical activity.",
+                    "Monitor blood pressure, cholesterol, and blood glucose regularly.",
+                    "Consult a clinician if symptoms are present.",
+                ],
+                "confidence": round(score, 3),
+            }
+
+    return evaluate_disease_risk_heuristic(patient_metrics)
+
+
+def evaluate_disease_risk_heuristic(patient_metrics: dict[str, Any]) -> dict[str, Any]:
+    """Fallback heuristic evaluation used when no trained model is available."""
     score = 0.0
     factors: list[str] = []
 
@@ -93,6 +165,11 @@ def evaluate_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def evaluate_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
+    """Backward-compatible alias to the model-aware risk predictor."""
+    return predict_disease_risk(patient_metrics)
+
+
 @dataclass
 class RiskAssessmentEngine:
     """
@@ -116,4 +193,4 @@ class RiskAssessmentEngine:
         if metrics:
             assessment_input.update(metrics)
 
-        return evaluate_disease_risk(assessment_input)
+        return predict_disease_risk(assessment_input)

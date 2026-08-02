@@ -1,21 +1,39 @@
 import os
-from PIL import Image
-from pypdf import PdfReader
-import easyocr
+from typing import Any
+
+try:
+    from PIL import Image  # noqa: F401
+except Exception:  # pragma: no cover - optional dependency guard
+    Image = None
+
+try:
+    from pypdf import PdfReader
+except Exception:  # pragma: no cover - optional dependency guard
+    PdfReader = None
+
+try:
+    import easyocr
+except Exception:  # pragma: no cover - optional dependency guard
+    easyocr = None
 
 # Initialize EasyOCR reader lazily (English language)
 _ocr_reader = None
 
+
 def get_ocr_reader():
     global _ocr_reader
     if _ocr_reader is None:
+        if easyocr is None:
+            raise ImportError("easyocr is not installed")
         # GPU=False ensures stability if CUDA isn't configured
-        _ocr_reader = easyocr.Reader(['en'], gpu=False)
+        _ocr_reader = easyocr.Reader(["en"], gpu=False)
     return _ocr_reader
 
 def extract_text_from_pdf(pdf_path: str) -> str:
     """Extracts raw text directly from searchable PDF files."""
     extracted_text = ""
+    if PdfReader is None:
+        return extracted_text
     try:
         reader = PdfReader(pdf_path)
         for page in reader.pages:
@@ -46,7 +64,7 @@ def process_medical_report(file_path: str) -> str:
         raise FileNotFoundError(f"File not found: {file_path}")
 
     ext = os.path.splitext(file_path)[1].lower()
-    
+
     if ext == ".pdf":
         text = extract_text_from_pdf(file_path)
         # Fallback to OCR if PDF contains scanned image rather than text
@@ -57,22 +75,31 @@ def process_medical_report(file_path: str) -> str:
         text = extract_text_from_image(file_path)
     else:
         raise ValueError(f"Unsupported file format: {ext}")
-        
+
     return text.strip()
+
+def extract_text(file_path: str) -> str:
+    """Compatibility entry point used by the agents."""
+    return process_medical_report(file_path)
+
 
 class OCRService:
     """
     Thin wrapper around OCR helper functions.
     """
 
-    def extract(self, file_path: str) -> str:
+    @staticmethod
+    def extract(file_path: str) -> str:
         return extract_text(file_path)
 
-    def extract_text(self, file_path: str) -> str:
+    @staticmethod
+    def extract_text(file_path: str) -> str:
         return extract_text(file_path)
 
-    def extract_from_image(self, image_path: str) -> str:
+    @staticmethod
+    def extract_from_image(image_path: str) -> str:
         return extract_text_from_image(image_path)
 
-    def extract_from_pdf(self, pdf_path: str) -> str:
+    @staticmethod
+    def extract_from_pdf(pdf_path: str) -> str:
         return extract_text_from_pdf(pdf_path)

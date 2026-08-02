@@ -79,10 +79,12 @@ class Parser:
     Backward-compatible wrapper used by MedicalReportAnalysisAgent.
     """
 
-    def parse(self, text: str) -> dict:
+    @staticmethod
+    def parse(text: str) -> dict:
         return extract_patient_metrics(text)
 
-    def extract(self, text: str) -> dict:
+    @staticmethod
+    def extract(text: str) -> dict:
         return extract_patient_metrics(text)
 
     @staticmethod
