@@ -47,7 +47,7 @@ async def analyze_clinical_case(
         state.patient["gender"] = state.patient.get("gender", "")
 
         if request.raw_report_text:
-            state.uploaded_reports = [request.raw_report_text]
+            state.raw_report_text = request.raw_report_text
             state.report_text = request.raw_report_text
 
         final_state, results, metrics = (

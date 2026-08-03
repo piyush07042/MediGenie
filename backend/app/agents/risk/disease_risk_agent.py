@@ -59,6 +59,8 @@ class DiseaseRiskAgent(BaseAgent):
         prediction = predict_disease_risk(assessment_input)
 
         state.disease_risk = prediction
+        state.metadata["risk_source"] = prediction.get("risk_source", "model" if "model_used" in prediction else "heuristic")
+        state.metadata["risk_model"] = prediction.get("model_used")
 
         elapsed = round(
             time.perf_counter() - start,

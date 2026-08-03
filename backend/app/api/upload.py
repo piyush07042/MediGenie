@@ -73,6 +73,7 @@ async def upload_report(
         state.patient = patient_context
         state.uploaded_reports = [str(destination)]
         state.report_text = str(destination)
+        state.raw_report_text = str(destination)
 
         final_state, results, metrics = await supervisor.run(
             state

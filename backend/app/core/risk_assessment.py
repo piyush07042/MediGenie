@@ -159,6 +159,7 @@ def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
             return {
                 "evaluated_condition": "Model-backed Disease Risk",
                 "risk_score": round(score, 3),
+                "risk_source": "model",
                 "estimated_risk_score_percent": round(score * 100, 1),
                 "risk_level": risk_level,
                 "risk_category": risk_level,
@@ -228,6 +229,7 @@ def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
             "condition": condition,
             "evaluated_condition": "Model-backed Disease Risk",
             "risk_score": round(prob, 3),
+            "risk_source": "model",
             "estimated_risk_score_percent": round(prob * 100, 1),
             "risk_level": risk_level,
             "risk_category": risk_level,
@@ -308,6 +310,7 @@ def evaluate_disease_risk_heuristic(patient_metrics: dict[str, Any]) -> dict[str
         "condition": "Cardiometabolic Risk",
         "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
         "risk_score": round(score, 3),
+        "risk_source": "heuristic",
         "estimated_risk_score_percent": round(score * 100, 1),
         "risk_level": risk_level,
         "risk_category": risk_level,

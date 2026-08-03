@@ -52,3 +52,4 @@ async def test_disease_risk_uses_diabetes_model_when_diagnosis_is_diabetes():
     assert state.disease_risk.get("model_used") == "diabetes_model"
     assert state.disease_risk.get("condition") == "Diabetes Risk"
     assert state.disease_risk.get("risk_category") == "high"
+    assert state.metadata.get("risk_source") == "model"

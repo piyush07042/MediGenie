@@ -120,6 +120,8 @@ class Settings(BaseSettings):
     SCHEDULER_OUT_DIR: str = "temp_reports"
     SCHEDULER_DRY_RUN: bool = True
 
+    AGENT_FALLBACK_MAPPINGS: dict[str, str] = Field(default_factory=dict)
+
     @field_validator("DEBUG", "ALLOW_CREDENTIALS", mode="before")
     @classmethod
     def parse_bool_fields(cls, value):
@@ -132,6 +134,18 @@ class Settings(BaseSettings):
             if lowered in {"0", "false", "no", "off", "none", "null", ""}:
                 return False
         return value
+
+    @field_validator("AGENT_FALLBACK_MAPPINGS", mode="before")
+    @classmethod
+    def parse_fallback_mappings(cls, value):
+        if isinstance(value, str) and value.strip():
+            try:
+                import json
+
+                return json.loads(value)
+            except ValueError:
+                return {}
+        return value or {}
 
 
 settings = Settings()

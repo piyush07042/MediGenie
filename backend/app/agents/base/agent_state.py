@@ -67,6 +67,8 @@ class AgentState:
     # ==========================================================
     metadata: dict[str, Any] = field(default_factory=dict)
 
+    workflow_summary: dict[str, Any] = field(default_factory=dict)
+
     warnings: list[str] = field(default_factory=list)
 
     errors: list[str] = field(default_factory=list)
@@ -131,6 +133,27 @@ class AgentState:
         self.execution_times.clear()
         self.errors.clear()
         self.warnings.clear()
+        self.workflow_summary.clear()
+
+    def mark_workflow_completed(self, status: str = "completed") -> None:
+        """Record completion metadata for the supervisor workflow."""
+        self.metadata["workflow_completed"] = True
+        self.metadata["workflow_status"] = status
+        self.metadata.setdefault("workflow_step_count", len(self.execution_trace))
+
+    def record_agent_result(
+        self,
+        agent_name: str,
+        output: Any,
+        confidence: float | None = None,
+        execution_time: float | None = None,
+    ) -> None:
+        """Store a normalized agent result and update summary metadata."""
+        self.set_agent_output(agent_name, output, confidence=confidence, execution_time=execution_time)
+        self.metadata["last_agent"] = agent_name
+        self.metadata["last_agent_output"] = output
+        self.metadata["last_agent_confidence"] = confidence
+        self.metadata["last_agent_execution_time"] = execution_time
 
     # Backward-compatible aliases used in older tests/code
     @property

@@ -68,6 +68,13 @@ class WorkflowExecutor:
 
             metrics.record(result)
 
+            state.record_agent_result(
+                agent.agent_name,
+                result.result,
+                confidence=result.confidence,
+                execution_time=result.processing_time,
+            )
+
             # Record execution trace
             state.add_trace(
                 f"{agent.agent_name}: {result.status}"
@@ -97,6 +104,23 @@ class WorkflowExecutor:
                 break
 
         metrics.finish()
+
+        state.metadata["agent_count"] = len(results)
+        state.metadata["successful_agents"] = [
+            result.agent for result in results if result.success
+        ]
+        state.metadata["failed_agents"] = [
+            result.agent for result in results if not result.success
+        ]
+        state.metadata["workflow_completed"] = True
+        state.metadata["workflow_status"] = "completed" if not state.has_errors() else "completed_with_errors"
+        state.metadata["workflow_duration"] = round(metrics.total_execution_time, 4)
+        state.workflow_summary = {
+            "agent_count": len(results),
+            "successful_agents": state.metadata["successful_agents"],
+            "failed_agents": state.metadata["failed_agents"],
+            "status": state.metadata["workflow_status"],
+        }
 
         logger.info(
             "Workflow completed in %.3fs",
