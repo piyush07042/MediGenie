@@ -65,3 +65,16 @@ class AIReport(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     patient = relationship("Patient", back_populates="ai_reports")
+
+
+class DrugSafetyAssessment(Base):
+    __tablename__ = "drug_safety_assessments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    patient_id = Column(Integer, ForeignKey("patients.id"), nullable=True)
+    medications = Column(JSON, nullable=False)
+    allergies = Column(JSON, nullable=True)
+    assessment = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    patient = relationship("Patient")

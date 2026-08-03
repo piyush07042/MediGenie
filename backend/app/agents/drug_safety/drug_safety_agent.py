@@ -17,6 +17,7 @@ from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
 
 from app.core.drug_safety import analyze_drug_safety
+from app.core.notifications import send_drug_safety_alert
 
 
 class DrugSafetyAgent(BaseAgent):
@@ -113,6 +114,18 @@ class DrugSafetyAgent(BaseAgent):
             assessment,
             confidence=confidence,
         )
+
+        # Notify external systems if the assessment is flagged
+        try:
+            if assessment.get("status") != "PASS":
+                payload = {
+                    "patient": state.patient or {},
+                    "assessment": assessment,
+                }
+                send_drug_safety_alert(payload)
+        except Exception:
+            # non-fatal
+            pass
 
         return AgentResult(
             agent=self.agent_name,

@@ -10,15 +10,17 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import status
 
-from backend.app.schemas.heart_disease import HeartDiseasePredictionRequest
-from backend.app.schemas.heart_disease import HeartDiseasePredictionResponse
-from backend.app.services.heart_disease_service import get_heart_disease_service
+from app.schemas.heart_disease import HeartDiseasePredictionRequest
+from app.schemas.heart_disease import HeartDiseasePredictionResponse
+from app.services.heart_disease_service import get_heart_disease_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/heart-disease", tags=["Heart Disease"])
 
-MODEL_DIRECTORY = "backend/models/heart_disease"
+from pathlib import Path
+
+MODEL_DIRECTORY = Path(__file__).resolve().parents[3] / "models" / "heart_disease"
 service = get_heart_disease_service(MODEL_DIRECTORY)
 
 

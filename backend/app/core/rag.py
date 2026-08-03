@@ -78,3 +78,37 @@ def query_knowledge_base(query_text: str, n_results: int = 2) -> list[dict[str, 
             })
         return documents
     return []
+
+
+def ingest_documents(documents: list[str], metadatas: list[dict] | None = None, ids: list[str] | None = None) -> dict:
+    """Add documents to the clinical_guidelines collection.
+
+    documents: list of document text
+    metadatas: optional list of metadata dicts matching documents
+    ids: optional list of ids for the documents
+
+    Returns a summary dict with counts and any errors.
+    """
+    current_collection = _get_collection()
+    try:
+        if metadatas is None:
+            metadatas = [{} for _ in documents]
+        if ids is None:
+            # create generated ids
+            ids = [f"doc_{i}_{abs(hash(doc)) % 100000}" for i, doc in enumerate(documents)]
+
+        current_collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids,
+        )
+
+        return {
+            "added": len(documents),
+            "ids": ids,
+        }
+    except Exception as exc:
+        return {
+            "added": 0,
+            "error": str(exc),
+        }

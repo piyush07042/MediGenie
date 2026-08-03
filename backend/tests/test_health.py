@@ -14,7 +14,21 @@ def test_health(client):
     body = response.json()
 
     assert body["success"] is True
+    assert body["message"] == "Application health status retrieved successfully."
+    assert isinstance(body["data"], dict)
+    assert body["data"]["application"] == "MediGenie"
+    assert body["data"]["status"] == "healthy"
+    assert "services" in body["data"]
 
-    assert "message" in body
 
-    assert "data" in body
+def test_readiness(client):
+
+    response = client.get("/api/v1/health/ready")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    body = response.json()
+
+    assert body["success"] is True
+    assert body["message"] == "Application is ready."
+    assert body["data"]["ready"] is True

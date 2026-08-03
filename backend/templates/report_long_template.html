@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>MediGenie Clinical Report - Long</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #1f2937; margin: 24px; }
+      h1 { color: #0b5fff; }
+      .section { margin-top: 20px; }
+      .section h2 { color: #2b6cb0; font-size: 1.1rem; margin-bottom: 10px; }
+      .section pre { white-space: pre-wrap; font-size: 0.95rem; }
+      .bullet { margin-left: 16px; }
+    </style>
+  </head>
+  <body>
+    <h1>MediGenie Clinical Report (Detailed)</h1>
+    <div class="section">
+      <strong>Patient:</strong> {{ report.patient.get('name') or report.patient.get('first_name') or 'Patient' }}<br />
+      <strong>ID:</strong> {{ report.patient.get('id', 'N/A') }}<br />
+      <strong>Generated:</strong> {{ report.generated_at }}
+    </div>
+    <div class="section">
+      <h2>Clinical Summary</h2>
+      <pre>{{ report.clinical_summary }}</pre>
+    </div>
+    <div class="section">
+      <h2>Disease Risk</h2>
+      {% if report.disease_risk %}
+        <p><strong>Category:</strong> {{ report.disease_risk.get('risk_category') }}<br />
+        <strong>Score:</strong> {{ report.disease_risk.get('risk_score') }}</p>
+        {% if report.disease_risk.get('top_factors') %}
+          <ul>
+            {% for f in report.disease_risk.get('top_factors') %}
+              <li class="bullet">{{ f }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p>No disease risk data available.</p>
+      {% endif %}
+    </div>
+    <div class="section">
+      <h2>Medications & Allergies</h2>
+      <p><strong>Medications:</strong> {{ report.medications | join(', ') }}</p>
+      <p><strong>Allergies:</strong> {{ report.allergies | join(', ') }}</p>
+    </div>
+    <div class="section">
+      <h2>Recommendations</h2>
+      {% if report.recommendations %}
+        <ul>
+          {% for rec in report.recommendations %}
+            <li class="bullet"><strong>{{ rec.priority }}</strong>: {{ rec.title }} — {{ rec.recommendation }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>No recommendations available.</p>
+      {% endif %}
+    </div>
+  </body>
+</html>

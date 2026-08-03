@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MediGenie Clinical Report</title>
+    <style>
+      body { font-family: Arial, sans-serif; color: #1f2937; padding: 24px; }
+      h1 { color: #0b5fff; }
+      .meta { background:#f7fafc; padding:8px; border:1px solid #e2e8f0; }
+      .section { margin-top:18px; }
+      .section h2 { color:#2b6cb0; font-size:1.05rem; }
+      pre { white-space:pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>MediGenie Clinical Report</h1>
+    <div class="meta">
+      <strong>Patient:</strong> {{ report.patient.get('name') or report.patient.get('first_name') or 'Patient' }}<br/>
+      <strong>Generated:</strong> {{ report.generated_at }}
+    </div>
+
+    <div class="section">
+      <h2>Clinical Summary</h2>
+      <pre>{{ report.clinical_summary }}</pre>
+    </div>
+
+    <div class="section">
+      <h2>Disease Risk</h2>
+      {% if report.disease_risk %}
+        <p>Category: {{ report.disease_risk.get('risk_category') }} | Score: {{ report.disease_risk.get('risk_score') }}</p>
+        {% if report.disease_risk.get('top_factors') %}
+          <ul>
+            {% for f in report.disease_risk.get('top_factors') %}
+              <li>{{ f }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p>No disease risk data.</p>
+      {% endif %}
+    </div>
+
+    <div class="section">
+      <h2>Medications & Allergies</h2>
+      <p><strong>Medications:</strong> {{ report.medications | join(', ') }}</p>
+      <p><strong>Allergies:</strong> {{ report.allergies | join(', ') }}</p>
+    </div>
+
+    <div class="section">
+      <h2>Recommendations</h2>
+      {% if report.recommendations %}
+        <ul>
+        {% for r in report.recommendations %}
+          <li><strong>{{ r.priority }}</strong>: {{ r.title }} — {{ r.recommendation }}</li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p>No recommendations.</p>
+      {% endif %}
+    </div>
+
+    <footer style="margin-top:28px; font-size:0.9rem; color:#6b7280;">MediGenie — Clinical Decision Support</footer>
+  </body>
+</html>

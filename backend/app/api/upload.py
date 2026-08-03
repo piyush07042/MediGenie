@@ -24,6 +24,7 @@ from app.agents.supervisor.supervisor import Supervisor
 from app.core.deps import get_supervisor
 from app.core.file_validation import validate_upload
 from app.schemas.common import ApiResponse
+from app.core.rag import ingest_documents
 
 router = APIRouter(
     prefix="/upload",
@@ -76,6 +77,27 @@ async def upload_report(
         final_state, results, metrics = await supervisor.run(
             state
         )
+
+        # Optional: index the extracted report text into the knowledge store.
+        try:
+            text = ""
+            if state.report_text and isinstance(state.report_text, str):
+                report_path = Path(state.report_text)
+                if report_path.exists() and report_path.is_file():
+                    if report_path.suffix.lower() == ".txt":
+                        text = report_path.read_text(encoding="utf-8")
+                    else:
+                        from app.services.ocr.ocr_service import OCRService
+
+                        text = OCRService.extract_text(str(report_path))
+                else:
+                    text = state.report_text
+
+            if text and text.strip():
+                ingest_documents([text], metadatas=[{"source": "uploaded_report"}])
+        except Exception:
+            # non-fatal
+            pass
 
         return ApiResponse(
             message="Medical report processed successfully.",

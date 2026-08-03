@@ -104,6 +104,22 @@ class Settings(BaseSettings):
 
     REDIS_URL: str | None = None
 
+    # ==========================================================
+    # Notifications
+    # ==========================================================
+
+    DRUG_SAFETY_WEBHOOK_URL: str | None = None
+
+    # ==========================================================
+    # Scheduler
+    # ==========================================================
+
+    SCHEDULER_ENABLED: bool = False
+    SCHEDULER_INTERVAL_SECONDS: int = 0
+    SCHEDULER_PATIENT_ID: int | None = None
+    SCHEDULER_OUT_DIR: str = "temp_reports"
+    SCHEDULER_DRY_RUN: bool = True
+
     @field_validator("DEBUG", "ALLOW_CREDENTIALS", mode="before")
     @classmethod
     def parse_bool_fields(cls, value):

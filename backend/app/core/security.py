@@ -12,7 +12,10 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    # Use a pure-Python backend by default to avoid native bcrypt
+    # runtime issues in test/CI environments. bcrypt remains supported
+    # if installed on the system.
+    schemes=["pbkdf2_sha256", "bcrypt"],
     deprecated="auto",
 )
 

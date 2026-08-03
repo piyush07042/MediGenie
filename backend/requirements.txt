@@ -104,3 +104,6 @@ typing_extensions>=4.11.0
 
 alembic
 psycopg[binary]
+ 
+# Scheduler
+APScheduler>=3.10.1

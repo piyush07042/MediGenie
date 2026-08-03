@@ -17,8 +17,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from backend.ml.inference.predictor import Predictor
-from backend.ml.inference.predictor import PredictorConfig
+from ml.inference.predictor import Predictor
+from ml.inference.predictor import PredictorConfig
 
 logger = logging.getLogger(__name__)
 

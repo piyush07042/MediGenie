@@ -19,7 +19,7 @@ API_VERSION = "v1"
 
 
 @router.get(
-    "/",
+    "",
     response_model=ApiResponse,
     status_code=status.HTTP_200_OK,
 )
