@@ -48,8 +48,4 @@ class WorkflowOrchestrator:
         ]
 
 
-# ----------------------------------------------------------------------
-# Backward compatibility
-# ----------------------------------------------------------------------
-
-SupervisorOrchestrator = WorkflowOrchestrator
+# Alias `SupervisorOrchestrator` removed; use `WorkflowOrchestrator`.

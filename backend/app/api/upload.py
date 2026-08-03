@@ -87,9 +87,9 @@ async def upload_report(
                     if report_path.suffix.lower() == ".txt":
                         text = report_path.read_text(encoding="utf-8")
                     else:
-                        from app.services.ocr.ocr_service import OCRService
+                        from app.services.ocr.ocr_service import extract_text as ocr_extract_text
 
-                        text = OCRService.extract_text(str(report_path))
+                        text = ocr_extract_text(str(report_path))
                 else:
                     text = state.report_text
 

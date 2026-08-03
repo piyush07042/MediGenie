@@ -19,6 +19,20 @@ from typing import Any
 
 from ml.inference.predictor import Predictor
 from ml.inference.predictor import PredictorConfig
+from ml.registry import resolve_model_directory
+
+
+def _resolve_model_directory(model_directory: str | Path) -> Path:
+    """Resolve the best available heart-disease model directory."""
+    candidate = Path(model_directory).expanduser()
+    if candidate.exists() and candidate.is_dir():
+        return candidate
+
+    fallback = resolve_model_directory("heart_disease")
+    if fallback.exists() and fallback.is_dir():
+        return fallback
+
+    return candidate
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +42,22 @@ class HeartDiseaseService:
 
     def __init__(self, model_directory: str | Path) -> None:
 
-        self.model_directory = Path(model_directory)
+        self.model_directory = _resolve_model_directory(model_directory)
         self.predictor = Predictor(
             PredictorConfig(model_directory=self.model_directory)
         )
-        self.predictor.initialize()
+        self._initialized = False
+        try:
+            self.predictor.initialize()
+            self._initialized = True
+        except Exception as exc:  # pragma: no cover - defensive fallback
+            logger.warning("Heart disease predictor initialization failed: %s", exc)
+            self._initialized = False
 
     def predict(self, patient_data: dict[str, Any]) -> dict[str, Any]:
         """Execute disease prediction."""
 
-        if self.predictor is None:
+        if self.predictor is None or not self._initialized:
             raise RuntimeError("Predictor not initialized.")
 
         result = self.predictor.predict(patient_data)
@@ -55,9 +75,10 @@ class HeartDiseaseService:
         """Service health status."""
 
         return {
-            "status": "healthy",
+            "status": "healthy" if self._initialized else "degraded",
             "service": "heart_disease",
-            "model_loaded": self.predictor is not None,
+            "model_loaded": self._initialized,
+            "model_directory": str(self.model_directory),
         }
 
 

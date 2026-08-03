@@ -87,19 +87,4 @@ class OCRService:
     """
     Thin wrapper around OCR helper functions.
     """
-
-    @staticmethod
-    def extract(file_path: str) -> str:
-        return extract_text(file_path)
-
-    @staticmethod
-    def extract_text(file_path: str) -> str:
-        return extract_text(file_path)
-
-    @staticmethod
-    def extract_from_image(image_path: str) -> str:
-        return extract_text_from_image(image_path)
-
-    @staticmethod
-    def extract_from_pdf(pdf_path: str) -> str:
-        return extract_text_from_pdf(pdf_path)
+    pass

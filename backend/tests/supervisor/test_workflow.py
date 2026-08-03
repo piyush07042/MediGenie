@@ -38,6 +38,14 @@ async def test_workflow_pipeline():
     assert metrics is not None
 
 
+def test_workflow_import_exposes_concrete_orchestrator():
+
+    workflow = WorkflowOrchestrator()
+
+    assert workflow.__class__.__name__ == "WorkflowOrchestrator"
+    assert isinstance(workflow, WorkflowOrchestrator)
+
+
 @pytest.mark.asyncio
 async def test_pipeline_contains_agents():
 

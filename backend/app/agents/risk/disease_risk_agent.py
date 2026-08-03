@@ -6,7 +6,7 @@ from app.agents.base.base_agent import BaseAgent
 from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
 
-from app.core.risk_assessment import RiskAssessmentEngine
+from app.core.risk_assessment import predict_disease_risk
 
 
 class DiseaseRiskAgent(BaseAgent):
@@ -43,12 +43,20 @@ class DiseaseRiskAgent(BaseAgent):
                 ],
             )
 
-        engine = RiskAssessmentEngine()
+        # Merge patient and metrics into a single input dict and call
+        # the centralized prediction function directly.
+        assessment_input: dict = {}
 
-        prediction = engine.predict(
-            patient=state.patient or state.patient_context,
-            metrics=metrics,
-        )
+        if state.patient:
+            assessment_input.update(state.patient)
+
+        if state.patient_context:
+            assessment_input.update(state.patient_context)
+
+        if metrics:
+            assessment_input.update(metrics)
+
+        prediction = predict_disease_risk(assessment_input)
 
         state.disease_risk = prediction
 

@@ -18,6 +18,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from ml.registry import resolve_model_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -51,7 +52,7 @@ def explain_prediction(model: str, input_json: str, dry: bool = False) -> int:
         print("ml.inference.predictor not importable; please run from repo root where ml package is available.")
         return 2
 
-    model_dir = ROOT / "ml" / "models" / model
+    model_dir = resolve_model_directory(model)
     if not model_dir.exists():
         print("Model directory not found:", model_dir)
         return 2

@@ -6,7 +6,8 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.agents.base.agent_state import AgentState
 from app.agents.base.agent_result import AgentResult
-from app.agents.supervisor.orchestrator import SupervisorOrchestrator
+# SupervisorOrchestrator import removed for consolidation; use
+# WorkflowOrchestrator from app.agents.supervisor.orchestrator when needed.
 from app.schemas.common import ApiResponse
 
 

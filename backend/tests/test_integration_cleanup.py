@@ -22,7 +22,7 @@ def test_ocr_service_extract_text_uses_process_medical_report(monkeypatch):
 
     monkeypatch.setattr(ocr_service, "process_medical_report", fake_process)
 
-    result = ocr_service.OCRService().extract_text("report.pdf")
+    result = ocr_service.extract_text("report.pdf")
 
     assert result == "clinical text"
     assert captured["path"] == "report.pdf"

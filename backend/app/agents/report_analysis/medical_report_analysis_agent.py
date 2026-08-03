@@ -6,8 +6,8 @@ from app.agents.base.base_agent import BaseAgent
 from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
 
-from app.services.ocr.ocr_service import OCRService
-from app.services.ocr.parser import Parser
+from app.services.ocr.ocr_service import extract_text
+from app.services.ocr.parser import extract_patient_metrics
 
 
 class MedicalReportAnalysisAgent(BaseAgent):
@@ -43,9 +43,9 @@ class MedicalReportAnalysisAgent(BaseAgent):
         if state.uploaded_reports:
             for report in state.uploaded_reports:
 
-                text = OCRService.extract_text(report)
+                text = extract_text(report)
 
-                metrics = Parser.parse(text)
+                metrics = extract_patient_metrics(text)
 
                 extracted_reports.append(
                     {
@@ -59,7 +59,7 @@ class MedicalReportAnalysisAgent(BaseAgent):
         else:
             # Use raw_report_text (tests supply this)
             text = state.raw_report_text or ""
-            metrics = Parser.parse(text)
+            metrics = extract_patient_metrics(text)
             extracted_reports.append({"report": None, "text": text, "metrics": metrics})
             parsed_metrics.update(metrics)
 
