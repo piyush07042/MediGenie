@@ -259,12 +259,21 @@ class Predictor:
         patient_data: dict[str, Any],
     ) -> pd.DataFrame:
         """
-        Convert dictionary to dataframe.
+        Convert dictionary to dataframe and select only model schema fields.
         """
 
         dataframe = pd.DataFrame(
             [patient_data]
         )
+
+        if self.schema is not None:
+            required = [
+                column
+                for column in self.schema.get("required_columns", [])
+                if column != self.schema.get("target_column")
+            ]
+            if required:
+                dataframe = dataframe.reindex(columns=required, fill_value=0.0)
 
         logger.info(
             "Input dataframe created."

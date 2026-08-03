@@ -131,3 +131,20 @@ class AgentState:
         self.execution_times.clear()
         self.errors.clear()
         self.warnings.clear()
+
+    # Backward-compatible aliases used in older tests/code
+    @property
+    def patient_context(self) -> dict[str, Any]:
+        return self.patient
+
+    @patient_context.setter
+    def patient_context(self, value: dict[str, Any]) -> None:
+        self.patient = value
+
+    @property
+    def raw_report_text(self) -> str:
+        return self.report_text
+
+    @raw_report_text.setter
+    def raw_report_text(self, value: str) -> None:
+        self.report_text = value

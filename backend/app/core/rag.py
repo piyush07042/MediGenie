@@ -1,5 +1,6 @@
 import chromadb
 from chromadb.utils import embedding_functions
+from typing import Any
 
 
 chroma_client = None
@@ -57,10 +58,23 @@ def seed_sample_guidelines():
         print("✅ Vector DB initialized with clinical practice guidelines!")
 
 
-def query_knowledge_base(query_text: str, n_results: int = 2) -> list:
-    """Retrieve relevant guideline snippets based on semantic similarity."""
+def query_knowledge_base(query_text: str, n_results: int = 2) -> list[dict[str, Any]]:
+    """Retrieve relevant guideline snippets and metadata based on semantic similarity."""
     current_collection = _get_collection()
-    results = current_collection.query(query_texts=[query_text], n_results=n_results)
+    results = current_collection.query(
+        query_texts=[query_text],
+        n_results=n_results,
+        include=["documents", "metadatas"],
+    )
     if results and "documents" in results and len(results["documents"]) > 0:
-        return results["documents"][0]
+        documents = []
+        for idx, document in enumerate(results["documents"][0]):
+            metadata = {}
+            if "metadatas" in results and len(results["metadatas"]) > 0:
+                metadata = results["metadatas"][0][idx] if idx < len(results["metadatas"][0]) else {}
+            documents.append({
+                "document": document,
+                "metadata": metadata,
+            })
+        return documents
     return []

@@ -32,7 +32,8 @@ class PatientIntakeAgent(BaseAgent):
         state: AgentState,
     ) -> AgentResult:
 
-        patient = state.patient or {}
+        # Accept either `state.patient` (preferred) or legacy `state.patient_context`
+        patient = state.patient or state.patient_context or {}
 
         missing = []
 

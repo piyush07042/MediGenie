@@ -1,0 +1,1 @@
+{"required_columns": ["age", "creatinine", "blood_urea", "sgpt", "albumin"], "target_column": "target"}

@@ -4,26 +4,50 @@ Risk assessment utilities.
 
 from __future__ import annotations
 
-import pickle
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-MODEL_PATHS = [
-    Path(__file__).resolve().parents[2] / "app" / "ml" / "models" / "disease_risk_model.pkl",
-    Path(__file__).resolve().parents[1] / "ml" / "models" / "disease_risk_model.pkl",
-]
+from app.core.prediction_service import PredictionService
+from app.core.feature_builder import FeatureBuilder
+
+_DEFAULT_MODEL_ROOT = Path(__file__).resolve().parents[2] / "ml" / "models"
 
 
-def _load_model_artifact(path: str | Path | None = None) -> dict[str, Any] | None:
-    """Load the persisted risk model artifact if it exists."""
-    candidate_paths = [Path(path)] if path is not None else MODEL_PATHS
+_prediction_service = PredictionService(model_root=_DEFAULT_MODEL_ROOT)
 
-    for candidate in candidate_paths:
-        if not candidate.exists():
-            continue
-        with candidate.open("rb") as handle:
-            return pickle.load(handle)
+# Backwards-compatible constant for tests that expect MODEL_PATHS
+MODEL_PATHS: list[str] = []
+
+MODEL_DIAGNOSIS_MAP: dict[str, str] = {
+    "type 2 diabetes": "diabetes_model",
+    "diabetes": "diabetes_model",
+    "heart failure": "heart_failure_model",
+    "congestive heart failure": "heart_failure_model",
+    "stroke": "stroke_model",
+    "cerebrovascular": "stroke_model",
+    "kidney disease": "kidney_disease_model",
+    "renal": "kidney_disease_model",
+    "liver disease": "liver_disease_model",
+    "hepatic": "liver_disease_model",
+    "hepatitis": "hepatitis_model",
+    "parkinson": "parkinsons_model",
+    "parkinson's": "parkinsons_model",
+    "breast cancer": "breast_cancer_model",
+    "cancer": "breast_cancer_model",
+    "hypertension": "disease_risk_model",
+    "cardiovascular": "disease_risk_model",
+}
+
+DEFAULT_RISK_MODEL = "disease_risk_model"
+
+
+def _load_model_artifact(path: str | None = None) -> dict[str, Any] | None:
+    """Compatibility shim. Older code/tests expect this function to exist.
+
+    New code uses `PredictionService`; this shim returns None by default.
+    Tests that need to simulate an artifact can monkeypatch this function.
+    """
 
     return None
 
@@ -39,15 +63,91 @@ def _build_feature_vector(patient_metrics: dict[str, Any]) -> list[float]:
     ]
 
 
+def _normalize_diagnosis(value: str | None) -> str:
+    if not value:
+        return ""
+    return str(value).strip().lower()
+
+
+def _select_model_candidates(patient_metrics: dict[str, Any]) -> list[str]:
+    candidates: list[str] = []
+    diagnosis = _normalize_diagnosis(
+        patient_metrics.get("diagnosis")
+        or patient_metrics.get("condition")
+        or patient_metrics.get("evaluated_condition")
+    )
+
+    for key, model_name in MODEL_DIAGNOSIS_MAP.items():
+        if key in diagnosis and model_name not in candidates:
+            candidates.append(model_name)
+
+    if "glucose" in patient_metrics and "bmi" in patient_metrics:
+        if "diabetes_model" not in candidates:
+            candidates.append("diabetes_model")
+
+    if "systolic_bp" in patient_metrics and "cholesterol" in patient_metrics:
+        if DEFAULT_RISK_MODEL not in candidates:
+            candidates.append(DEFAULT_RISK_MODEL)
+
+    if not candidates:
+        candidates.append(DEFAULT_RISK_MODEL)
+
+    return candidates
+
+
+def _build_model_input(
+    patient: dict[str, Any] | None,
+    metrics: dict[str, Any] | None,
+    model_name: str,
+) -> dict[str, Any]:
+    required_features = _prediction_service.get_model_required_features(model_name)
+    if required_features:
+        return FeatureBuilder.build(
+            patient=patient,
+            metrics=metrics,
+            required_features=required_features,
+        )
+    return FeatureBuilder.build(patient=patient, metrics=metrics)
+
+
+def _display_condition_for_model(model_name: str, diagnosis: str | None = None) -> str:
+    if model_name == "diabetes_model":
+        return "Diabetes Risk"
+    if model_name == "heart_failure_model":
+        return "Heart Failure Risk"
+    if model_name == "stroke_model":
+        return "Stroke Risk"
+    if model_name == "kidney_disease_model":
+        return "Kidney Disease Risk"
+    if model_name == "liver_disease_model":
+        return "Liver Disease Risk"
+    if model_name == "hepatitis_model":
+        return "Hepatitis Risk"
+    if model_name == "parkinsons_model":
+        return "Parkinson's Disease Risk"
+    if model_name == "breast_cancer_model":
+        return "Breast Cancer Risk"
+    if diagnosis:
+        return str(diagnosis).title()
+    return "Cardiometabolic Risk"
+
+
 def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
     """Evaluate disease risk using the trained model when available."""
+    # Backwards-compatible: if an older persisted artifact is present, use it.
     artifact = _load_model_artifact()
     if artifact is not None:
         model = artifact.get("model")
         if model is not None:
             feature_vector = _build_feature_vector(patient_metrics)
-            probabilities = model.predict_proba([feature_vector])[0]
-            positive_probability = float(probabilities[-1])
+            try:
+                probabilities = model.predict_proba([feature_vector])[0]
+                positive_probability = float(probabilities[-1])
+            except Exception:
+                # If model doesn't support predict_proba, fall back to predict()
+                pred = model.predict([feature_vector])[0]
+                positive_probability = float(pred)
+
             score = min(max(positive_probability, 0.0), 1.0)
             if score >= 0.70:
                 risk_level = "high"
@@ -55,8 +155,9 @@ def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
                 risk_level = "moderate"
             else:
                 risk_level = "low"
+
             return {
-                "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
+                "evaluated_condition": "Model-backed Disease Risk",
                 "risk_score": round(score, 3),
                 "estimated_risk_score_percent": round(score * 100, 1),
                 "risk_level": risk_level,
@@ -83,6 +184,61 @@ def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
                 ],
                 "confidence": round(score, 3),
             }
+
+    # Try PredictionService-backed predictor next
+    candidate_models = _select_model_candidates(patient_metrics)
+    diagnosis = _normalize_diagnosis(
+        patient_metrics.get("diagnosis")
+        or patient_metrics.get("condition")
+        or patient_metrics.get("evaluated_condition")
+    )
+
+    for model_name in candidate_models:
+        if not _prediction_service.has_model(model_name):
+            continue
+
+        features = _build_model_input(None, patient_metrics, model_name)
+        result = _prediction_service.predict(model_name, features)
+
+        if result is None:
+            continue
+
+        prob = float(result.get("probability", 0.0))
+        conf = float(result.get("confidence", prob))
+
+        if prob >= 0.70:
+            risk_level = "high"
+        elif prob >= 0.40:
+            risk_level = "moderate"
+        else:
+            risk_level = "low"
+
+        condition = _display_condition_for_model(model_name, diagnosis)
+        top_factors = result.get("top_factors") or []
+        feature_drivers = [
+            factor.get("feature")
+            for factor in top_factors
+            if isinstance(factor, dict) and factor.get("feature")
+        ]
+
+        if not feature_drivers:
+            feature_drivers = list(result.get("class_probabilities", {}).keys())
+
+        return {
+            "condition": condition,
+            "evaluated_condition": "Model-backed Disease Risk",
+            "risk_score": round(prob, 3),
+            "estimated_risk_score_percent": round(prob * 100, 1),
+            "risk_level": risk_level,
+            "risk_category": risk_level,
+            "drivers": feature_drivers,
+            "explainable_ai_factors": feature_drivers,
+            "recommendations": [
+                "Consult clinician for further assessment.",
+            ],
+            "confidence": round(conf, 3),
+            "model_used": model_name,
+        }
 
     return evaluate_disease_risk_heuristic(patient_metrics)
 
@@ -149,6 +305,7 @@ def evaluate_disease_risk_heuristic(patient_metrics: dict[str, Any]) -> dict[str
         risk_level = "low"
 
     return {
+        "condition": "Cardiometabolic Risk",
         "evaluated_condition": "Metabolic & Cardiovascular Risk Profile",
         "risk_score": round(score, 3),
         "estimated_risk_score_percent": round(score * 100, 1),

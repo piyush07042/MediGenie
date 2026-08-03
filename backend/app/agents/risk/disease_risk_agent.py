@@ -29,23 +29,25 @@ class DiseaseRiskAgent(BaseAgent):
 
         start = time.perf_counter()
 
-        if not state.extracted_metrics:
+        # Accept either pre-extracted metrics or fall back to patient_context
+        metrics = state.extracted_metrics or state.patient_context or state.patient
 
+        if not metrics:
             return AgentResult(
                 agent=self.agent_name,
                 status="FAILED",
                 confidence=0.0,
                 result={},
                 warnings=[
-                    "No extracted metrics available."
+                    "No extracted metrics or patient context available."
                 ],
             )
 
         engine = RiskAssessmentEngine()
 
         prediction = engine.predict(
-            patient=state.patient,
-            metrics=state.extracted_metrics,
+            patient=state.patient or state.patient_context,
+            metrics=metrics,
         )
 
         state.disease_risk = prediction

@@ -37,7 +37,25 @@ class DrugSafetyAgent(BaseAgent):
     ) -> AgentResult:
 
         medications = state.medications or []
+        if not medications:
+            medications = (
+                state.patient_context.get("current_medications")
+                or state.patient.get("current_medications")
+                or []
+            )
+
         allergies = state.allergies or []
+        if not allergies:
+            allergies = (
+                state.patient_context.get("allergies")
+                or state.patient.get("allergies")
+                or []
+            )
+
+        if isinstance(medications, str):
+            medications = [medications]
+        if isinstance(allergies, str):
+            allergies = [allergies]
 
         result = analyze_drug_safety(
             medications=medications,
@@ -59,7 +77,8 @@ class DrugSafetyAgent(BaseAgent):
             [],
         ):
 
-            warnings.append(interaction["warning"])
+            warning_text = interaction.get("warning", "Potential drug interaction detected.")
+            warnings.append(warning_text)
 
             evidence.append(
                 f"{interaction['severity']} Interaction: "
@@ -72,11 +91,18 @@ class DrugSafetyAgent(BaseAgent):
             [],
         ):
 
-            warnings.append(allergy["reasoning"])
+            warning_text = allergy.get(
+                "reasoning",
+                f"Allergy conflict with {allergy.get('medication', 'a medication')}.",
+            )
+            warnings.append(warning_text)
 
             evidence.append(
                 f"Allergy Conflict: {allergy['medication']}"
             )
+
+        for warning_text in warnings:
+            state.add_warning(warning_text)
 
         confidence = 1.0
 

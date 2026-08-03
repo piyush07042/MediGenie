@@ -49,13 +49,14 @@ class MedicalKnowledgeAgent(BaseAgent):
             query_parts.extend(state.symptoms)
 
         if state.disease_risk:
-            risk = state.disease_risk.get(
-                "condition",
-                ""
-            )
+            risk = state.disease_risk.get("condition") or state.disease_risk.get("evaluated_condition")
+            category = state.disease_risk.get("risk_category")
 
             if risk:
                 query_parts.append(risk)
+
+            if category:
+                query_parts.append(category)
 
         if state.extracted_metrics:
 
@@ -71,6 +72,10 @@ class MedicalKnowledgeAgent(BaseAgent):
 
         if not query_parts:
             query_parts.append("General Clinical Guidelines")
+
+        diagnosis = getattr(state, "diagnosis", None) or state.patient.get("diagnosis")
+        if diagnosis:
+            query_parts.append(str(diagnosis))
 
         query = " ".join(query_parts)
 
@@ -88,14 +93,21 @@ class MedicalKnowledgeAgent(BaseAgent):
         evidence = []
 
         for document in documents:
+            if isinstance(document, dict):
+                doc_text = document.get("document", "")
+                metadata = document.get("metadata", {})
+            else:
+                doc_text = str(document)
+                metadata = {}
 
             knowledge.append(
                 {
-                    "document": document
+                    "document": doc_text,
+                    "metadata": metadata,
                 }
             )
 
-            evidence.append(document[:120])
+            evidence.append(doc_text[:120])
 
         # -----------------------------------------------------
         # Store into AgentState

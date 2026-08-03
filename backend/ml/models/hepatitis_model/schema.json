@@ -1,0 +1,1 @@
+{"required_columns": ["age", "bilirubin", "alk_phosphatase", "sgpt", "sgot"], "target_column": "target"}

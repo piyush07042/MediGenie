@@ -27,32 +27,40 @@ class MedicalReportAnalysisAgent(BaseAgent):
 
         start = time.perf_counter()
 
-        if not state.uploaded_reports:
+        # Accept either uploaded report files or raw report text for tests
+        if not state.uploaded_reports and not state.raw_report_text:
             return AgentResult(
                 agent=self.agent_name,
                 status="FAILED",
                 confidence=0.0,
                 result={},
-                warnings=["No medical reports uploaded."],
+                warnings=["No medical reports uploaded or raw report text provided."],
             )
 
         extracted_reports = []
         parsed_metrics = {}
 
-        for report in state.uploaded_reports:
+        if state.uploaded_reports:
+            for report in state.uploaded_reports:
 
-            text = OCRService.extract_text(report)
+                text = OCRService.extract_text(report)
 
+                metrics = Parser.parse(text)
+
+                extracted_reports.append(
+                    {
+                        "report": report,
+                        "text": text,
+                        "metrics": metrics,
+                    }
+                )
+
+                parsed_metrics.update(metrics)
+        else:
+            # Use raw_report_text (tests supply this)
+            text = state.raw_report_text or ""
             metrics = Parser.parse(text)
-
-            extracted_reports.append(
-                {
-                    "report": report,
-                    "text": text,
-                    "metrics": metrics,
-                }
-            )
-
+            extracted_reports.append({"report": None, "text": text, "metrics": metrics})
             parsed_metrics.update(metrics)
 
         state.report_text = "\n\n".join(

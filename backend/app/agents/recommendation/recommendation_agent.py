@@ -40,32 +40,71 @@ class RecommendationAgent(BaseAgent):
 
         if risk:
 
-            category = risk.get("risk_category", "")
+            category = str(risk.get("risk_category", "")).strip().title()
 
             score = risk.get("risk_score", 0)
 
-            if category == "High":
+            drivers = risk.get("top_factors") or risk.get("drivers") or []
+            if isinstance(drivers, dict):
+                drivers = [drivers]
 
+            risk_recs = risk.get("recommendations", [])
+            if isinstance(risk_recs, str):
+                risk_recs = [risk_recs]
+
+            if category == "High":
                 recommendations.append({
                     "priority": "High",
-                    "title": "Urgent Clinical Review",
-                    "recommendation":
-                        "Patient demonstrates high disease risk. "
-                        "Further clinical evaluation is recommended."
+                    "title": "Elevated Risk Profile",
+                    "recommendation": (
+                        "Patient is at high risk. Review the top risk drivers "
+                        "and accelerate diagnostic evaluation and treatment planning."
+                    ),
                 })
-
+            elif risk_recs:
+                for rec in risk_recs:
+                    recommendations.append({
+                        "priority": "High" if category == "High" else "Medium",
+                        "title": "Risk-Based Recommendation",
+                        "recommendation": str(rec),
+                    })
             elif category == "Moderate":
-
                 recommendations.append({
                     "priority": "Medium",
-                    "title": "Follow-up Assessment",
-                    "recommendation":
-                        "Schedule follow-up investigations and monitor."
+                    "title": "Moderate Risk Management",
+                    "recommendation": (
+                        "Patient is at moderate risk. Continue monitoring trends "
+                        "and implement guideline-supported preventive measures."
+                    ),
+                })
+            else:
+                recommendations.append({
+                    "priority": "Low",
+                    "title": "Routine Monitoring",
+                    "recommendation": (
+                        "Patient has low risk. Maintain regular follow-up and lifestyle optimization."
+                    ),
                 })
 
             evidence.append(
                 f"Disease Risk Score: {score}"
             )
+
+            if drivers:
+                formatted_drivers = []
+                for driver in drivers:
+                    if isinstance(driver, dict):
+                        formatted_drivers.append(
+                            f"{driver.get('feature')}={driver.get('value')}"
+                        )
+                    else:
+                        formatted_drivers.append(str(driver))
+                evidence.append(
+                    "Top factors: " + ", ".join(formatted_drivers)
+                )
+
+            if risk_recs:
+                evidence.extend([f"Risk recommendation: {str(rec)}" for rec in risk_recs])
 
         # ----------------------------------------------------
         # Drug Safety
@@ -89,6 +128,18 @@ class RecommendationAgent(BaseAgent):
                     "Medication safety issues detected."
                 )
 
+            for interaction in drug.get("interaction_warnings", []):
+                evidence.append(
+                    f"Interaction: {interaction.get('severity', 'Unknown')} - "
+                    f"{interaction.get('warning', 'No description')}"
+                )
+
+            for allergy in drug.get("allergy_conflicts", []):
+                evidence.append(
+                    f"Allergy conflict: {allergy.get('medication', 'Unknown')} "
+                    f"({allergy.get('allergen_match', 'Unknown')})"
+                )
+
         # ----------------------------------------------------
         # Medical Knowledge
         # ----------------------------------------------------
@@ -97,17 +148,40 @@ class RecommendationAgent(BaseAgent):
 
         if knowledge:
 
+            recommendation_text = (
+                "Consult the retrieved clinical guidance and align the care plan "
+                "with the most relevant evidence-based recommendations."
+            )
+
+            if len(knowledge) > 1:
+                recommendation_text = (
+                    "Consult the retrieved clinical guidance snippets and align "
+                    "the care plan with the most relevant evidence-based recommendations."
+                )
+
             recommendations.append({
                 "priority": "Information",
-                "title": "Relevant Clinical Guidelines",
-                "recommendation":
-                    "Consult retrieved evidence before final decision."
+                "title": "Evidence-Based Guidance",
+                "recommendation": recommendation_text,
             })
 
-            evidence.extend([
-                item.get("document", "")[:150]
-                for item in knowledge
-            ])
+            for item in knowledge:
+                document = item.get("document", "")
+                metadata = item.get("metadata", {})
+                if metadata:
+                    evidence.append(
+                        f"[{metadata.get('category', 'Guideline')}] "
+                        f"{document[:160]}"
+                    )
+                else:
+                    evidence.append(document[:160])
+
+            if len(knowledge) == 1 and document:
+                recommendations.append({
+                    "priority": "Information",
+                    "title": "Specific Guideline Insight",
+                    "recommendation": document[:280],
+                })
 
         # ----------------------------------------------------
         # Default

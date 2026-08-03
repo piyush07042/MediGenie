@@ -19,10 +19,15 @@ async def test_report_generation():
 
     state.patient_context = {
         "name": "John Doe",
+        "age": 45,
+        "gender": "Female",
     }
 
     state.recommendations = [
-        "Exercise regularly",
+        {
+            "title": "Lifestyle",
+            "recommendation": "Exercise regularly.",
+        },
     ]
 
     agent = ReportGenerationAgent()
@@ -30,3 +35,4 @@ async def test_report_generation():
     result = await agent.run(state)
 
     assert result.success
+    assert "Clinical Summary for John Doe" in state.final_report["clinical_summary"]

@@ -7,6 +7,7 @@ class PatientContextSchema(BaseModel):
     glucose: Optional[float] = Field(default=None, example=145.0)
     systolic_bp: Optional[float] = Field(default=None, example=138.0)
     cholesterol: Optional[float] = Field(default=None, example=210.0)
+    diagnosis: Optional[str] = Field(default=None, example="Type 2 Diabetes")
     current_medications: Optional[List[str]] = Field(default_factory=list, example=["Lisinopril", "Metformin"])
     allergies: Optional[List[str]] = Field(default_factory=list, example=["Penicillin"])
 

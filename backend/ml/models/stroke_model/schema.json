@@ -1,0 +1,1 @@
+{"required_columns": ["age", "bmi", "hypertension", "heart_disease", "avg_glucose_level"], "target_column": "target"}

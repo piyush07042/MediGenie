@@ -21,7 +21,10 @@ async def test_drug_safety():
         "current_medications": [
             "Metformin",
             "Lisinopril",
-        ]
+        ],
+        "allergies": [
+            "penicillin",
+        ],
     }
 
     agent = DrugSafetyAgent()
@@ -29,3 +32,5 @@ async def test_drug_safety():
     result = await agent.run(state)
 
     assert result.success
+    assert state.drug_analysis["status"] == "PASS"
+    assert result.metadata["medications_checked"] == 2
