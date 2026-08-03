@@ -7,28 +7,47 @@ from __future__ import annotations
 from typing import Any
 
 from app.agents.base.agent_state import AgentState
+from app.core.config import settings
 from app.services.recommendation.knowledge_evidence import (
     build_citations_from_knowledge,
     summarize_evidence,
 )
 
 
+def _normalize_probability(value: Any) -> float:
+    if value is None:
+        return 0.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _estimate_confidence_label(probability: float) -> str:
+    if probability >= settings.HEART_CONFIDENCE_HIGH:
+        return "High"
+    if probability >= settings.HEART_CONFIDENCE_MEDIUM:
+        return "Medium"
+    return "Low"
+
+
 def _build_evidence_payload(knowledge_results: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
-    """Convert retrieved knowledge snippets into evidence entries for recommendations."""
     evidence: list[dict[str, Any]] = []
     for entry in knowledge_results or []:
         if not isinstance(entry, dict):
             continue
 
-        document = entry.get("document") or entry.get("text") or ""
+        document = str(entry.get("document") or entry.get("text") or "").strip()
         metadata = entry.get("metadata") or {}
         source = metadata.get("source") or metadata.get("title") or "Clinical guideline"
-        snippet = str(document).strip()
-        if snippet:
-            evidence.append({
-                "source": source,
-                "text": snippet,
-            })
+        if not document:
+            continue
+
+        evidence.append({
+            "source": source,
+            "excerpt": document[:300],
+            "relevance": float(entry.get("similarity_score") or 0.0),
+        })
 
     return evidence
 
@@ -36,137 +55,524 @@ def _build_evidence_payload(knowledge_results: list[dict[str, Any]] | None) -> l
 def _build_similarity_scores(knowledge_results: list[dict[str, Any]] | None) -> list[float]:
     scores: list[float] = []
     for entry in knowledge_results or []:
+        if not isinstance(entry, dict):
+            continue
         score = entry.get("similarity_score")
         if isinstance(score, (int, float)):
             scores.append(float(score))
     return scores
 
 
-def _build_recommendation_context(state: AgentState) -> dict[str, Any]:
-    knowledge_results = state.knowledge_results or []
-    evidence_payload = _build_evidence_payload(knowledge_results)
-    citations = build_citations_from_knowledge(knowledge_results)
-    similarity_scores = _build_similarity_scores(knowledge_results)
-    evidence_summary = summarize_evidence(knowledge_results)
+def _build_supporting_factors(
+    disease_risk: dict[str, Any],
+    knowledge_results: list[dict[str, Any]] | None,
+    drug_analysis: dict[str, Any],
+    patient: dict[str, Any],
+    extracted_metrics: dict[str, Any],
+) -> list[str]:
+    factors: list[str] = []
+
+    if patient.get("age") is not None:
+        factors.append(f"Age {patient['age']}")
+    if patient.get("gender"):
+        factors.append(f"Gender {str(patient['gender']).title()}")
+    if patient.get("smoking"):
+        factors.append("Smoking history")
+    if patient.get("bmi") is not None:
+        factors.append(f"BMI {patient['bmi']}")
+    if patient.get("cholesterol") is not None:
+        factors.append(f"Cholesterol {patient['cholesterol']}")
+    if patient.get("glucose") is not None:
+        factors.append(f"Glucose {patient['glucose']}")
+
+    probability = _normalize_probability(
+        disease_risk.get("probability")
+        or disease_risk.get("confidence")
+        or disease_risk.get("risk_score")
+    )
+    if probability > 0:
+        factors.append(f"Predicted risk probability {round(probability * 100, 1)}%")
+
+    drivers = disease_risk.get("top_factors") or disease_risk.get("drivers") or []
+    if isinstance(drivers, dict):
+        drivers = [drivers]
+    for driver in drivers[:4]:
+        if isinstance(driver, dict):
+            feature = driver.get("feature") or driver.get("name")
+            importance = driver.get("importance")
+            if feature:
+                factors.append(f"{feature} importance {importance if importance is not None else 'unknown'}")
+        else:
+            factors.append(str(driver))
+
+    for item in (drug_analysis.get("interactions") or []):
+        if item.get("severity"):
+            factors.append(f"Interaction {item.get('severity')}")
+    for item in (drug_analysis.get("allergies") or []):
+        if item.get("severity"):
+            factors.append(f"Allergy {item.get('severity')}")
+    if drug_analysis.get("status") == "FLAGGED":
+        factors.append("Drug safety flagged")
+
+    evidence_sources = {
+        str(entry.get("metadata", {}).get("source") or entry.get("metadata", {}).get("title"))
+        for entry in knowledge_results or []
+        if isinstance(entry, dict) and entry.get("metadata")
+    }
+    for source in sorted(evidence_sources):
+        if source:
+            factors.append(f"Evidence source {source}")
+
+    metric_keys = ["systolic_bp", "diastolic_bp", "heart_rate", "bmi", "glucose", "cholesterol"]
+    for key in metric_keys:
+        if extracted_metrics.get(key) is not None and f"{key}" not in factors:
+            factors.append(f"{key.replace('_', ' ').title()} {extracted_metrics[key]}")
+
+    return factors[:12] or ["No supporting factors available."]
+
+
+def _build_drug_safety_payload(drug_analysis: dict[str, Any]) -> dict[str, Any]:
+    interactions = [
+        {
+            "drugs_involved": item.get("drugs_involved", []),
+            "severity": item.get("severity"),
+            "explanation": item.get("explanation"),
+            "recommendation": item.get("recommendation"),
+        }
+        for item in (drug_analysis.get("interactions") or [])
+        if isinstance(item, dict)
+    ]
+    contraindications = [
+        {
+            "medication": item.get("medication"),
+            "condition": item.get("condition"),
+            "severity": item.get("severity"),
+            "explanation": item.get("explanation"),
+            "recommendation": item.get("recommendation"),
+        }
+        for item in (drug_analysis.get("contraindications") or [])
+        if isinstance(item, dict)
+    ]
+    allergies = [
+        {
+            "medication": item.get("medication"),
+            "allergy_type": item.get("allergy_type"),
+            "severity": item.get("severity"),
+            "explanation": item.get("explanation"),
+            "recommendation": item.get("recommendation"),
+        }
+        for item in (drug_analysis.get("allergies") or [])
+        if isinstance(item, dict)
+    ]
+
+    warnings: list[str] = []
+    if drug_analysis.get("status") == "FLAGGED":
+        warnings.append("Medication safety review flagged one or more concerns.")
+    if interactions:
+        warnings.extend(
+            f"Interaction {item['severity']} between {', '.join(item['drugs_involved'])}."
+            for item in interactions
+            if item.get("severity") and item.get("drugs_involved")
+        )
+    if contraindications:
+        warnings.extend(
+            f"Contraindication: {item['medication']} for {item['condition']}."
+            for item in contraindications
+            if item.get("medication") and item.get("condition")
+        )
+    if allergies:
+        warnings.extend(
+            f"Allergy concern: {item['medication']} ({item['allergy_type']})."
+            for item in allergies
+            if item.get("medication") and item.get("allergy_type")
+        )
+
+    renal_adjustment = drug_analysis.get("renal_adjustment") or {}
+    liver_adjustment = drug_analysis.get("liver_adjustment") or {}
+    pregnancy = drug_analysis.get("pregnancy") or {}
 
     return {
-        "evidence": evidence_payload,
-        "citations": citations,
-        "similarity_scores": similarity_scores,
-        "evidence_summary": evidence_summary,
+        "risk_level": drug_analysis.get("overall_risk") or "Low",
+        "warnings": warnings,
+        "contraindications": contraindications,
+        "interactions": interactions,
+        "renal_adjustment": {
+            "summary": ", ".join(
+                rec.get("recommendation")
+                for rec in (renal_adjustment.get("recommendations") or [])
+                if isinstance(rec, dict) and rec.get("recommendation")
+            )
+            or renal_adjustment.get("monitoring_advice")
+            or "No renal adjustment recommendations.",
+            "egfr": renal_adjustment.get("egfr"),
+            "ckd_stage": renal_adjustment.get("ckd_stage"),
+        },
+        "liver_adjustment": {
+            "summary": ", ".join(
+                rec.get("recommendation")
+                for rec in (liver_adjustment.get("recommendations") or [])
+                if isinstance(rec, dict) and rec.get("recommendation")
+            )
+            or liver_adjustment.get("monitoring_advice")
+            or "No liver adjustment recommendations.",
+            "alt": liver_adjustment.get("alt"),
+            "ast": liver_adjustment.get("ast"),
+            "bilirubin": liver_adjustment.get("bilirubin"),
+        },
+        "pregnancy": {
+            "category": pregnancy.get("category") or "Not Applicable",
+            "explanation": pregnancy.get("explanation") or "Pregnancy safety evaluation not indicated.",
+        },
+    }
+
+
+def _determine_recommendation_priority(
+    risk_summary: dict[str, Any],
+    drug_safety_payload: dict[str, Any],
+) -> str:
+    probability = risk_summary.get("probability", 0.0)
+    confidence = str(risk_summary.get("confidence") or "").title()
+    drug_risk = str(drug_safety_payload.get("risk_level") or "").title()
+
+    if confidence == "High" or probability >= 0.8 or drug_risk == "High":
+        return "High"
+    if confidence == "Medium" or probability >= 0.65 or drug_risk == "Medium":
+        return "Medium"
+    return "Low"
+
+
+def _build_patient_specific_recommendations(
+    risk_summary: dict[str, Any],
+    medical_evidence: list[dict[str, Any]],
+    drug_safety_payload: dict[str, Any],
+    patient: dict[str, Any],
+    extracted_metrics: dict[str, Any],
+) -> list[str]:
+    recommendations: list[str] = []
+    probability = risk_summary.get("probability", 0.0)
+    confidence = risk_summary.get("confidence", "Unknown")
+    prediction = risk_summary.get("prediction", "heart disease")
+
+    if probability >= 0.8 or confidence == "High":
+        recommendations.append(
+            f"High-risk cardiovascular management is indicated for {prediction} with an estimated probability of {round(probability * 100, 1)}%."
+        )
+    elif probability >= 0.65 or confidence == "Medium":
+        recommendations.append(
+            f"Moderate risk of {prediction} is present; optimize lifestyle, metabolic health, and monitoring."
+        )
+    else:
+        recommendations.append(
+            f"Low predicted risk for {prediction}; maintain preventive care and routine surveillance."
+        )
+
+    if medical_evidence:
+        recommendations.append(
+            "Incorporate the retrieved clinical evidence into treatment planning and monitoring."
+        )
+
+    if drug_safety_payload.get("warnings"):
+        recommendations.append(
+            "Review medications for safety issues and adjust therapy based on identified warnings."
+        )
+    else:
+        recommendations.append(
+            "Continue current medication therapy with periodic safety monitoring."
+        )
+
+    if patient.get("smoking"):
+        recommendations.append("Provide smoking cessation counseling and support.")
+
+    if patient.get("bmi") is not None and float(patient.get("bmi", 0)) >= 30:
+        recommendations.append("Initiate weight management and nutrition counseling.")
+
+    if extracted_metrics.get("glucose") is not None and float(extracted_metrics.get("glucose", 0)) >= 126:
+        recommendations.append("Coordinate glycemic control with cardiovascular risk management.")
+
+    if not recommendations:
+        recommendations.append(
+            "Maintain evidence-based preventive care and reassess risk periodically."
+        )
+
+    return recommendations[:6]
+
+
+def _build_recommendation_objects(
+    risk_summary: dict[str, Any],
+    medical_evidence: list[dict[str, Any]],
+    drug_safety_payload: dict[str, Any],
+    patient: dict[str, Any],
+    extracted_metrics: dict[str, Any],
+    recommendation_priority: str,
+) -> list[dict[str, Any]]:
+    objects: list[dict[str, Any]] = []
+    probability = risk_summary.get("probability", 0.0)
+    confidence = risk_summary.get("confidence", "Unknown")
+    prediction = risk_summary.get("prediction", "heart disease")
+
+    objects.append({
+        "title": "Risk Assessment",
+        "recommendation": (
+            f"The model indicates a {confidence.lower()} confidence prediction of {prediction} "
+            f"({round(probability * 100, 1)}%). Prioritize clinical evaluation accordingly."
+        ),
+        "priority": recommendation_priority,
+        "category": "Risk",
+    })
+
+    if medical_evidence:
+        sources = sorted({item.get("source") for item in medical_evidence if item.get("source")})
+        evidence_text = (
+            f"Align management with evidence from {', '.join(sources)}."
+        )
+    else:
+        evidence_text = (
+            "No evidence sources were retrieved; rely on best-practice guidelines and consider additional knowledge retrieval."
+        )
+
+    objects.append({
+        "title": "Evidence Alignment",
+        "recommendation": evidence_text,
+        "priority": recommendation_priority,
+        "category": "Evidence",
+    })
+
+    if drug_safety_payload.get("warnings"):
+        drug_text = (
+            f"Address medication safety concerns: {drug_safety_payload['warnings'][0]}"
+            f"{' Additional concerns should be reviewed.' if len(drug_safety_payload['warnings']) > 1 else ''}"
+        )
+    else:
+        drug_text = (
+            "Medication review did not identify major safety issues; continue monitoring organ and metabolic function."
+        )
+
+    objects.append({
+        "title": "Medication Safety",
+        "recommendation": drug_text,
+        "priority": recommendation_priority,
+        "category": "Medication",
+    })
+
+    if patient.get("smoking"):
+        objects.append({
+            "title": "Smoking Cessation",
+            "recommendation": "Provide smoking cessation support and counseling.",
+            "priority": recommendation_priority,
+            "category": "Lifestyle",
+        })
+
+    if patient.get("bmi") is not None and float(patient.get("bmi", 0)) >= 30:
+        objects.append({
+            "title": "Weight Management",
+            "recommendation": "Recommend weight management and dietary modification to improve cardiovascular risk.",
+            "priority": recommendation_priority,
+            "category": "Lifestyle",
+        })
+
+    if extracted_metrics.get("glucose") is not None and float(extracted_metrics.get("glucose", 0)) >= 126:
+        objects.append({
+            "title": "Glycemic Control",
+            "recommendation": "Monitor glycemic control and coordinate with diabetes management.",
+            "priority": recommendation_priority,
+            "category": "Metabolic",
+        })
+
+    if not objects:
+        objects.append({
+            "title": "General Recommendation",
+            "recommendation": "Continue preventive care and monitor clinical markers regularly.",
+            "priority": recommendation_priority,
+            "category": "General",
+        })
+
+    return objects[:6]
+
+
+def _build_recommendations(
+    risk_summary: dict[str, Any],
+    medical_evidence: list[dict[str, Any]],
+    drug_safety_payload: dict[str, Any],
+    patient: dict[str, Any],
+    extracted_metrics: dict[str, Any],
+) -> list[dict[str, Any]]:
+    recommendation_priority = _determine_recommendation_priority(risk_summary, drug_safety_payload)
+    return _build_recommendation_objects(
+        risk_summary,
+        medical_evidence,
+        drug_safety_payload,
+        patient,
+        extracted_metrics,
+        recommendation_priority,
+    )
+
+
+def _build_follow_up(
+    risk_summary: dict[str, Any],
+    drug_safety_payload: dict[str, Any],
+    patient: dict[str, Any],
+) -> list[str]:
+    follow_up: list[str] = []
+    if risk_summary.get("confidence") == "High" or risk_summary.get("probability", 0.0) >= 0.8:
+        follow_up.append("Refer to cardiology within 4 weeks.")
+    else:
+        follow_up.append("Reassess cardiovascular risk in 3 months.")
+
+    if drug_safety_payload.get("warnings"):
+        follow_up.append("Review medication regimen and laboratory monitoring for drug safety concerns.")
+
+    if patient.get("smoking"):
+        follow_up.append("Arrange smoking cessation support.")
+    if patient.get("bmi") is not None and float(patient.get("bmi", 0)) >= 30:
+        follow_up.append("Plan dietary and exercise counseling for weight management.")
+
+    follow_up.append("Repeat lipid profile, renal function, and liver function tests as clinically indicated.")
+    return follow_up[:5]
+
+
+def _build_clinical_summary(
+    patient: dict[str, Any],
+    risk_summary: dict[str, Any],
+    knowledge_results: list[dict[str, Any]] | None,
+    drug_safety_payload: dict[str, Any],
+    recommendations: list[dict[str, Any]] | list[str],
+) -> str:
+    lines: list[str] = []
+    name = (
+        patient.get("name")
+        or patient.get("first_name")
+        or patient.get("patient_name")
+        or "Patient"
+    )
+    age = patient.get("age")
+    gender = patient.get("gender")
+    lines.append(f"Clinical synthesis for {name}.")
+    if age is not None:
+        lines.append(f"Age {age}.")
+    if gender:
+        lines.append(f"Gender {str(gender).title()}.")
+
+    risk_sentence = (
+        f"The heart disease model estimates {risk_summary.get('probability', 0.0) * 100:.1f}% probability "
+        f"of {risk_summary.get('prediction', 'heart disease')} with {risk_summary.get('confidence', 'Unknown')} confidence."
+    )
+    lines.append(risk_sentence)
+
+    if knowledge_results:
+        sources = {
+            str(entry.get("metadata", {}).get("source") or entry.get("metadata", {}).get("title"))
+            for entry in knowledge_results
+            if isinstance(entry, dict)
+        }
+        if sources:
+            lines.append(
+                f"Retrieved guideline evidence from {', '.join(sorted(source for source in sources if source))}."
+            )
+    else:
+        lines.append(
+            "No medical knowledge evidence was available for this patient query."
+        )
+
+    if drug_safety_payload.get("warnings"):
+        lines.append(
+            f"Drug safety review raised concerns: {drug_safety_payload['warnings'][0]}"
+        )
+    else:
+        lines.append(
+            "Medication safety review did not identify major contraindications or interactions."
+        )
+
+    if recommendations:
+        recommendation_text = None
+        first_recommendation = recommendations[0]
+        if isinstance(first_recommendation, dict):
+            recommendation_text = first_recommendation.get("recommendation")
+        else:
+            recommendation_text = str(first_recommendation)
+
+        if recommendation_text:
+            lines.append("Key synthesized recommendation summary:")
+            lines.append(recommendation_text)
+
+    return " ".join(lines)
+
+
+def generate_recommendation(state: AgentState) -> dict[str, Any]:
+    patient = state.patient or {}
+    disease_risk = state.disease_risk or {}
+    knowledge_results = state.knowledge_results or []
+    drug_analysis = state.drug_analysis or {}
+    extracted_metrics = state.extracted_metrics or {}
+
+    risk_summary = {
+        "prediction": str(
+            disease_risk.get("risk_category")
+            or disease_risk.get("disease")
+            or disease_risk.get("condition")
+            or disease_risk.get("evaluated_condition")
+            or "heart disease"
+        ).title(),
+        "probability": round(
+            _normalize_probability(
+                disease_risk.get("probability")
+                or disease_risk.get("confidence")
+                or disease_risk.get("risk_score")
+            ),
+            3,
+        ),
+        "confidence": disease_risk.get("confidence_label")
+        or disease_risk.get("risk_level")
+        or _estimate_confidence_label(
+            _normalize_probability(
+                disease_risk.get("probability")
+                or disease_risk.get("confidence")
+                or disease_risk.get("risk_score")
+            )
+        ),
+    }
+
+    medical_evidence = _build_evidence_payload(knowledge_results)
+    drug_safety_payload = _build_drug_safety_payload(drug_analysis)
+    supporting_factors = _build_supporting_factors(
+        disease_risk,
+        knowledge_results,
+        drug_analysis,
+        patient,
+        extracted_metrics,
+    )
+    recommendations = _build_recommendations(
+        risk_summary,
+        medical_evidence,
+        drug_safety_payload,
+        patient,
+        extracted_metrics,
+    )
+    follow_up = _build_follow_up(risk_summary, drug_safety_payload, patient)
+    clinical_summary = _build_clinical_summary(
+        patient,
+        risk_summary,
+        knowledge_results,
+        drug_safety_payload,
+        recommendations,
+    )
+
+    return {
+        "clinical_summary": clinical_summary,
+        "risk_summary": risk_summary,
+        "supporting_factors": supporting_factors,
+        "medical_evidence": medical_evidence,
+        "evidence": medical_evidence,
+        "citations": build_citations_from_knowledge(knowledge_results),
+        "similarity_scores": [
+            float(score)
+            for score in (_build_similarity_scores(knowledge_results) or [])
+        ],
+        "drug_safety": drug_safety_payload,
+        "recommendations": recommendations,
+        "follow_up": follow_up,
+        "evidence_summary": summarize_evidence(knowledge_results),
     }
 
 
 def generate_recommendations(state: AgentState) -> list[dict[str, Any]]:
-    """Generate recommendations based on state outputs.
-
-    This extracts the logic previously embedded in RecommendationAgent
-    so other callers (CLI/tests) can reuse it.
-    """
-    recommendations: list[dict[str, Any]] = []
-    context = _build_recommendation_context(state)
-
-    # Disease risk
-    risk = state.disease_risk or {}
-    if risk:
-        category = str(risk.get("risk_category", "")).strip().title()
-        score = risk.get("risk_score", 0)
-        drivers = risk.get("top_factors") or risk.get("drivers") or []
-        if isinstance(drivers, dict):
-            drivers = [drivers]
-
-        risk_recs = risk.get("recommendations", [])
-        if isinstance(risk_recs, str):
-            risk_recs = [risk_recs]
-
-        if category == "High":
-            recommendations.append({
-                "priority": "High",
-                "title": "Elevated Risk Profile",
-                "recommendation": (
-                    "Patient is at high risk. Review the top risk drivers "
-                    "and accelerate diagnostic evaluation and treatment planning."
-                ),
-                **context,
-            })
-        elif risk_recs:
-            for rec in risk_recs:
-                recommendations.append({
-                    "priority": "High" if category == "High" else "Medium",
-                    "title": "Risk-Based Recommendation",
-                    "recommendation": str(rec),
-                    **context,
-                })
-        elif category == "Moderate":
-            recommendations.append({
-                "priority": "Medium",
-                "title": "Moderate Risk Management",
-                "recommendation": (
-                    "Patient is at moderate risk. Continue monitoring trends "
-                    "and implement guideline-supported preventive measures."
-                ),
-                **context,
-            })
-        else:
-            recommendations.append({
-                "priority": "Low",
-                "title": "Routine Monitoring",
-                "recommendation": (
-                    "Patient has low risk. Maintain regular follow-up and lifestyle optimization."
-                ),
-                **context,
-            })
-
-    # Drug safety
-    drug = state.drug_analysis or {}
-    if drug:
-        details = []
-        for item in drug.get("interactions", []):
-            details.append(f"Interaction: {item.get('severity')} severity between {', '.join(item.get('drugs_involved', []))}.")
-        for item in drug.get("allergies", []):
-            details.append(f"Allergy: {item.get('medication')} ({item.get('allergy_type')}).")
-        for item in drug.get("contraindications", []):
-            details.append(f"Contraindication: {item.get('medication')} for {item.get('condition')}." )
-
-        if drug.get("status") == "FLAGGED":
-            recommendations.append({
-                "priority": "Critical",
-                "title": "Medication Safety Alert",
-                "recommendation": (
-                    "Review medication interactions, allergy conflicts, contraindications, and organ function adjustments before prescribing."
-                ),
-                "drug_safety_findings": details,
-                **context,
-            })
-        else:
-            recommendations.append({
-                "priority": "Low",
-                "title": "Medication Safety Review",
-                "recommendation": (
-                    "Drug safety review did not identify significant issues. Continue therapy with standard monitoring."
-                ),
-                "drug_safety_findings": details,
-                **context,
-            })
-
-    # Knowledge-based suggestions
-    knowledge = state.knowledge_results or []
-    if knowledge:
-        recommendations.append({
-            "priority": "Information",
-            "title": "Evidence-Based Guidance",
-            "recommendation": (
-                "Consult the retrieved clinical guidance and align the care plan with the most relevant evidence-based recommendations."
-            ),
-            **context,
-        })
-
-    if not recommendations:
-        recommendations.append({
-            "priority": "Low",
-            "title": "No Significant Findings",
-            "recommendation": "No evidence requiring immediate intervention.",
-            **context,
-        })
-
-    return recommendations
+    return [generate_recommendation(state)]

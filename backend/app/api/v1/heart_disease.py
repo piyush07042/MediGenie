@@ -54,6 +54,7 @@ async def predict(request: HeartDiseasePredictionRequest):
         # Merge recommendations, evidence, citations, and final report from workflow into response
         response = dict(prediction)
         response["recommendations"] = final_state.recommendations or []
+        response["structured_recommendation"] = final_state.recommendations[0] if final_state.recommendations else None
         response.setdefault("final_report", final_state.final_report)
         response.setdefault("evidence", [])
         response.setdefault("citations", [])

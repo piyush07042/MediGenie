@@ -44,6 +44,7 @@ class HeartDiseasePredictionResponse(BaseModel):
     confidence_label: str | None = None
     explanations: list[dict] | None = None
     recommendations: list[dict] | None = None
+    structured_recommendation: dict | None = None
     final_report: dict | None = None
     evidence: list[dict] | None = None
     citations: list[dict] | None = None
