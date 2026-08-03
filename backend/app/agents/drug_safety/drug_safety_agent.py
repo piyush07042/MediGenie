@@ -16,8 +16,8 @@ from app.agents.base.base_agent import BaseAgent
 from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
 
-from app.core.drug_safety import analyze_drug_safety
 from app.core.notifications import send_drug_safety_alert
+from app.services.drug_safety_service import get_drug_safety_service
 
 
 class DrugSafetyAgent(BaseAgent):
@@ -58,49 +58,18 @@ class DrugSafetyAgent(BaseAgent):
         if isinstance(allergies, str):
             allergies = [allergies]
 
-        result = analyze_drug_safety(
+        service = get_drug_safety_service()
+        result = service.analyze(
             medications=medications,
             patient_allergies=allergies,
+            patient_context={
+                **(state.patient or {}),
+                **(state.patient_context or {}),
+            },
         )
 
-        assessment = result.get(
-            "drug_safety_assessment",
-            {},
-        )
-
-        warnings = []
-
-        evidence = []
-
-        # Interaction warnings
-        for interaction in assessment.get(
-            "interaction_warnings",
-            [],
-        ):
-
-            warning_text = interaction.get("warning", "Potential drug interaction detected.")
-            warnings.append(warning_text)
-
-            evidence.append(
-                f"{interaction['severity']} Interaction: "
-                f"{', '.join(interaction['drugs_involved'])}"
-            )
-
-        # Allergy conflicts
-        for allergy in assessment.get(
-            "allergy_conflicts",
-            [],
-        ):
-
-            warning_text = allergy.get(
-                "reasoning",
-                f"Allergy conflict with {allergy.get('medication', 'a medication')}.",
-            )
-            warnings.append(warning_text)
-
-            evidence.append(
-                f"Allergy Conflict: {allergy['medication']}"
-            )
+        assessment = result.get("drug_safety_assessment", {})
+        warnings, evidence = service.build_agent_output(assessment)
 
         for warning_text in warnings:
             state.add_warning(warning_text)

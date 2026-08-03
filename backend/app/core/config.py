@@ -4,6 +4,7 @@ Application configuration.
 
 from __future__ import annotations
 
+import os
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -90,6 +91,20 @@ class Settings(BaseSettings):
     GOOGLE_API_KEY: str | None = None
     LANGCHAIN_API_KEY: str | None = None
     HUGGINGFACE_API_KEY: str | None = None
+    GEMINI_API_KEY: str | None = None
+
+    # ==========================================================
+    # Model Paths
+    # ==========================================================
+
+    MODEL_ROOT: str = "models"
+    HEART_DISEASE_MODEL_DIRECTORY: str = "models/heart_disease"
+    RAG_DB_DIRECTORY: str = "medigenie_rag_db"
+    # ==========================================================
+    # Heart Disease Confidence Thresholds (configurable)
+    # ==========================================================
+    HEART_CONFIDENCE_HIGH: float = 0.85
+    HEART_CONFIDENCE_MEDIUM: float = 0.65
 
     # ==========================================================
     # OCR
@@ -146,6 +161,13 @@ class Settings(BaseSettings):
             except ValueError:
                 return {}
         return value or {}
+
+    @field_validator("RAG_DB_DIRECTORY", mode="before")
+    @classmethod
+    def parse_rag_db_directory(cls, value):
+        if value:
+            return value
+        return os.getenv("CHROMA_DB_DIRECTORY", "medigenie_rag_db")
 
 
 settings = Settings()

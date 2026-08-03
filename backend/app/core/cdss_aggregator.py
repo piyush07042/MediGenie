@@ -20,8 +20,8 @@ def consolidate_clinical_context(
     # Extract Drug Safety Flags
     safety_info = drug_safety_data.get("drug_safety_assessment", {})
     safety_status = safety_info.get("status", "PASS")
-    allergy_conflicts = safety_info.get("allergy_conflicts", [])
-    interaction_warnings = safety_info.get("interaction_warnings", [])
+    allergy_conflicts = safety_info.get("allergies", []) or safety_info.get("allergy_conflicts", [])
+    interaction_warnings = safety_info.get("interactions", []) or safety_info.get("interaction_warnings", [])
 
     # Synthesize High-Priority Clinical Directives
     priority_directives = []

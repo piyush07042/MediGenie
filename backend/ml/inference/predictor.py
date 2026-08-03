@@ -309,76 +309,89 @@ class Predictor:
             )
             return dataframe
 
-        transformed = self.pipeline.transform(
-            dataframe
-        )
+        try:
+            transformed = self.pipeline.transform(
+                dataframe
+            )
 
-        logger.info(
-            "Input transformed."
-        )
+            logger.info(
+                "Input transformed."
+            )
+            return transformed
+        except Exception as exc:
+            logger.warning(
+                "Pipeline transform failed; attempting manual preprocessing fallback: %s",
+                exc,
+            )
 
-        if self.model is not None and hasattr(self.model, "feature_names_in_"):
-            expected = list(self.model.feature_names_in_)
-            try:
-                row = dataframe.iloc[0].to_dict()
-                feature_values: list[float] = []
+            if self.model is not None and hasattr(self.model, "feature_names_in_"):
+                expected = list(self.model.feature_names_in_)
+                try:
+                    row = dataframe.iloc[0].to_dict()
+                    feature_values: list[float] = []
 
-                def _safe_float(value: Any) -> float:
-                    try:
-                        return float(value)
-                    except Exception:
-                        return 0.0
+                    def _safe_float(value: Any) -> float:
+                        try:
+                            return float(value)
+                        except Exception:
+                            return 0.0
 
-                # Map the raw schema fields to the engineered feature names expected by the model.
-                age = _safe_float(row.get("age", 0))
-                sex = _safe_float(row.get("sex", 0))
-                cp = _safe_float(row.get("cp", 0))
-                trestbps = _safe_float(row.get("trestbps", 0))
-                chol = _safe_float(row.get("chol", 0))
-                fbs = _safe_float(row.get("fbs", 0))
-                restecg = _safe_float(row.get("restecg", 0))
-                thalach = _safe_float(row.get("thalach", 0))
-                exang = _safe_float(row.get("exang", 0))
-                oldpeak = _safe_float(row.get("oldpeak", 0))
-                slope = _safe_float(row.get("slope", 0))
-                ca = _safe_float(row.get("ca", 0))
-                thal = _safe_float(row.get("thal", 0))
+                    # Map the raw schema fields to the engineered feature names expected by the model.
+                    age = _safe_float(row.get("age", 0))
+                    sex = _safe_float(row.get("sex", 0))
+                    cp = _safe_float(row.get("cp", 0))
+                    trestbps = _safe_float(row.get("trestbps", 0))
+                    chol = _safe_float(row.get("chol", 0))
+                    fbs = _safe_float(row.get("fbs", 0))
+                    restecg = _safe_float(row.get("restecg", 0))
+                    thalach = _safe_float(row.get("thalach", 0))
+                    exang = _safe_float(row.get("exang", 0))
+                    oldpeak = _safe_float(row.get("oldpeak", 0))
+                    slope = _safe_float(row.get("slope", 0))
+                    ca = _safe_float(row.get("ca", 0))
+                    thal = _safe_float(row.get("thal", 0))
 
-                age_group = 1.0 if age >= 60 else 0.0
-                chol_category = 1.0 if chol >= 240 else 0.0
-                bp_category = 1.0 if trestbps >= 140 else 0.0
+                    age_group = 1.0 if age >= 60 else 0.0
+                    chol_category = 1.0 if chol >= 240 else 0.0
+                    bp_category = 1.0 if trestbps >= 140 else 0.0
 
-                feature_values.extend([
-                    age,
-                    sex,
-                    cp,
-                    trestbps,
-                    chol,
-                    fbs,
-                    restecg,
-                    thalach,
-                    exang,
-                    oldpeak,
-                    slope,
-                    age_group,
-                    chol_category,
-                    bp_category,
-                ])
+                    feature_values.extend([
+                        age,
+                        sex,
+                        cp,
+                        trestbps,
+                        chol,
+                        fbs,
+                        restecg,
+                        thalach,
+                        exang,
+                        oldpeak,
+                        slope,
+                        age_group,
+                        chol_category,
+                        bp_category,
+                    ])
 
-                for value in [ca]:
-                    for category in [0.0, 1.0, 2.0, 3.0, 999.0]:
-                        feature_values.append(1.0 if value == category else 0.0)
+                    for value in [ca]:
+                        for category in [0.0, 1.0, 2.0, 3.0, 999.0]:
+                            feature_values.append(1.0 if value == category else 0.0)
 
-                for value in [thal]:
-                    for category in [3.0, 6.0, 7.0, 999.0]:
-                        feature_values.append(1.0 if value == category else 0.0)
+                    for value in [thal]:
+                        for category in [3.0, 6.0, 7.0, 999.0]:
+                            feature_values.append(1.0 if value == category else 0.0)
 
-                if len(feature_values) == len(expected):
-                    return np.array([feature_values], dtype=float)
-            except Exception:
-                pass
+                    if len(feature_values) == len(expected):
+                        logger.info(
+                            "Manual preprocessing fallback succeeded with %d features.",
+                            len(feature_values),
+                        )
+                        return np.array([feature_values], dtype=float)
+                except Exception:
+                    logger.exception(
+                        "Manual preprocessing fallback failed.",
+                    )
 
-        return transformed
+            raise
 
     # ==========================================================================
     # Predict

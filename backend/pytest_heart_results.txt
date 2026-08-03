@@ -1,0 +1,146 @@
+...                                                                      [100%]
+============================== warnings summary ===============================
+app\schemas\schemas.py:13
+  D:\medigenie\backend\app\schemas\schemas.py:13: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class UserResponse(BaseModel):
+
+app\schemas\schemas.py:38
+  D:\medigenie\backend\app\schemas\schemas.py:38: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class PatientResponse(PatientCreate):
+
+app\schemas\cdss.py:5
+  D:\medigenie\backend\app\schemas\cdss.py:5: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: Optional[int] = Field(default=None, example=52)
+
+app\schemas\cdss.py:6
+  D:\medigenie\backend\app\schemas\cdss.py:6: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bmi: Optional[float] = Field(default=None, example=31.5)
+
+app\schemas\cdss.py:7
+  D:\medigenie\backend\app\schemas\cdss.py:7: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    glucose: Optional[float] = Field(default=None, example=145.0)
+
+app\schemas\cdss.py:8
+  D:\medigenie\backend\app\schemas\cdss.py:8: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    systolic_bp: Optional[float] = Field(default=None, example=138.0)
+
+app\schemas\cdss.py:9
+  D:\medigenie\backend\app\schemas\cdss.py:9: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cholesterol: Optional[float] = Field(default=None, example=210.0)
+
+app\schemas\cdss.py:10
+  D:\medigenie\backend\app\schemas\cdss.py:10: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    diagnosis: Optional[str] = Field(default=None, example="Type 2 Diabetes")
+
+app\schemas\cdss.py:11
+  D:\medigenie\backend\app\schemas\cdss.py:11: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    current_medications: Optional[List[str]] = Field(default_factory=list, example=["Lisinopril", "Metformin"])
+
+app\schemas\cdss.py:12
+  D:\medigenie\backend\app\schemas\cdss.py:12: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    allergies: Optional[List[str]] = Field(default_factory=list, example=["Penicillin"])
+
+app\schemas\cdss.py:16
+  D:\medigenie\backend\app\schemas\cdss.py:16: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    raw_report_text: Optional[str] = Field(default="", example="Patient has history of uncontrolled hypertension and morning fatigue.")
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:47
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:47: PendingDeprecationWarning: The set_bad function will be deprecated in a future version. Use cmap.with_extremes(bad=...) or Colormap(bad=...) instead.
+    red_blue.set_bad(gray_rgb.tolist(), 1.0)
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:48
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:48: PendingDeprecationWarning: The set_over function will be deprecated in a future version. Use cmap.with_extremes(over=...) or Colormap(over=...) instead.
+    red_blue.set_over(gray_rgb.tolist(), 1.0)
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:49
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:49: PendingDeprecationWarning: The set_under function will be deprecated in a future version. Use cmap.with_extremes(under=...) or Colormap(under=...) instead.
+    red_blue.set_under(gray_rgb.tolist(), 1.0)  # "under" is incorrectly used instead of "bad" in the scatter plot
+
+app\schemas\heart_disease.py:19
+  D:\medigenie\backend\app\schemas\heart_disease.py:19: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=63)
+
+app\schemas\heart_disease.py:20
+  D:\medigenie\backend\app\schemas\heart_disease.py:20: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sex: int = Field(..., ge=0, le=1, description="0 = Female, 1 = Male", example=1)
+
+app\schemas\heart_disease.py:21
+  D:\medigenie\backend\app\schemas\heart_disease.py:21: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cp: int = Field(..., ge=1, le=4, description="Chest pain type", example=3)
+
+app\schemas\heart_disease.py:22
+  D:\medigenie\backend\app\schemas\heart_disease.py:22: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    trestbps: float = Field(..., ge=50, le=300, description="Resting blood pressure", example=145)
+
+app\schemas\heart_disease.py:23
+  D:\medigenie\backend\app\schemas\heart_disease.py:23: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    chol: float = Field(..., ge=50, le=700, description="Serum cholesterol", example=233)
+
+app\schemas\heart_disease.py:24
+  D:\medigenie\backend\app\schemas\heart_disease.py:24: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    fbs: int = Field(..., ge=0, le=1, description="Fasting blood sugar >120 mg/dl", example=1)
+
+app\schemas\heart_disease.py:25
+  D:\medigenie\backend\app\schemas\heart_disease.py:25: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    restecg: int = Field(..., ge=0, le=2, example=2)
+
+app\schemas\heart_disease.py:26
+  D:\medigenie\backend\app\schemas\heart_disease.py:26: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thalach: float = Field(..., ge=50, le=250, example=150)
+
+app\schemas\heart_disease.py:27
+  D:\medigenie\backend\app\schemas\heart_disease.py:27: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    exang: int = Field(..., ge=0, le=1, example=0)
+
+app\schemas\heart_disease.py:28
+  D:\medigenie\backend\app\schemas\heart_disease.py:28: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    oldpeak: float = Field(..., ge=0, le=10, example=2.3)
+
+app\schemas\heart_disease.py:29
+  D:\medigenie\backend\app\schemas\heart_disease.py:29: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    slope: int = Field(..., ge=1, le=3, example=3)
+
+app\schemas\heart_disease.py:30
+  D:\medigenie\backend\app\schemas\heart_disease.py:30: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    ca: int = Field(..., ge=0, le=4, example=0)
+
+app\schemas\heart_disease.py:31
+  D:\medigenie\backend\app\schemas\heart_disease.py:31: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thal: int = Field(..., ge=3, le=7, example=6)
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator SimpleImputer from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator StandardScaler from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator OneHotEncoder from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator ColumnTransformer from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+tests/test_integration_heart_disease.py::test_supervisor_heart_workflow
+tests/test_integration_heart_disease.py::test_http_heart_disease_predict_endpoint
+tests/test_integration_heart_disease.py::test_http_heart_disease_predict_endpoint
+tests/test_integration_heart_disease.py::test_api_heart_predict_full_response
+tests/test_integration_heart_disease.py::test_api_heart_predict_full_response
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\utils\validation.py:2827: UserWarning: X does not have valid feature names, but RandomForestClassifier was fitted with feature names
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+3 passed, 38 warnings in 11.46s

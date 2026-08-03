@@ -145,6 +145,28 @@ async def test_supervisor_dynamically_skips_agents_for_missing_context(monkeypat
     assert "DiseaseRiskAgent" in skipped
 
 
+@pytest.mark.asyncio
+async def test_supervisor_runs_drug_safety_when_medications_in_patient_context(monkeypatch):
+    supervisor = Supervisor()
+    monkeypatch.setattr(supervisor.orchestrator, "agents", supervisor.orchestrator.agents)
+
+    state = AgentState()
+    state.patient_context = {
+        "name": "Test",
+        "age": 50,
+        "gender": "Female",
+        "current_medications": ["aspirin", "warfarin"],
+    }
+    state.symptoms = ["chest pain"]
+
+    final_state, _, _ = await supervisor.run(state)
+
+    skipped = set(final_state.metadata["routing_plan"]["skipped_agents"])
+    assert "DrugSafetyAgent" not in skipped
+    assert final_state.drug_analysis
+    assert final_state.drug_analysis["overall_risk"] in {"High", "Medium", "Low"}
+
+
 class FailingAgent(BaseAgent):
     agent_name = "FailingAgent"
 

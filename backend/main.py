@@ -20,7 +20,6 @@ from app.core.startup import validate_environment, app_state
 from app.core.security_headers import configure_security_headers
 from app.core.rag import seed_sample_guidelines
 from app.db.session import create_database
-from app.core.config import settings
 from app.core.scheduler import start_scheduler, shutdown_scheduler
 
 

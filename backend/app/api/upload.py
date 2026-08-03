@@ -25,13 +25,14 @@ from app.core.deps import get_supervisor
 from app.core.file_validation import validate_upload
 from app.schemas.common import ApiResponse
 from app.core.rag import ingest_documents
+from app.core.config import settings
 
 router = APIRouter(
     prefix="/upload",
     tags=["Medical Report Upload"],
 )
 
-UPLOAD_DIRECTORY = Path("uploads")
+UPLOAD_DIRECTORY = Path(settings.UPLOAD_DIRECTORY)
 UPLOAD_DIRECTORY.mkdir(
     parents=True,
     exist_ok=True,

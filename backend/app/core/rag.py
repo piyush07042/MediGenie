@@ -1,6 +1,9 @@
 import chromadb
 from chromadb.utils import embedding_functions
 from typing import Any
+from pathlib import Path
+
+from app.core.config import settings
 
 
 chroma_client = None
@@ -15,7 +18,7 @@ def _get_collection():
     if collection is not None:
         return collection
 
-    chroma_client = chromadb.PersistentClient(path="./medigenie_rag_db")
+    chroma_client = chromadb.PersistentClient(path=str(Path(getattr(settings, "RAG_DB_DIRECTORY", "medigenie_rag_db"))))
 
     try:
         if embedding_function is None:
@@ -55,7 +58,8 @@ def seed_sample_guidelines():
             ],
             ids=["guideline_cap_01", "guideline_htn_01", "guideline_fda_01", "guideline_dia_01"]
         )
-        print("✅ Vector DB initialized with clinical practice guidelines!")
+        from app.core.logging import get_logger
+        get_logger(__name__).info("Vector DB initialized with clinical practice guidelines")
 
 
 def query_knowledge_base(query_text: str, n_results: int = 2) -> list[dict[str, Any]]:
@@ -64,20 +68,46 @@ def query_knowledge_base(query_text: str, n_results: int = 2) -> list[dict[str, 
     results = current_collection.query(
         query_texts=[query_text],
         n_results=n_results,
-        include=["documents", "metadatas"],
+        include=["documents", "metadatas", "distances"],
     )
-    if results and "documents" in results and len(results["documents"]) > 0:
-        documents = []
-        for idx, document in enumerate(results["documents"][0]):
-            metadata = {}
-            if "metadatas" in results and len(results["metadatas"]) > 0:
-                metadata = results["metadatas"][0][idx] if idx < len(results["metadatas"][0]) else {}
-            documents.append({
-                "document": document,
-                "metadata": metadata,
-            })
-        return documents
-    return []
+
+    if not results or "documents" not in results or len(results["documents"]) == 0:
+        return []
+
+    unique_items: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+    documents = results["documents"][0]
+    metadatas = results.get("metadatas", [[]])[0] if results.get("metadatas") else []
+    distances = results.get("distances", [[]])[0] if results.get("distances") else []
+
+    for idx, document in enumerate(documents):
+        metadata = metadatas[idx] if idx < len(metadatas) else {}
+        distance = distances[idx] if idx < len(distances) else None
+        similarity_score = None
+
+        if isinstance(distance, (int, float)):
+            similarity_score = 1.0 / (1.0 + distance)
+
+        document_text = str(document or "").strip()
+        identifier = metadata.get("id") or metadata.get("source") or ""
+        key = (str(identifier), document_text)
+        if not document_text or key in seen_keys:
+            continue
+
+        seen_keys.add(key)
+        unique_items.append({
+            "document": document_text,
+            "metadata": metadata or {},
+            "distance": distance,
+            "similarity_score": similarity_score,
+        })
+
+    unique_items.sort(
+        key=lambda item: item.get("similarity_score") if isinstance(item.get("similarity_score"), (int, float)) else -1.0,
+        reverse=True,
+    )
+
+    return unique_items
 
 
 def ingest_documents(documents: list[str], metadatas: list[dict] | None = None, ids: list[str] | None = None) -> dict:

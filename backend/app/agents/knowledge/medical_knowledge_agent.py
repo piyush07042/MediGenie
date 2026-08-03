@@ -89,35 +89,57 @@ class MedicalKnowledgeAgent(BaseAgent):
         )
 
         knowledge = []
-
+        citations = []
         evidence = []
 
         for document in documents:
             if isinstance(document, dict):
-                doc_text = document.get("document", "")
-                metadata = document.get("metadata", {})
+                doc_text = str(document.get("document", ""))
+                metadata = document.get("metadata", {}) or {}
+                raw_id = document.get("id")
+                similarity_score = document.get("similarity_score")
             else:
                 doc_text = str(document)
                 metadata = {}
+                raw_id = None
+                similarity_score = None
 
-            knowledge.append(
-                {
-                    "document": doc_text,
-                    "metadata": metadata,
-                }
-            )
+            entry = {
+                "id": raw_id,
+                "document": doc_text,
+                "metadata": metadata,
+                "similarity_score": similarity_score,
+            }
+            knowledge.append(entry)
 
-            evidence.append(doc_text[:120])
+            if doc_text:
+                evidence.append(doc_text[:200])
 
-        # -----------------------------------------------------
-        # Store into AgentState
-        # -----------------------------------------------------
+            citations.append({
+                "source": metadata.get("source") or metadata.get("title") or "Clinical guideline",
+                "identifier": metadata.get("id") or metadata.get("source") or "",
+                "text": doc_text,
+                "similarity_score": similarity_score,
+            })
 
-        state.knowledge_results = knowledge
+        unique_knowledge = []
+        seen_docs: set[tuple[str, str]] = set()
+        for entry in knowledge:
+            doc_text = str(entry.get("document", "") or "").strip()
+            identifier = entry.get("metadata", {}).get("id") or entry.get("metadata", {}).get("source") or ""
+            key = (str(identifier), doc_text)
+            if key not in seen_docs and doc_text:
+                seen_docs.add(key)
+                unique_knowledge.append(entry)
+
+        if not unique_knowledge:
+            state.add_warning("No knowledge evidence was retrieved for the current query.")
+
+        state.knowledge_results = unique_knowledge
 
         state.set_agent_output(
             self.agent_name,
-            knowledge,
+            unique_knowledge,
             confidence=0.92,
         )
 
@@ -129,11 +151,13 @@ class MedicalKnowledgeAgent(BaseAgent):
             agent=self.agent_name,
             status="SUCCESS",
             confidence=0.92,
-            result=knowledge,
+            result=unique_knowledge,
             evidence=evidence,
             metadata={
                 "query": query,
-                "documents_found": len(knowledge),
+                "documents_found": len(unique_knowledge),
+                "citations": citations,
+                "similarity_scores": [entry.get("similarity_score") for entry in unique_knowledge],
             },
         )
 

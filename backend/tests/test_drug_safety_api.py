@@ -18,6 +18,14 @@ def test_drug_safety_analyze_store_and_get_patient(client):
     body = response.json()
     assert body["success"] is True
     assert body["data"]["drug_safety_assessment"]["status"] in {"PASS", "FLAGGED"}
+    assert "interactions" in body["data"]["drug_safety_assessment"]
+    assert "contraindications" in body["data"]["drug_safety_assessment"]
+    assert "allergies" in body["data"]["drug_safety_assessment"]
+    assert "overall_risk" in body["data"]["drug_safety_assessment"]
+    assert "interactions" in body["data"]["drug_safety_assessment"]
+    assert "contraindications" in body["data"]["drug_safety_assessment"]
+    assert "allergies" in body["data"]["drug_safety_assessment"]
+    assert "overall_risk" in body["data"]["drug_safety_assessment"]
 
     store_response = client.post(
         "/api/v1/drug-safety/store",

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -151,7 +152,7 @@ class AgentState:
         """Store a normalized agent result and update summary metadata."""
         self.set_agent_output(agent_name, output, confidence=confidence, execution_time=execution_time)
         self.metadata["last_agent"] = agent_name
-        self.metadata["last_agent_output"] = output
+        self.metadata["last_agent_output"] = copy.deepcopy(output)
         self.metadata["last_agent_confidence"] = confidence
         self.metadata["last_agent_execution_time"] = execution_time
 

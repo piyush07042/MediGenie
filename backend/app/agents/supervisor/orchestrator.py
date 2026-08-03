@@ -115,7 +115,21 @@ class WorkflowOrchestrator:
         has_patient_context = bool(state.patient) or bool(state.patient_context)
         has_report_context = bool(state.uploaded_reports) or bool(getattr(state, "raw_report_text", ""))
         has_medications = bool(state.medications)
+        if not has_medications:
+            patient_medications = []
+            if state.patient:
+                patient_medications = state.patient.get("current_medications") or patient_medications
+            if state.patient_context:
+                patient_medications = state.patient_context.get("current_medications") or patient_medications
+            has_medications = bool(patient_medications)
         has_symptoms = bool(state.symptoms)
+
+        patient_context = state.patient_context or {}
+        demographic_only_context = False
+        if patient_context:
+            demographic_keys = {"name", "first_name", "last_name", "age", "gender", "sex"}
+            additional_keys = [k for k in patient_context.keys() if k not in demographic_keys]
+            demographic_only_context = bool(patient_context) and not bool(additional_keys)
 
         if not has_patient_context:
             skipped_agents.append("PatientIntakeAgent")
@@ -131,13 +145,13 @@ class WorkflowOrchestrator:
             skipped_agents.append("DrugSafetyAgent")
             reasons["DrugSafetyAgent"] = "No medications detected for safety checking"
 
-        if not has_symptoms and not has_report_context:
+        if demographic_only_context and not has_report_context and not has_symptoms:
             skipped_agents.append("DiseaseRiskAgent")
-            reasons["DiseaseRiskAgent"] = "No symptoms or report context available for risk analysis"
+            reasons["DiseaseRiskAgent"] = "Only demographic patient context available; insufficient for risk analysis"
 
-        if not has_patient_context and not has_report_context:
+        if demographic_only_context and not has_report_context:
             skipped_agents.append("RecommendationAgent")
-            reasons["RecommendationAgent"] = "Insufficient context for recommendations"
+            reasons["RecommendationAgent"] = "Insufficient clinical context for recommendations"
 
         return {
             "mode": "adaptive",
@@ -334,9 +348,14 @@ class WorkflowOrchestrator:
             "recommendations",
             "final_report",
         ):
-            if hasattr(agent_state, field_name):
-                value = getattr(agent_state, field_name)
-                setattr(state, field_name, copy.deepcopy(value))
+            if not hasattr(agent_state, field_name):
+                continue
+
+            value = getattr(agent_state, field_name)
+            if value in (None, "", [], {}, set()):
+                continue
+
+            setattr(state, field_name, copy.deepcopy(value))
 
         for trace in agent_state.execution_trace:
             if trace not in state.execution_trace:

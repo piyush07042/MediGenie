@@ -41,7 +41,8 @@ def extract_text_from_pdf(pdf_path: str) -> str:
             if text:
                 extracted_text += text + "\n"
     except Exception as e:
-        print(f"Error reading PDF with PyPDF: {e}")
+        from app.core.logging import get_logger
+        get_logger(__name__).warning("Error reading PDF with PyPDF: %s", e)
     return extracted_text.strip()
 
 def extract_text_from_image(image_path: str) -> str:
@@ -52,7 +53,8 @@ def extract_text_from_image(image_path: str) -> str:
         results = reader.readtext(image_path, detail=0)
         return "\n".join(results)
     except Exception as e:
-        print(f"Error executing EasyOCR: {e}")
+        from app.core.logging import get_logger
+        get_logger(__name__).warning("Error executing EasyOCR: %s", e)
         return ""
 
 def process_medical_report(file_path: str) -> str:
@@ -69,7 +71,8 @@ def process_medical_report(file_path: str) -> str:
         text = extract_text_from_pdf(file_path)
         # Fallback to OCR if PDF contains scanned image rather than text
         if not text:
-            print("PDF has no embedded text. Running fallback OCR...")
+            from app.core.logging import get_logger
+            get_logger(__name__).info("PDF has no embedded text. Running fallback OCR...")
             text = extract_text_from_image(file_path)
     elif ext in [".png", ".jpg", ".jpeg", ".tiff"]:
         text = extract_text_from_image(file_path)
@@ -87,4 +90,23 @@ class OCRService:
     """
     Thin wrapper around OCR helper functions.
     """
-    pass
+    def __init__(self):
+        self.logger = None
+
+    def extract_text(self, file_path: str) -> str:
+        """Extract text from a file (PDF or image)."""
+        # prefer module-level helpers but expose a single method
+        try:
+            return process_medical_report(file_path)
+        except Exception as exc:
+            from app.core.logging import get_logger
+            if self.logger is None:
+                self.logger = get_logger(__name__)
+            self.logger.exception("OCR extraction failed: %s", exc)
+            return ""
+
+    def extract_text_from_pdf(self, pdf_path: str) -> str:
+        return extract_text_from_pdf(pdf_path)
+
+    def extract_text_from_image(self, image_path: str) -> str:
+        return extract_text_from_image(image_path)

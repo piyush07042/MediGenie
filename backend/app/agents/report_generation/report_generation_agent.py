@@ -17,6 +17,8 @@ from app.agents.base.base_agent import BaseAgent
 from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
 
+from app.services.report.report_service import build_final_report
+
 
 class ReportGenerationAgent(BaseAgent):
 
@@ -27,68 +29,13 @@ class ReportGenerationAgent(BaseAgent):
         state: AgentState,
     ) -> AgentResult:
 
-        report = {
-
-            "generated_at": datetime.utcnow().isoformat(),
-
-            "patient": state.patient,
-
-            "patient_history": state.patient_history,
-
-            "symptoms": state.symptoms,
-
-            "medications": state.medications,
-
-            "allergies": state.allergies,
-
-            "uploaded_reports": state.uploaded_reports,
-
-            "extracted_metrics": state.extracted_metrics,
-
-            "disease_risk": state.disease_risk,
-
-            "knowledge_results": state.knowledge_results,
-
-            "drug_analysis": state.drug_analysis,
-
-            "recommendations": state.recommendations,
-
-            "warnings": state.warnings,
-
-            "errors": state.errors,
-
-            "execution_trace": state.execution_trace,
-
-            "metadata": state.metadata,
-        }
-
-        report["clinical_summary"] = self._build_clinical_summary(report)
+        report = build_final_report(state)
 
         state.final_report = report
 
-        state.set_agent_output(
+        state.set_agent_output(self.agent_name, report, confidence=1.0)
 
-            self.agent_name,
-
-            report,
-
-            confidence=1.0,
-        )
-
-        return AgentResult(
-
-            agent=self.agent_name,
-
-            status="SUCCESS",
-
-            confidence=1.0,
-
-            result=report,
-
-            metadata={
-                "sections": len(report),
-            },
-        )
+        return AgentResult(agent=self.agent_name, status="SUCCESS", confidence=1.0, result=report, metadata={"sections": len(report)})
 
     def _build_clinical_summary(self, report: dict[str, Any]) -> str:
         """Build a human-readable clinical summary for the final report."""
@@ -147,10 +94,12 @@ class ReportGenerationAgent(BaseAgent):
             lines.append(f"Medication safety check status: {status}.")
             if status == "FLAGGED":
                 issues = []
-                for interaction in drug_analysis.get("interaction_warnings", []):
-                    issues.append(interaction.get("warning", "Potential interaction"))
-                for allergy in drug_analysis.get("allergy_conflicts", []):
-                    issues.append(allergy.get("reasoning", "Allergy conflict."))
+                for interaction in drug_analysis.get("interactions", []):
+                    issues.append(interaction.get("explanation", "Potential interaction"))
+                for allergy in drug_analysis.get("allergies", []):
+                    issues.append(allergy.get("explanation", "Allergy conflict."))
+                for contraindication in drug_analysis.get("contraindications", []):
+                    issues.append(contraindication.get("explanation", "Contraindication."))
                 if issues:
                     lines.append(
                         "Safety issues identified: " + " ".join(issues)

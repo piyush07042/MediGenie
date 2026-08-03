@@ -41,7 +41,16 @@ class HeartDiseasePredictionResponse(BaseModel):
     prediction: int
     probability: float
     confidence: float
+    confidence_label: str | None = None
+    explanations: list[dict] | None = None
+    recommendations: list[dict] | None = None
+    final_report: dict | None = None
+    evidence: list[dict] | None = None
+    citations: list[dict] | None = None
+    similarity_scores: list[float] | None = None
+    evidence_summary: str | None = None
     class_probabilities: dict[str, float]
+    drug_safety: dict | None = None
 
 
 class ErrorResponse(BaseModel):
