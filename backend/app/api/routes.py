@@ -17,6 +17,8 @@ from app.api.endpoints import router as endpoints_router
 from app.api.fhir import router as fhir_router
 from app.api.health import router as health_router
 from app.api.knowledge import router as knowledge_router
+from app.api.model_registry import router as model_registry_router
+from app.api.metrics import router as metrics_router
 from app.api.patients import router as patients_router
 from app.api.reporting import router as reporting_router
 from app.api.upload import router as upload_router
@@ -86,6 +88,15 @@ api_router.include_router(chat_router)
 api_router.include_router(
     health_router,
 )
+api_router.include_router(
+    metrics_router,
+)
+
+# =====================================================
+# Model Package Registry
+# =====================================================
+
+api_router.include_router(model_registry_router)
 
 api_router.include_router(
     version_router,

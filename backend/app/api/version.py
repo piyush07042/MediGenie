@@ -13,8 +13,10 @@ router = APIRouter(
     tags=["Version"],
 )
 
-APP_NAME = "MediGenie"
-APP_VERSION = "2.0.0"
+from app.core.config import settings
+
+APP_NAME = settings.APP_NAME
+APP_VERSION = settings.APP_VERSION
 API_VERSION = "v1"
 
 

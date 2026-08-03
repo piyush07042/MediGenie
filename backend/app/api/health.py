@@ -4,7 +4,7 @@ Health check endpoints.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from app.core.config import settings
 from app.core.startup import app_state
@@ -34,11 +34,12 @@ async def health_check():
                 "vector_store": app_state.vector_store is not None,
                 "ocr": app_state.ocr_engine is not None,
             },
+            "model_registry_size": len(app_state.model_registry or {}),
         },
     )
 
 
-@router.get("/ready", response_model=ApiResponse, status_code=status.HTTP_200_OK)
+@router.get("/ready", response_model=ApiResponse)
 async def readiness_probe(request: Request):
     """
     Returns application readiness status.
@@ -46,16 +47,31 @@ async def readiness_probe(request: Request):
 
     startup_error = getattr(request.app.state, "startup_error", False)
     if startup_error:
-        return ApiResponse(
-            success=False,
-            message="Application startup failed.",
-            data={
-                "ready": False,
-                "error": getattr(request.app.state, "startup_error_details", "Unknown startup error."),
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "success": False,
+                "message": "Application startup failed.",
+                "data": {
+                    "ready": False,
+                    "error": getattr(request.app.state, "startup_error_details", "Unknown startup error."),
+                },
             },
         )
 
     return ApiResponse(
         message="Application is ready.",
         data={"ready": True},
+    )
+
+
+@router.get("/live", response_model=ApiResponse, status_code=status.HTTP_200_OK)
+async def liveness_probe():
+    """
+    Returns application liveness status.
+    """
+
+    return ApiResponse(
+        message="Application is live.",
+        data={"live": True},
     )

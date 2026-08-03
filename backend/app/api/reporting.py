@@ -12,6 +12,7 @@ from app.core.report_renderer import (
     list_report_templates,
     render_report_html,
 )
+from app.services.report.report_service import build_report_from_storage
 
 from app.models.models import (
     AIReport,
@@ -81,16 +82,11 @@ def generate_pdf(
             detail="Clinical report not found for this patient.",
         )
 
-    report = {
-        "patient": _serialize_model(patient),
-        "summary": _serialize_model(summary),
-        "generated_at": summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
-        "clinical_summary": getattr(summary, 'clinical_summary', None) or getattr(summary, 'summary_text', None) or getattr(summary, 'summary', None) or "No clinical summary available.",
-        "disease_risk": getattr(summary, 'risk_assessment', None) or {},
-        "medications": getattr(patient, 'current_medications', None) or [],
-        "allergies": getattr(patient, 'allergies', None) or [],
-        "recommendations": [],
-    }
+    report = build_report_from_storage(
+        patient=_serialize_model(patient),
+        summary=_serialize_model(summary),
+        generated_at=summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
+    )
 
     pdf_bytes = generate_clinical_pdf_report(report)
 
@@ -147,16 +143,11 @@ def generate_html(
             detail="Clinical report not found for this patient.",
         )
 
-    report = {
-        "patient": _serialize_model(patient),
-        "summary": _serialize_model(summary),
-        "generated_at": summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
-        "clinical_summary": getattr(summary, 'clinical_summary', None) or getattr(summary, 'summary_text', None) or getattr(summary, 'summary', None) or "",
-        "disease_risk": getattr(summary, 'risk_assessment', None) or {},
-        "medications": getattr(patient, 'current_medications', None) or [],
-        "allergies": getattr(patient, 'allergies', None) or [],
-        "recommendations": [],
-    }
+    report = build_report_from_storage(
+        patient=_serialize_model(patient),
+        summary=_serialize_model(summary),
+        generated_at=summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
+    )
 
     html = render_report_html(report, template_name=template)
 

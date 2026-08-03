@@ -11,7 +11,7 @@ from typing import Any
 
 from app.core.config import settings
 from app.db.session import SessionLocal
-from ml.registry import resolve_model_directory
+from ml.registry import get_model_registry, resolve_model_directory
 
 
 @dataclass
@@ -22,6 +22,7 @@ class AppState:
     ml_model: Any = None
     vector_store: Any = None
     ocr_engine: Any = None
+    model_registry: dict[str, Any] | None = None
 
 
 app_state = AppState()
@@ -31,9 +32,11 @@ def validate_environment() -> None:
     """
     Validate required configuration at startup.
     """
+    _validate_environment()
     _validate_required_settings()
     _validate_directories()
     _validate_database_connection()
+    _validate_model_registry()
     _validate_heart_disease_model_path()
 
 
@@ -59,6 +62,16 @@ def _ensure_directory(path: Path) -> Path:
     return path
 
 
+def _validate_environment() -> None:
+    if settings.ENVIRONMENT not in {"development", "production", "testing"}:
+        raise RuntimeError(
+            "ENVIRONMENT must be one of development, production, or testing."
+        )
+
+    if settings.ENVIRONMENT == "production" and settings.DEBUG:
+        raise RuntimeError("DEBUG must be disabled in production environment.")
+
+
 def _validate_required_settings() -> None:
     if not settings.SECRET_KEY:
         raise RuntimeError("SECRET_KEY must be configured.")
@@ -70,6 +83,14 @@ def _validate_directories() -> None:
     _ensure_directory(_resolve_path(settings.UPLOAD_DIRECTORY))
     _ensure_directory(_resolve_path(settings.LOG_DIRECTORY))
     _ensure_directory(_resolve_path(settings.RAG_DB_DIRECTORY))
+    _ensure_directory(_resolve_path(settings.MODEL_ROOT))
+
+
+def _validate_model_registry() -> None:
+    registry = get_model_registry()
+    app_state.model_registry = registry
+    if not registry:
+        logging.warning("No packaged models were found during startup validation.")
 
 
 def _validate_database_connection() -> None:

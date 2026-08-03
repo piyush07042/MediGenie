@@ -1,0 +1,181 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: D:\medigenie\backend
+plugins: anyio-4.14.2, langsmith-0.10.15, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 9 items
+
+tests/agents/test_report_generation.py::test_report_generation_agent_builds_structured_report FAILED [ 11%]
+tests/agents/test_report_generation.py::test_generate_clinical_pdf_report_includes_sections PASSED [ 22%]
+tests/agents/test_report_generation.py::test_build_final_report_includes_required_sections PASSED [ 33%]
+tests/agents/test_report_generation.py::test_build_report_from_storage_uses_persisted_ai_report PASSED [ 44%]
+tests/agents/test_report_generation.py::test_generate_clinical_pdf_report_from_storage_report PASSED [ 55%]
+tests/test_report_templates.py::test_list_report_templates_contains_variants PASSED [ 66%]
+tests/test_report_templates.py::test_render_report_html_variants PASSED  [ 77%]
+tests/test_report_templates.py::test_generate_report_files_creates_files PASSED [ 88%]
+tests/test_e2e_report_generation.py::test_end_to_end_report_generation PASSED [100%]
+
+================================== FAILURES ===================================
+____________ test_report_generation_agent_builds_structured_report ____________
+
+    @pytest.mark.asyncio
+    async def test_report_generation_agent_builds_structured_report():
+        state = AgentState()
+        state.patient_context = {
+            "name": "John Doe",
+            "age": 45,
+            "gender": "Female",
+        }
+        state.symptoms = ["fatigue"]
+        state.medications = ["aspirin"]
+        state.allergies = ["penicillin"]
+        state.disease_risk = {
+            "risk_category": "Moderate",
+            "probability": 0.42,
+            "confidence_label": "Medium",
+            "explanations": [{"feature": "age", "value": 45}],
+        }
+        state.knowledge_results = [
+            {"source": "Clinical Guidelines", "text": "Follow-up within 3 months."},
+        ]
+        state.drug_analysis = {"status": "PASS", "overall_risk": "Low"}
+        state.recommendations = [
+            {"title": "Lifestyle", "recommendation": "Exercise regularly.", "follow_up_plan": ["Repeat labs in 2 weeks."]},
+        ]
+    
+        agent = ReportGenerationAgent()
+        result = await agent.run(state)
+    
+        assert result.success
+        report = state.final_report
+        assert report["patient_summary"]["name"] == "John Doe"
+        assert report["prediction"]["risk_category"] == "Moderate"
+        assert report["confidence"] == 0.42
+>       assert report["explainability"]["top_factors"]
+E       assert []
+
+tests\agents\test_report_generation.py:48: AssertionError
+============================== warnings summary ===============================
+app\schemas\schemas.py:13
+  D:\medigenie\backend\app\schemas\schemas.py:13: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class UserResponse(BaseModel):
+
+app\schemas\schemas.py:38
+  D:\medigenie\backend\app\schemas\schemas.py:38: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class PatientResponse(PatientCreate):
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\Lib\site-packages\fastapi\routing.py:211: 79 warnings
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\Lib\site-packages\fastapi\routing.py:211: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    is_coroutine = asyncio.iscoroutinefunction(dependant.call)
+
+app\schemas\cdss.py:5
+  D:\medigenie\backend\app\schemas\cdss.py:5: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: Optional[int] = Field(default=None, example=52)
+
+app\schemas\cdss.py:6
+  D:\medigenie\backend\app\schemas\cdss.py:6: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bmi: Optional[float] = Field(default=None, example=31.5)
+
+app\schemas\cdss.py:7
+  D:\medigenie\backend\app\schemas\cdss.py:7: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    glucose: Optional[float] = Field(default=None, example=145.0)
+
+app\schemas\cdss.py:8
+  D:\medigenie\backend\app\schemas\cdss.py:8: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    systolic_bp: Optional[float] = Field(default=None, example=138.0)
+
+app\schemas\cdss.py:9
+  D:\medigenie\backend\app\schemas\cdss.py:9: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cholesterol: Optional[float] = Field(default=None, example=210.0)
+
+app\schemas\cdss.py:10
+  D:\medigenie\backend\app\schemas\cdss.py:10: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    diagnosis: Optional[str] = Field(default=None, example="Type 2 Diabetes")
+
+app\schemas\cdss.py:11
+  D:\medigenie\backend\app\schemas\cdss.py:11: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    current_medications: Optional[List[str]] = Field(default_factory=list, example=["Lisinopril", "Metformin"])
+
+app\schemas\cdss.py:12
+  D:\medigenie\backend\app\schemas\cdss.py:12: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    allergies: Optional[List[str]] = Field(default_factory=list, example=["Penicillin"])
+
+app\schemas\cdss.py:16
+  D:\medigenie\backend\app\schemas\cdss.py:16: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    raw_report_text: Optional[str] = Field(default="", example="Patient has history of uncontrolled hypertension and morning fatigue.")
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\Lib\site-packages\chromadb\telemetry\opentelemetry\__init__.py:128
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\Lib\site-packages\chromadb\telemetry\opentelemetry\__init__.py:128: DeprecationWarning: 'asyncio.iscoroutinefunction' is deprecated and slated for removal in Python 3.16; use inspect.iscoroutinefunction() instead
+    if asyncio.iscoroutinefunction(f):
+
+app\schemas\heart_disease.py:19
+  D:\medigenie\backend\app\schemas\heart_disease.py:19: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=63)
+
+app\schemas\heart_disease.py:20
+  D:\medigenie\backend\app\schemas\heart_disease.py:20: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sex: int = Field(..., ge=0, le=1, description="0 = Female, 1 = Male", example=1)
+
+app\schemas\heart_disease.py:21
+  D:\medigenie\backend\app\schemas\heart_disease.py:21: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cp: int = Field(..., ge=1, le=4, description="Chest pain type", example=3)
+
+app\schemas\heart_disease.py:22
+  D:\medigenie\backend\app\schemas\heart_disease.py:22: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    trestbps: float = Field(..., ge=50, le=300, description="Resting blood pressure", example=145)
+
+app\schemas\heart_disease.py:23
+  D:\medigenie\backend\app\schemas\heart_disease.py:23: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    chol: float = Field(..., ge=50, le=700, description="Serum cholesterol", example=233)
+
+app\schemas\heart_disease.py:24
+  D:\medigenie\backend\app\schemas\heart_disease.py:24: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    fbs: int = Field(..., ge=0, le=1, description="Fasting blood sugar >120 mg/dl", example=1)
+
+app\schemas\heart_disease.py:25
+  D:\medigenie\backend\app\schemas\heart_disease.py:25: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    restecg: int = Field(..., ge=0, le=2, example=2)
+
+app\schemas\heart_disease.py:26
+  D:\medigenie\backend\app\schemas\heart_disease.py:26: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thalach: float = Field(..., ge=50, le=250, example=150)
+
+app\schemas\heart_disease.py:27
+  D:\medigenie\backend\app\schemas\heart_disease.py:27: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    exang: int = Field(..., ge=0, le=1, example=0)
+
+app\schemas\heart_disease.py:28
+  D:\medigenie\backend\app\schemas\heart_disease.py:28: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    oldpeak: float = Field(..., ge=0, le=10, example=2.3)
+
+app\schemas\heart_disease.py:29
+  D:\medigenie\backend\app\schemas\heart_disease.py:29: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    slope: int = Field(..., ge=1, le=3, example=3)
+
+app\schemas\heart_disease.py:30
+  D:\medigenie\backend\app\schemas\heart_disease.py:30: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    ca: int = Field(..., ge=0, le=4, example=0)
+
+app\schemas\heart_disease.py:31
+  D:\medigenie\backend\app\schemas\heart_disease.py:31: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thal: int = Field(..., ge=3, le=7, example=6)
+
+tests/agents/test_report_generation.py::test_report_generation_agent_builds_structured_report
+tests/agents/test_report_generation.py::test_build_final_report_includes_required_sections
+  D:\medigenie\backend\app\services\report\report_service.py:22: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    generated_at = state.metadata.get("generated_at") or datetime.utcnow().isoformat()
+
+tests/agents/test_report_generation.py::test_report_generation_agent_builds_structured_report
+  <string>:11: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+tests/test_e2e_report_generation.py::test_end_to_end_report_generation
+tests/test_e2e_report_generation.py::test_end_to_end_report_generation
+tests/test_e2e_report_generation.py::test_end_to_end_report_generation
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python314\Lib\site-packages\sqlalchemy\sql\schema.py:3623: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/agents/test_report_generation.py::test_report_generation_agent_builds_structured_report - assert []
+================== 1 failed, 8 passed, 110 warnings in 0.39s ==================

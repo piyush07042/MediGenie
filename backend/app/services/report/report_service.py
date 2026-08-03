@@ -19,8 +19,10 @@ def build_final_report(state: AgentState) -> dict[str, Any]:
 
     recommendation_output = state.recommendations[0] if state.recommendations and isinstance(state.recommendations[0], dict) else {}
 
+    generated_at = state.metadata.get("generated_at") or datetime.utcnow().isoformat()
+
     report = {
-        "generated_at": datetime.utcnow().isoformat(),
+        "generated_at": generated_at,
         "patient": state.patient,
         "patient_summary": _build_patient_summary(
             state.patient,
@@ -129,11 +131,31 @@ def _build_prediction(disease_risk: dict[str, Any]) -> dict[str, Any]:
 
 
 def _build_explainability(disease_risk: dict[str, Any]) -> dict[str, Any]:
+    top_factors = disease_risk.get("top_factors") or disease_risk.get("drivers") or []
     explanations = disease_risk.get("explanations") or disease_risk.get("drivers") or disease_risk.get("top_factors") or []
     if isinstance(explanations, dict):
         explanations = [explanations]
+
+    if not top_factors and isinstance(explanations, list):
+        computed_factors: list[str] = []
+        for entry in explanations:
+            if isinstance(entry, dict):
+                feature = entry.get("feature") or entry.get("label") or entry.get("name")
+                value = entry.get("value") or entry.get("description")
+                if feature and value is not None:
+                    computed_factors.append(f"{feature}: {value}")
+                elif feature:
+                    computed_factors.append(str(feature))
+                elif value is not None:
+                    computed_factors.append(str(value))
+                else:
+                    computed_factors.append(str(entry))
+            else:
+                computed_factors.append(str(entry))
+        top_factors = computed_factors
+
     return {
-        "top_factors": disease_risk.get("top_factors") or disease_risk.get("drivers") or [],
+        "top_factors": top_factors,
         "explanations": explanations,
         "notes": disease_risk.get("explainability") or disease_risk.get("explanations") or [],
     }
@@ -206,3 +228,46 @@ def _build_clinical_summary(state: AgentState) -> str:
                 lines.append(f"- {rec}")
 
     return "\n".join(lines)
+
+
+def build_report_from_storage(
+    patient: dict[str, Any] | None = None,
+    summary: dict[str, Any] | None = None,
+    generated_at: str | None = None,
+) -> dict[str, Any]:
+    """Build a standardized report object from persisted patient and AI report data."""
+    patient = patient or {}
+    summary = summary or {}
+
+    state = AgentState()
+    state.patient = patient
+    state.patient_history = summary.get("medical_history") or patient.get("medical_history") or {}
+    state.symptoms = summary.get("symptoms") or []
+    state.medications = summary.get("medications") or patient.get("current_medications") or []
+    state.allergies = summary.get("allergies") or patient.get("allergies") or []
+    state.report_text = summary.get("report_text") or summary.get("clinical_summary") or ""
+    state.ocr_result = summary.get("ocr_result") or {}
+    state.extracted_metrics = summary.get("extracted_metrics") or {}
+    state.disease_risk = summary.get("risk_assessment") or summary.get("disease_risk") or {}
+    state.knowledge_results = summary.get("rag_evidence") or summary.get("knowledge_results") or []
+    state.drug_analysis = summary.get("drug_safety_alerts") or summary.get("drug_analysis") or {}
+    state.recommendations = summary.get("recommendations") or []
+    state.warnings = summary.get("warnings") or []
+    state.errors = summary.get("errors") or []
+    state.metadata = summary.get("metadata") or {}
+
+    if generated_at:
+        state.metadata["generated_at"] = generated_at
+    else:
+        created_at = (
+            summary.get("created_at")
+            if isinstance(summary, dict)
+            else getattr(summary, "created_at", None)
+        )
+        if created_at is not None:
+            if hasattr(created_at, "isoformat"):
+                state.metadata["generated_at"] = created_at.isoformat()
+            else:
+                state.metadata["generated_at"] = str(created_at)
+
+    return build_final_report(state)

@@ -31,7 +31,12 @@ def test_end_to_end_report_generation(tmp_path):
         out_dir = str(tmp_path / "reports")
         os.makedirs(out_dir, exist_ok=True)
 
-        outputs = run_reports(patient_id=patient.id, out_dir=out_dir, dry_run=True)
+        outputs = run_reports(
+            patient_id=patient.id,
+            out_dir=out_dir,
+            dry_run=True,
+            session_factory=TestingSessionLocal,
+        )
         assert isinstance(outputs, list)
         # In dry-run we still return intended paths
         assert len(outputs) >= 1

@@ -4,13 +4,14 @@ import argparse
 import time
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable, Any
 
 from sqlalchemy.orm import DeclarativeMeta
 
 from app.db.session import SessionLocal
 from app.models.models import Patient, AIReport
 from app.core.pdf_generator import generate_clinical_pdf_report
+from app.services.report.report_service import build_report_from_storage
 
 
 def _serialize_model(model: object) -> dict[str, object]:
@@ -27,14 +28,19 @@ def _serialize_model(model: object) -> dict[str, object]:
     }
 
 
-def run_reports(patient_id: Optional[int] = None, out_dir: str = "temp_reports", dry_run: bool = False) -> list[str]:
+def run_reports(
+    patient_id: Optional[int] = None,
+    out_dir: str = "temp_reports",
+    dry_run: bool = False,
+    session_factory: Callable[[], Any] = SessionLocal,
+) -> list[str]:
     """Generate PDF clinical reports for patients.
 
     Returns a list of produced file paths (or would-be paths in dry-run).
     """
     os.makedirs(out_dir, exist_ok=True)
 
-    db = SessionLocal()
+    db = session_factory()
     try:
         if patient_id is not None:
             patients = db.query(Patient).filter(Patient.id == patient_id).all()
@@ -55,16 +61,11 @@ def run_reports(patient_id: Optional[int] = None, out_dir: str = "temp_reports",
                 print(f"Skipping patient {patient.id}: no AI report available.")
                 continue
 
-            report = {
-                "patient": _serialize_model(patient),
-                "summary": _serialize_model(summary),
-                "generated_at": getattr(summary, "created_at", None).isoformat() if getattr(summary, "created_at", None) else None,
-                "clinical_summary": getattr(summary, "clinical_summary", None) or getattr(summary, "summary", None) or "",
-                "disease_risk": getattr(summary, "risk_assessment", None) or {},
-                "medications": getattr(patient, "current_medications", None) or [],
-                "allergies": getattr(patient, "allergies", None) or [],
-                "recommendations": [],
-            }
+            report = build_report_from_storage(
+                patient=_serialize_model(patient),
+                summary=_serialize_model(summary),
+                generated_at=getattr(summary, "created_at", None).isoformat() if getattr(summary, "created_at", None) else None,
+            )
 
             pdf_bytes = generate_clinical_pdf_report(report)
 

@@ -15,7 +15,8 @@ from app.api.routes import api_router
 from app.core.config import settings
 from app.core.compression import configure_compression
 from app.core.cors import configure_cors
-from app.core.logging import configure_logging
+from app.core.logging import RequestIDMiddleware, configure_logging
+from app.core.metrics import configure_metrics
 from app.core.startup import validate_environment, app_state
 from app.core.security_headers import configure_security_headers
 from app.core.rag import seed_sample_guidelines
@@ -78,9 +79,11 @@ app = FastAPI(
 app.state.startup_error = False
 app.state.startup_error_details = None
 
+app.add_middleware(RequestIDMiddleware)
 configure_cors(app)
 configure_security_headers(app)
 configure_compression(app)
+configure_metrics(app)
 
 @app.get("/")
 def root():

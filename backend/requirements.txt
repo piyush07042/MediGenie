@@ -96,6 +96,7 @@ pytest-asyncio>=0.23.6
 # Logging
 # ----------------------------
 loguru>=0.7.2
+prometheus_client>=0.17.0
 
 # ----------------------------
 # Utilities

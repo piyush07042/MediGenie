@@ -1,0 +1,138 @@
+........................................................................ [ 96%]
+...                                                                      [100%]
+75 passed, 54 warnings in 26.49s
+Name                                                          Stmts   Miss  Cover   Missing
+-------------------------------------------------------------------------------------------
+app\agents\__init__.py                                            4      0   100%
+app\agents\base\__init__.py                                       5      0   100%
+app\agents\base\agent_result.py                                  28      5    82%   51, 55, 59-60, 72
+app\agents\base\agent_state.py                                   76      9    88%   116, 124, 131-137
+app\agents\base\base_agent.py                                    38      4    89%   109, 120, 123, 126
+app\agents\base\exceptions.py                                    19     19     0%   16-80
+app\agents\base\registry.py                                      36     19    47%   32, 38-47, 54-56, 63-68, 74, 80, 86, 92-94, 97, 100, 103
+app\agents\drug\__init__.py                                       0      0   100%
+app\agents\drug_safety\__init__.py                                2      0   100%
+app\agents\drug_safety\drug_safety_agent.py                      37      4    89%   57, 59, 95-97
+app\agents\intake\__init__.py                                     2      0   100%
+app\agents\intake\patient_intake_agent.py                        22      0   100%
+app\agents\knowledge\__init__.py                                  2      0   100%
+app\agents\knowledge\medical_knowledge_agent.py                  67     11    84%   52-59, 102-105, 136
+app\agents\recommendation\__init__.py                             2      0   100%
+app\agents\recommendation\recommendation_agent.py                12      0   100%
+app\agents\registry.py                                           11      0   100%
+app\agents\report\__init__.py                                     0      0   100%
+app\agents\report_analysis\__init__.py                            2      0   100%
+app\agents\report_analysis\medical_report_analysis_agent.py      51      3    94%   32, 55-56
+app\agents\report_analysis\report_analysis_agent.py               3      0   100%
+app\agents\report_generation\__init__.py                          2      0   100%
+app\agents\report_generation\report_generation_agent.py          14      0   100%
+app\agents\risk\__init__.py                                       2      0   100%
+app\agents\risk\disease_risk_agent.py                            65      3    95%   43, 47, 70
+app\agents\supervisor\executor.py                                38      1    97%   91
+app\agents\supervisor\metrics.py                                 46      1    98%   107
+app\agents\supervisor\orchestrator.py                           245     29    88%   91, 184-185, 209, 219, 234, 265, 286, 290, 352, 380-381, 396-397, 400, 404-408, 435-439, 443-448, 459, 466, 477-484
+app\agents\supervisor\supervisor.py                              13      0   100%
+app\agents\workflow.py                                            3      0   100%
+app\api\auth.py                                                  28      0   100%
+app\api\chat.py                                                  11      0   100%
+app\api\clinical.py                                              22      2    91%   66-68
+app\api\diagnostics.py                                           19     10    47%   12-29, 35
+app\api\drug_safety.py                                           37      8    78%   28-29, 61-73, 91
+app\api\endpoints.py                                              7      1    86%   19
+app\api\fhir.py                                                  16      5    69%   41-60
+app\api\health.py                                                15      1    93%   49
+app\api\knowledge.py                                             20      3    85%   27, 32, 47
+app\api\patients.py                                              20      0   100%
+app\api\reporting.py                                             50     30    40%   33-42, 58-105, 119-154, 160
+app\api\routes.py                                                31      0   100%
+app\api\upload.py                                                52     33    37%   58-123
+app\api\v1\heart_disease.py                                      66      9    86%   27, 52, 80-81, 92, 104-106, 114
+app\api\version.py                                               10      0   100%
+app\cli\generate_reports.py                                      60     23    62%   19, 21, 24, 43, 56-57, 71, 82-99, 103
+app\config\__init__.py                                            0      0   100%
+app\config\constants.py                                           0      0   100%
+app\config\logging.py                                             0      0   100%
+app\config\settings.py                                            0      0   100%
+app\core\compression.py                                           4      0   100%
+app\core\config.py                                               72      9    88%   149-151, 157-162, 170
+app\core\cors.py                                                  6      0   100%
+app\core\deps.py                                                 28      4    86%   47-50, 59
+app\core\drug_safety.py                                           5      0   100%
+app\core\feature_builder.py                                      28      6    79%   31, 38, 41, 52, 56-57
+app\core\file_validation.py                                      22      6    73%   55, 75, 90-102
+app\core\logging.py                                              22     12    45%   31-52, 60
+app\core\notifications.py                                        24     12    50%   19-29, 42-43
+app\core\pdf_generator.py                                       137      3    98%   55, 58, 193
+app\core\prediction_service.py                                  112     36    68%   48, 54-55, 61, 66-67, 72, 81, 102-103, 111-112, 119-120, 128, 144-182
+app\core\rag.py                                                  63     12    81%   28-29, 32, 46-62, 75, 95, 125, 128, 140-141
+app\core\report_renderer.py                                      14      0   100%
+app\core\risk_assessment.py                                     142     53    63%   110, 117, 119, 121, 123, 125, 127, 129, 131, 146-149, 154-157, 199, 205, 212-215, 226, 245, 250-309, 330, 351
+app\core\scheduler.py                                            42     32    24%   15-21, 31-54, 59-64, 68
+app\core\security.py                                             20      1    95%   69
+app\core\security_headers.py                                     14      0   100%
+app\core\startup.py                                              57     34    40%   34-37, 44-45, 49-59, 63-66, 70-72, 76-87, 91-101
+app\db\session.py                                                18      5    72%   12, 33-37
+app\main.py                                                       2      0   100%
+app\models\models.py                                             62      0   100%
+app\reporting\__init__.py                                         0      0   100%
+app\reporting\fhir_exporter.py                                   13     13     0%   1-68
+app\reporting\generate_patient_pdf.py                            38     38     0%   1-111
+app\reporting\pdf_generator.py                                   33     33     0%   1-101
+app\schemas\cdss.py                                              18      0   100%
+app\schemas\common.py                                            12      0   100%
+app\schemas\heart_disease.py                                     42      0   100%
+app\schemas\schemas.py                                           35      0   100%
+app\services\drug_safety_service.py                             260     38    85%   242-245, 250-253, 308, 315, 317, 350, 421-424, 457, 459, 491-500, 590, 592, 594, 596, 599, 601, 603, 605, 610, 612, 624, 626-627, 647, 657-660, 664, 666, 668, 671
+app\services\fhir_service.py                                      6      1    83%   14
+app\services\heart_disease_service.py                            98     35    64%   47, 53, 79, 88, 90, 93-94, 108-111, 114-132, 146-159, 175
+app\services\ocr\ocr_service.py                                  70     49    30%   25-30, 34-46, 50-58, 65-82, 99-106, 109, 112
+app\services\ocr\parser.py                                      171     14    92%   11, 15, 18-19, 24, 30, 46, 52, 64, 95-97, 242, 246
+app\services\recommendation\knowledge_evidence.py                46      4    91%   11, 19, 41, 59
+app\services\recommendation\recommendation_service.py           219     37    83%   22-23, 28, 38, 44, 59, 98, 112-113, 178, 184, 240, 251-297, 382, 491
+app\services\report\report_service.py                           144     10    93%   71-72, 137, 149-154, 210, 228, 269
+app\services\risk\risk_service.py                                11      0   100%
+app\utils\__init__.py                                             0      0   100%
+app\utils\helpers.py                                              0      0   100%
+app\utils\logger.py                                               0      0   100%
+app\utils\validators.py                                           0      0   100%
+ml\__init__.py                                                    0      0   100%
+ml\config.py                                                      0      0   100%
+ml\inference\predictor.py                                       148     15    90%   131-136, 181-186, 229, 307-310, 336-337, 389-394, 410
+ml\models\diabetes_model\build_sample_model.py                   33     20    39%   33-77, 81
+ml\preprocessing\__init__.py                                      0      0   100%
+ml\preprocessing\clean.py                                       208    208     0%   21-766
+ml\preprocessing\encoding.py                                      0      0   100%
+ml\preprocessing\evaluate.py                                      0      0   100%
+ml\preprocessing\feature_engineering.py                         220    220     0%   17-881
+ml\preprocessing\feature_selection.py                             0      0   100%
+ml\preprocessing\pipeline.py                                      0      0   100%
+ml\preprocessing\preprocessor.py                                177    177     0%   17-841
+ml\preprocessing\save_model.py                                    0      0   100%
+ml\preprocessing\scaler.py                                        0      0   100%
+ml\preprocessing\schema_loader.py                               136    136     0%   22-566
+ml\preprocessing\schemas\__init__.py                              0      0   100%
+ml\preprocessing\schemas\breast_cancer.py                         0      0   100%
+ml\preprocessing\schemas\diabetes.py                              0      0   100%
+ml\preprocessing\schemas\heart_disease.py                         1      1     0%   11
+ml\preprocessing\schemas\heart_failure.py                         0      0   100%
+ml\preprocessing\schemas\hepatitis.py                             0      0   100%
+ml\preprocessing\schemas\kidney.py                                0      0   100%
+ml\preprocessing\schemas\liver.py                                 0      0   100%
+ml\preprocessing\schemas\parkinsons.py                            0      0   100%
+ml\preprocessing\schemas\thyroid.py                               0      0   100%
+ml\preprocessing\split.py                                       114    114     0%   15-536
+ml\preprocessing\train.py                                         0      0   100%
+ml\preprocessing\validation.py                                  327    327     0%   21-1199
+ml\registry\__init__.py                                          20      9    55%   21, 26-33
+ml\training\__init__.py                                           0      0   100%
+ml\training\evaluator.py                                        213    213     0%   20-865
+ml\training\hypertrain.py                                        97     97     0%   9-163
+ml\training\metrics.py                                            0      0   100%
+ml\training\model_selector.py                                   115    115     0%   16-513
+ml\training\save_model.py                                         0      0   100%
+ml\training\scaler.py                                           144    144     0%   17-644
+ml\training\split.py                                            152    152     0%   16-672
+ml\training\trainer.py                                          222    222     0%   19-785
+ml\utils.py                                                       0      0   100%
+-------------------------------------------------------------------------------------------
+TOTAL                                                          5748   2900    50%

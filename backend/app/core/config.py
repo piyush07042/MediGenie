@@ -5,6 +5,8 @@ Application configuration.
 from __future__ import annotations
 
 import os
+from typing import Literal
+
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -22,8 +24,9 @@ class Settings(BaseSettings):
 
     APP_NAME: str = "MediGenie"
     APP_VERSION: str = "1.0.0"
-    ENVIRONMENT: str = "development"
+    ENVIRONMENT: Literal["development", "production", "testing"] = "development"
     DEBUG: bool = True
+    REQUEST_ID_HEADER: str = "X-Request-ID"
 
     # ==========================================================
     # API
@@ -148,6 +151,13 @@ class Settings(BaseSettings):
                 return lowered in {"1", "true", "yes", "on", "debug"}
             if lowered in {"0", "false", "no", "off", "none", "null", ""}:
                 return False
+        return value
+
+    @field_validator("ENVIRONMENT", mode="before")
+    @classmethod
+    def parse_environment(cls, value):
+        if isinstance(value, str):
+            return value.strip().lower()
         return value
 
     @field_validator("AGENT_FALLBACK_MAPPINGS", mode="before")

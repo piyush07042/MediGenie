@@ -9,7 +9,7 @@ import pytest
 from app.agents.base.agent_state import AgentState
 from app.agents.report_generation.report_generation_agent import ReportGenerationAgent
 from app.core.pdf_generator import generate_clinical_pdf_report
-from app.services.report.report_service import build_final_report
+from app.services.report.report_service import build_final_report, build_report_from_storage
 
 
 @pytest.mark.asyncio
@@ -96,3 +96,59 @@ def test_build_final_report_includes_required_sections():
     assert report["drug_safety"]["status"] == "FLAGGED"
     assert report["recommendations"]
     assert report["follow_up"] == ["Schedule appointment within 2 weeks."]
+
+
+def test_build_report_from_storage_uses_persisted_ai_report():
+    patient = {
+        "name": "Alice Smith",
+        "id": 77,
+        "age": 54,
+        "gender": "Female",
+        "current_medications": ["lisinopril"],
+        "allergies": ["aspirin"],
+    }
+    summary = {
+        "risk_assessment": {"risk_category": "Elevated", "probability": 0.65, "confidence": 0.70, "confidence_label": "Medium"},
+        "rag_evidence": [{"source": "Clinical Guidelines", "text": "Control blood pressure."}],
+        "drug_safety_alerts": {"status": "PASS", "overall_risk": "Low"},
+        "clinical_summary": "Patient at elevated risk.",
+        "recommendations": [{"title": "Blood Pressure", "recommendation": "Optimize antihypertensive therapy.", "follow_up_plan": ["Recheck BP in 4 weeks."]}],
+        "created_at": "2026-08-04T12:00:00Z",
+    }
+
+    report = build_report_from_storage(patient=patient, summary=summary)
+
+    assert report["patient"]["name"] == "Alice Smith"
+    assert report["prediction"]["risk_category"] == "Elevated"
+    assert report["probability"] == 0.65
+    assert report["confidence"] == 0.7
+    assert report["retrieved_evidence"]["knowledge_results"][0]["source"] == "Clinical Guidelines"
+    assert report["drug_safety"]["status"] == "PASS"
+    assert report["recommendations"]
+    assert report["follow_up"] == ["Recheck BP in 4 weeks."]
+    assert report["generated_at"] == "2026-08-04T12:00:00Z"
+
+
+def test_generate_clinical_pdf_report_from_storage_report():
+    patient = {
+        "name": "Alice Smith",
+        "id": 77,
+        "age": 54,
+        "gender": "Female",
+        "current_medications": ["lisinopril"],
+        "allergies": ["aspirin"],
+    }
+    summary = {
+        "risk_assessment": {"risk_category": "Elevated", "probability": 0.65, "confidence": 0.70, "confidence_label": "Medium"},
+        "rag_evidence": [{"source": "Clinical Guidelines", "text": "Control blood pressure."}],
+        "drug_safety_alerts": {"status": "PASS", "overall_risk": "Low"},
+        "clinical_summary": "Patient at elevated risk.",
+        "recommendations": [{"title": "Blood Pressure", "recommendation": "Optimize antihypertensive therapy."}],
+        "created_at": "2026-08-04T12:00:00Z",
+    }
+
+    report = build_report_from_storage(patient=patient, summary=summary)
+    pdf_bytes = generate_clinical_pdf_report(report)
+
+    assert isinstance(pdf_bytes, (bytes, bytearray))
+    assert len(pdf_bytes) > 0

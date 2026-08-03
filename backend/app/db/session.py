@@ -7,9 +7,15 @@ from app.models.models import Base
 
 def _build_engine() -> object:
     database_url = settings.DATABASE_URL or "sqlite:///./medigenie_cdss.db"
-    if database_url.startswith("postgresql") and database_url.count("localhost"):
-        return create_engine("sqlite:///./medigenie_cdss.db", pool_pre_ping=True)
-    return create_engine(database_url, pool_pre_ping=True)
+    connect_args = {}
+    if database_url.startswith("sqlite"):
+        connect_args = {"check_same_thread": False}
+
+    return create_engine(
+        database_url,
+        pool_pre_ping=True,
+        connect_args=connect_args,
+    )
 
 
 engine = _build_engine()
