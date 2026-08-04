@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import os
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
 from sqlalchemy.orm import Session, DeclarativeMeta
@@ -13,6 +15,8 @@ from app.core.report_renderer import (
     render_report_html,
 )
 from app.services.report.report_service import build_report_from_storage
+
+logger = logging.getLogger(__name__)
 
 from app.models.models import (
     AIReport,
@@ -55,6 +59,8 @@ def generate_pdf(
     Generate a clinical PDF report for a patient.
     """
 
+    logger.info("Searching report for patient_id=%s", patient_id)
+
     patient = (
         db.query(Patient)
         .filter(Patient.id == patient_id)
@@ -62,6 +68,7 @@ def generate_pdf(
     )
 
     if patient is None:
+        logger.info("Patient not found for patient_id=%s", patient_id)
         raise HTTPException(
             status_code=404,
             detail="Patient not found",
@@ -77,10 +84,17 @@ def generate_pdf(
     )
 
     if summary is None:
+        logger.info("No AIReport row found for patient_id=%s", patient_id)
         raise HTTPException(
             status_code=404,
             detail="Clinical report not found for this patient.",
         )
+
+    logger.info(
+        "Found report=%s for patient_id=%s",
+        getattr(summary, "id", None),
+        patient_id,
+    )
 
     report = build_report_from_storage(
         patient=_serialize_model(patient),
@@ -101,6 +115,8 @@ def generate_pdf(
 
     with open(output_path, "wb") as fp:
         fp.write(pdf_bytes)
+
+    logger.info("Generated PDF report output path=%s for patient_id=%s", output_path, patient_id)
 
     return FileResponse(
         output_path,
@@ -138,10 +154,17 @@ def generate_html(
     )
 
     if summary is None:
+        logger.info("No AIReport row found for patient_id=%s", patient_id)
         raise HTTPException(
             status_code=404,
             detail="Clinical report not found for this patient.",
         )
+
+    logger.info(
+        "Found report=%s for patient_id=%s",
+        getattr(summary, "id", None),
+        patient_id,
+    )
 
     report = build_report_from_storage(
         patient=_serialize_model(patient),

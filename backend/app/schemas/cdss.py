@@ -2,6 +2,8 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
 class PatientContextSchema(BaseModel):
+    id: Optional[int] = Field(default=None, example=1)
+    patient_id: Optional[int] = Field(default=None, example=1)
     age: Optional[int] = Field(default=None, example=52)
     bmi: Optional[float] = Field(default=None, example=31.5)
     glucose: Optional[float] = Field(default=None, example=145.0)

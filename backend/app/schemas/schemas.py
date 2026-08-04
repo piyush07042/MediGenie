@@ -25,6 +25,14 @@ class Token(BaseModel):
     token_type: str
     user: UserResponse
 
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    success: bool = True
+    message: str
+    data: Token | None = None
+
 # Patient Schemas
 class PatientCreate(BaseModel):
     first_name: str

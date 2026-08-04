@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy import text
+
 from app.core.config import settings
 from app.db.session import SessionLocal
 from ml.registry import get_model_registry, resolve_model_directory
@@ -96,7 +98,7 @@ def _validate_model_registry() -> None:
 def _validate_database_connection() -> None:
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
     except Exception as exc:
         raise RuntimeError(
             f"Unable to connect to database: {exc}"

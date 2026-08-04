@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import List
 
+import logging
+
 from fastapi import APIRouter, Body, HTTPException, Depends
 from sqlalchemy.orm import Session
 
@@ -9,6 +11,8 @@ from app.core.drug_safety import analyze_drug_safety
 from app.db.session import get_db
 from app.models.models import DrugSafetyAssessment, Patient
 from app.schemas.common import ApiResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/drug-safety",
@@ -26,6 +30,7 @@ def analyze(medications: List[str] = Body(...), allergies: List[str] | None = Bo
             data=result,
         )
     except Exception as exc:
+        logger.exception("Drug safety analyze failed")
         raise HTTPException(status_code=500, detail=str(exc))
 
 
@@ -37,22 +42,40 @@ def store_assessment(
     db: Session = Depends(get_db),
 ):
     """Store a computed drug safety assessment in the database."""
-    assessment = analyze_drug_safety(medications=medications, patient_allergies=allergies or [])
+    try:
+        logger.info("Drug safety store starting: patient_id=%s medications=%s allergies=%s", patient_id, medications, allergies)
+        assessment = analyze_drug_safety(medications=medications, patient_allergies=allergies or [])
+        logger.info("Drug safety analysis completed before DB insert")
 
-    db_obj = DrugSafetyAssessment(
-        patient_id=patient_id,
-        medications=medications,
-        allergies=allergies or [],
-        assessment=assessment,
-    )
-    db.add(db_obj)
-    db.commit()
-    db.refresh(db_obj)
+        db_obj = DrugSafetyAssessment(
+            patient_id=patient_id,
+            medications=medications,
+            allergies=allergies or [],
+            assessment=assessment,
+        )
+        logger.info("DrugSafetyAssessment instance created: %s", db_obj)
 
-    return ApiResponse(
-        message="Drug safety assessment stored successfully.",
-        data={"id": db_obj.id, "status": db_obj.assessment},
-    )
+        db.add(db_obj)
+        logger.info("Added DrugSafetyAssessment to session")
+
+        db.commit()
+        logger.info("Committed DrugSafetyAssessment to database")
+
+        db.refresh(db_obj)
+        logger.info("Refreshed DrugSafetyAssessment from database with id=%s", db_obj.id)
+
+        return ApiResponse(
+            message="Drug safety assessment stored successfully.",
+            data={"id": db_obj.id, "status": db_obj.assessment},
+        )
+    except Exception:
+        try:
+            db.rollback()
+            logger.info("Rolled back DB session after failure")
+        except Exception:
+            logger.exception("Failed to rollback DB session after drug safety store failure")
+        logger.exception("Drug safety store failed")
+        raise
 
 
 @router.get("/patient/{patient_id}", response_model=ApiResponse)

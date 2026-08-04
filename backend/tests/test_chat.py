@@ -33,5 +33,6 @@ def test_chat(client):
     body = response.json()
 
     assert body["success"] is True
-
     assert "data" in body
+    assert body["data"]["reply"] != "This is a simulated response."
+    assert body["data"]["reply"]

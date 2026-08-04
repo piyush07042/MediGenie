@@ -9,6 +9,8 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+import logging
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -18,6 +20,7 @@ from fastapi import (
     UploadFile,
     status,
 )
+from sqlalchemy.orm import Session
 
 from app.agents.base.agent_state import AgentState
 from app.agents.supervisor.supervisor import Supervisor
@@ -26,6 +29,10 @@ from app.core.file_validation import validate_upload
 from app.schemas.common import ApiResponse
 from app.core.rag import ingest_documents
 from app.core.config import settings
+from app.core.deps import get_db
+from app.services.report.report_service import get_patient_id_from_context, save_ai_report
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/upload",
@@ -48,6 +55,7 @@ async def upload_report(
     file: UploadFile = File(...),
     patient_context_json: Optional[str] = Form("{}"),
     supervisor: Supervisor = Depends(get_supervisor),
+    db: Session = Depends(get_db),
 ):
     """
     Upload a medical report and execute the Supervisor workflow.
@@ -79,6 +87,14 @@ async def upload_report(
         final_state, results, metrics = await supervisor.run(
             state
         )
+
+        patient_id = get_patient_id_from_context(state.patient)
+        if patient_id is not None:
+            logger.info("Saving report...")
+            logger.info("Patient ID: %s", patient_id)
+            save_ai_report(db, patient_id, final_state)
+        else:
+            logger.info("Skipping report persistence: no patient_id found in uploaded report context.")
 
         # Optional: index the extracted report text into the knowledge store.
         try:

@@ -4,10 +4,16 @@ Report generation service: centralize final report composition.
 from __future__ import annotations
 
 import copy
+import logging
 from datetime import datetime
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.agents.base.agent_state import AgentState
+from app.models.models import AIReport
+
+logger = logging.getLogger(__name__)
 
 
 def build_final_report(state: AgentState) -> dict[str, Any]:
@@ -61,6 +67,44 @@ def build_final_report(state: AgentState) -> dict[str, Any]:
     report["recommendation_priority"] = recommendation_output.get("recommendation_priority") if isinstance(recommendation_output, dict) else None
 
     return report
+
+
+def get_patient_id_from_context(patient: dict[str, Any] | None) -> int | None:
+    if not patient:
+        return None
+
+    patient_id = patient.get("patient_id") or patient.get("id")
+    if patient_id is None:
+        return None
+
+    try:
+        return int(patient_id)
+    except (TypeError, ValueError):
+        return None
+
+
+def save_ai_report(db: Session, patient_id: int, final_state: AgentState) -> AIReport:
+    logger.info("Saving report... Patient ID=%s", patient_id)
+
+    report_payload = AIReport(
+        patient_id=patient_id,
+        risk_assessment=final_state.disease_risk or {},
+        rag_evidence=final_state.knowledge_results or [],
+        drug_safety_alerts=final_state.drug_analysis or {},
+        clinical_summary=(final_state.final_report or {}).get("clinical_summary", "") or "",
+    )
+
+    db.add(report_payload)
+    db.commit()
+    db.refresh(report_payload)
+
+    logger.info(
+        "Report saved successfully. Patient ID=%s Report ID=%s Commit successful",
+        report_payload.patient_id,
+        report_payload.id,
+    )
+
+    return report_payload
 
 
 def _safe_float(value: Any, default: float = 0.0) -> float:

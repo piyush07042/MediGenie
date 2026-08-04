@@ -46,6 +46,37 @@ def test_duplicate_registration(client):
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+def test_login_returns_oauth2_token_shape(client):
+
+    register_payload = {
+        "email": "oauth2@test.com",
+        "password": "Doctor123",
+        "full_name": "OAuth2 User",
+        "role": "doctor",
+    }
+
+    client.post(
+        "/api/v1/auth/register",
+        json=register_payload,
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        data={
+            "username": register_payload["email"],
+            "password": register_payload["password"],
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    body = response.json()
+
+    assert body["access_token"]
+    assert body["token_type"] == "bearer"
+    assert body["data"]["access_token"] == body["access_token"]
+
+
 def test_invalid_login(client):
 
     response = client.post(

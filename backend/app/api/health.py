@@ -39,7 +39,7 @@ async def health_check():
     )
 
 
-@router.get("/ready", response_model=ApiResponse)
+@router.get("/ready", response_model=ApiResponse, status_code=status.HTTP_200_OK)
 async def readiness_probe(request: Request):
     """
     Returns application readiness status.
@@ -60,6 +60,7 @@ async def readiness_probe(request: Request):
         )
 
     return ApiResponse(
+        success=True,
         message="Application is ready.",
         data={"ready": True},
     )
