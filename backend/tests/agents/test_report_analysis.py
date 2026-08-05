@@ -161,6 +161,7 @@ async def test_supervisor_pipeline_with_uploaded_pdf_and_image(monkeypatch, tmp_
 
     assert result.success is True
     assert state.patient["patient_id"] == "P7777"
+    assert state.patient["blood_pressure"] == "140/90"
     assert state.extracted_metrics["age"] == 58
     assert state.extracted_metrics["glucose"] == 98.0
 

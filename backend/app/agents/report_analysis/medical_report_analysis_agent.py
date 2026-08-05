@@ -79,7 +79,7 @@ class MedicalReportAnalysisAgent(BaseAgent):
             patient_payload = {
                 k: v
                 for k, v in parsed_metrics.items()
-                if k in {"patient_id", "age", "sex", "gender", "bmi", "glucose", "cholesterol", "systolic_bp", "diastolic_bp", "heart_rate", "ecg"}
+                if k in {"patient_id", "age", "sex", "gender", "bmi", "glucose", "cholesterol", "systolic_bp", "diastolic_bp", "blood_pressure", "heart_rate", "ecg"}
             }
             for key, value in patient_payload.items():
                 state.patient.setdefault(key, value)

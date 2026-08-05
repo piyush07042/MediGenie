@@ -24,6 +24,9 @@ from app.api.reporting import router as reporting_router
 from app.api.upload import router as upload_router
 from app.api.version import router as version_router
 from app.api.v1.heart_disease import router as heart_disease_router
+from app.api.v1.diabetes import router as diabetes_router
+from app.api.v1.kidney_disease import router as kidney_disease_router
+from app.api.v1.liver import router as liver_router
 
 api_router = APIRouter()
 
@@ -102,6 +105,9 @@ api_router.include_router(
     version_router,
 )
 api_router.include_router(heart_disease_router)
+api_router.include_router(diabetes_router)
+api_router.include_router(kidney_disease_router)
+api_router.include_router(liver_router)
 api_router.include_router(diagnostics_router, prefix="/diagnostics")
 
 # =====================================================

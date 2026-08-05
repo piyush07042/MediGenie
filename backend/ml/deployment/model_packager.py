@@ -37,6 +37,8 @@ class PackageConfig:
     model_path: Path
     scaler_path: Path | None
     encoder_path: Path | None
+    preprocessor_path: Path | None = None
+    feature_names_path: Path | None = None
     schema_path: Path
     metadata_path: Path
     output_directory: Path
@@ -69,6 +71,12 @@ class ModelPackager:
     def copy_artifacts(self) -> None:
 
         self.copy_file(self.config.model_path, "model.joblib")
+
+        if self.config.preprocessor_path:
+            self.copy_file(self.config.preprocessor_path, "preprocessor.joblib")
+
+        if self.config.feature_names_path:
+            self.copy_file(self.config.feature_names_path, "feature_names.json")
 
         if self.config.scaler_path:
             self.copy_file(self.config.scaler_path, "scaler.joblib")
@@ -125,6 +133,12 @@ class ModelPackager:
             "requirements.txt",
             "manifest.json",
         ]
+
+        if self.config.preprocessor_path is not None:
+            required.append("preprocessor.joblib")
+
+        if self.config.feature_names_path is not None:
+            required.append("feature_names.json")
 
         for name in required:
             path = self.package_directory / name

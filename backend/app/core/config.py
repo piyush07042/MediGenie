@@ -102,12 +102,24 @@ class Settings(BaseSettings):
 
     MODEL_ROOT: str = "models"
     HEART_DISEASE_MODEL_DIRECTORY: str = "models/heart_disease"
+    KIDNEY_DISEASE_MODEL_DIRECTORY: str = "models/kidney_disease_model"
+    LIVER_DISEASE_MODEL_DIRECTORY: str = "models/liver_disease_model"
     RAG_DB_DIRECTORY: str = "medigenie_rag_db"
     # ==========================================================
     # Heart Disease Confidence Thresholds (configurable)
     # ==========================================================
     HEART_CONFIDENCE_HIGH: float = 0.85
     HEART_CONFIDENCE_MEDIUM: float = 0.65
+    # ==========================================================
+    # Kidney Disease Confidence Thresholds (configurable)
+    # ==========================================================
+    KIDNEY_CONFIDENCE_HIGH: float = 0.85
+    KIDNEY_CONFIDENCE_MEDIUM: float = 0.65
+    # ==========================================================
+    # Liver Disease Confidence Thresholds (configurable)
+    # ==========================================================
+    LIVER_CONFIDENCE_HIGH: float = 0.85
+    LIVER_CONFIDENCE_MEDIUM: float = 0.65
 
     # ==========================================================
     # OCR

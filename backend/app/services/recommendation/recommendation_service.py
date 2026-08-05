@@ -378,6 +378,34 @@ def _build_recommendation_objects(
             "category": "Metabolic",
         })
 
+    if risk_summary.get("prediction") and str(risk_summary.get("prediction", "")).lower() == "diabetes":
+        objects.extend([
+            {
+                "title": "Lifestyle",
+                "recommendation": "Adopt a balanced meal plan, reduce sugary beverages, and maintain regular sleep and stress management habits.",
+                "priority": recommendation_priority,
+                "category": "Lifestyle",
+            },
+            {
+                "title": "Exercise",
+                "recommendation": "Aim for at least 150 minutes of moderate-intensity activity per week and include strength training twice weekly.",
+                "priority": recommendation_priority,
+                "category": "Exercise",
+            },
+            {
+                "title": "Monitoring",
+                "recommendation": "Track fasting glucose, HbA1c, blood pressure, and weight trends at regular intervals with your clinician.",
+                "priority": recommendation_priority,
+                "category": "Monitoring",
+            },
+            {
+                "title": "Follow-up",
+                "recommendation": "Schedule a follow-up visit within 3 months to review glucose trends, medication adherence, and complications screening.",
+                "priority": recommendation_priority,
+                "category": "Follow-up",
+            },
+        ])
+
     if not objects:
         objects.append({
             "title": "General Recommendation",

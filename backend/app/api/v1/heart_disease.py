@@ -44,9 +44,17 @@ async def predict(request: HeartDiseasePredictionRequest):
         patient_data.setdefault("name", "Heart Disease Patient")
         patient_data.setdefault("gender", "Unknown")
         state.patient = patient_data
-        final_state, results, metrics = await supervisor.run(state)
+        logger.info("HeartDisease API request received; patient keys=%s", list(patient_data.keys()))
 
-        # DiseaseRiskAgent should populate `disease_risk` with HeartDiseaseService output
+        final_state, results, metrics = await supervisor.run(state)
+        logger.info(
+            "Workflow finished; disease_risk present=%s, agent_results=%s, errors=%s, warnings=%s",
+            bool(final_state.disease_risk),
+            [result.agent for result in results],
+            final_state.errors,
+            final_state.warnings,
+        )
+
         prediction = final_state.disease_risk or {}
         if not prediction:
             raise RuntimeError("Disease risk not produced by workflow")

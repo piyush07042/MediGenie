@@ -58,6 +58,41 @@ async def lifespan(app: FastAPI):
         except Exception as exc:
             logging.warning("Vector store initialization skipped: %s", exc)
             app_state.vector_store = None
+
+        try:
+            from pathlib import Path
+            from app.services.heart_disease_service import HeartDiseaseService
+            from app.services.diabetes_service import DiabetesService
+            from app.core.risk_assessment import _prediction_service as risk_prediction_service
+
+            app_state.heart_disease_service = HeartDiseaseService(
+                Path(settings.HEART_DISEASE_MODEL_DIRECTORY)
+            )
+            app_state.diabetes_service = DiabetesService(
+                Path("models/diabetes_model")
+            )
+            from app.services.kidney_disease_service import KidneyDiseaseService
+            app_state.kidney_disease_service = KidneyDiseaseService(
+                Path(settings.KIDNEY_DISEASE_MODEL_DIRECTORY)
+            )
+            app_state.prediction_service = risk_prediction_service
+
+            if app_state.model_registry:
+                for model_name in app_state.model_registry:
+                    try:
+                        risk_prediction_service.get_predictor(model_name)
+                    except Exception as exc:
+                        logging.warning(
+                            "Failed to preload packaged model '%s': %s",
+                            model_name,
+                            exc,
+                        )
+
+            app_state.ml_model = True
+        except Exception as exc:
+            logging.warning("ML service preload skipped or failed: %s", exc)
+            app_state.ml_model = None
+
         # Start in-app scheduler if configured
         try:
             if settings.SCHEDULER_ENABLED and settings.SCHEDULER_INTERVAL_SECONDS > 0:

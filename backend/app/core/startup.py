@@ -25,6 +25,11 @@ class AppState:
     vector_store: Any = None
     ocr_engine: Any = None
     model_registry: dict[str, Any] | None = None
+    heart_disease_service: Any = None
+    diabetes_service: Any = None
+    kidney_disease_service: Any = None
+    liver_disease_service: Any = None
+    prediction_service: Any = None
 
 
 app_state = AppState()
@@ -40,6 +45,8 @@ def validate_environment() -> None:
     _validate_database_connection()
     _validate_model_registry()
     _validate_heart_disease_model_path()
+    _validate_kidney_disease_model_path()
+    _validate_liver_disease_model_path()
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -130,3 +137,35 @@ def _validate_heart_disease_model_path() -> None:
             _app_state.ml_model = str(model_path)
         except Exception:
             pass
+
+
+def _validate_kidney_disease_model_path() -> None:
+    model_path = resolve_model_directory("kidney_disease_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Kidney disease model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Kidney disease model directory is missing required artifacts: {model_path}"
+        )
+
+
+def _validate_liver_disease_model_path() -> None:
+    model_path = resolve_model_directory("liver_disease_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Liver disease model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Liver disease model directory is missing required artifacts: {model_path}"
+        )

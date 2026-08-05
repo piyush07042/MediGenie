@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import time
 from typing import Any
 
@@ -9,6 +10,9 @@ from app.agents.base.agent_state import AgentState
 
 from app.services.risk.risk_service import get_risk_service
 from app.services.heart_disease_service import get_heart_disease_service
+from app.services.diabetes_service import get_diabetes_service
+from app.services.kidney_disease_service import get_kidney_disease_service
+from app.services.liver_disease_service import get_liver_disease_service
 from pathlib import Path
 from app.core.config import settings
 
@@ -56,6 +60,105 @@ class DiseaseRiskAgent(BaseAgent):
             normalized["explanations"] = explanations
         return normalized
 
+    def _safe_float(self, value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            if isinstance(value, str):
+                return float(value.strip())
+            return float(value)
+        except Exception:
+            return None
+
+    def _normalize_sex(self, value: Any) -> int | None:
+        if value is None:
+            return None
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float)):
+            int_value = int(value)
+            return int_value if int_value in {0, 1} else None
+        normalized = str(value).strip().lower()
+        if normalized in {"m", "male"}:
+            return 1
+        if normalized in {"f", "female"}:
+            return 0
+        return None
+
+    def _parse_trestbps(self, value: Any) -> float | None:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            bp_match = re.search(r"(\d{2,3})\s*/\s*(\d{2,3})", value)
+            if bp_match:
+                return self._safe_float(bp_match.group(1))
+            return self._safe_float(value)
+        return None
+
+    def _convert_glucose_to_fbs(self, value: Any) -> int | None:
+        glucose = self._safe_float(value)
+        if glucose is None:
+            return None
+        return 1 if glucose > 120 else 0
+
+    def _prepare_heart_model_input(self, assessment_input: dict[str, Any]) -> dict[str, Any]:
+        heart_input = dict(assessment_input)
+
+        sex = self._normalize_sex(heart_input.get("sex"))
+        if sex is None:
+            sex = self._normalize_sex(heart_input.get("gender"))
+        if sex is not None:
+            heart_input["sex"] = sex
+
+        if "trestbps" not in heart_input:
+            trestbps = self._parse_trestbps(heart_input.get("systolic_bp"))
+            if trestbps is None:
+                trestbps = self._parse_trestbps(heart_input.get("blood_pressure"))
+            if trestbps is not None:
+                heart_input["trestbps"] = trestbps
+
+        if "chol" not in heart_input and heart_input.get("cholesterol") is not None:
+            chol = self._safe_float(heart_input.get("cholesterol"))
+            if chol is not None:
+                heart_input["chol"] = chol
+
+        if "fbs" not in heart_input and heart_input.get("glucose") is not None:
+            fbs = self._convert_glucose_to_fbs(heart_input.get("glucose"))
+            if fbs is not None:
+                heart_input["fbs"] = fbs
+
+        return heart_input
+
+    def _prepare_diabetes_model_input(self, assessment_input: dict[str, Any]) -> dict[str, Any]:
+        diabetes_input = dict(assessment_input)
+        if "age" not in diabetes_input and assessment_input.get("patient_age") is not None:
+            diabetes_input["age"] = assessment_input.get("patient_age")
+        if "bmi" not in diabetes_input and assessment_input.get("BMI") is not None:
+            diabetes_input["bmi"] = assessment_input.get("BMI")
+        if "glucose" not in diabetes_input and assessment_input.get("blood_glucose") is not None:
+            diabetes_input["glucose"] = assessment_input.get("blood_glucose")
+        if "systolic_bp" not in diabetes_input and assessment_input.get("blood_pressure") is not None:
+            diabetes_input["systolic_bp"] = assessment_input.get("blood_pressure")
+        if "insulin" not in diabetes_input and assessment_input.get("insulin_level") is not None:
+            diabetes_input["insulin"] = assessment_input.get("insulin_level")
+        return diabetes_input
+
+    def _prepare_kidney_model_input(self, assessment_input: dict[str, Any]) -> dict[str, Any]:
+        kidney_input = dict(assessment_input)
+        if "age" not in kidney_input and assessment_input.get("patient_age") is not None:
+            kidney_input["age"] = assessment_input.get("patient_age")
+        if "creatinine" not in kidney_input and assessment_input.get("serum_creatinine") is not None:
+            kidney_input["creatinine"] = assessment_input.get("serum_creatinine")
+        if "blood_urea" not in kidney_input and assessment_input.get("urea") is not None:
+            kidney_input["blood_urea"] = assessment_input.get("urea")
+        if "sgpt" not in kidney_input and assessment_input.get("alt") is not None:
+            kidney_input["sgpt"] = assessment_input.get("alt")
+        if "albumin" not in kidney_input and assessment_input.get("albumin_level") is not None:
+            kidney_input["albumin"] = assessment_input.get("albumin_level")
+        return kidney_input
+
     async def run(
         self,
         state: AgentState,
@@ -90,27 +193,123 @@ class DiseaseRiskAgent(BaseAgent):
         if metrics:
             assessment_input.update(metrics)
 
-        # Prefer specialized Heart Disease service when heart-related features are present.
+        # Prefer specialized Heart Disease or Kidney Disease services when specific features are present.
         # If the model rejects partial/unsupported input, fall back to the general risk engine.
-        heart_keys = {"cholesterol", "chol", "systolic_bp", "trestbps", "thalach", "oldpeak"}
+        heart_keys = {"cholesterol", "chol", "systolic_bp", "trestbps", "blood_pressure", "thalach", "oldpeak"}
+        diabetes_keys = {"bmi", "glucose", "insulin", "blood_glucose", "diabetes"}
+        kidney_keys = {"creatinine", "blood_urea", "sgpt", "albumin", "egfr", "ckd", "renal"}
+        liver_keys = {"bilirubin", "alk_phosphatase", "alkphos", "sgpt", "sgot", "alt", "ast", "bilirubin_level"}
         has_heart_features = any(k in assessment_input for k in heart_keys)
+        has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+            "diagnosis" in assessment_input and "diabetes" in str(assessment_input.get("diagnosis", "")).lower()
+        )
+        has_kidney_features = any(k in assessment_input for k in kidney_keys) or (
+            "diagnosis" in assessment_input and "kidney" in str(assessment_input.get("diagnosis", "")).lower()
+        )
+        has_liver_features = any(k in assessment_input for k in liver_keys) or (
+            "diagnosis" in assessment_input and "liver" in str(assessment_input.get("diagnosis", "")).lower()
+        )
+
+        self.logger.info(
+            "DiseaseRiskAgent input keys=%s has_heart_features=%s has_diabetes_features=%s has_kidney_features=%s",
+            list(assessment_input.keys()),
+            has_heart_features,
+            has_diabetes_features,
+            has_kidney_features,
+        )
 
         prediction = None
 
         if has_heart_features:
             model_dir = Path(settings.HEART_DISEASE_MODEL_DIRECTORY)
             heart_service = get_heart_disease_service(model_dir)
+            heart_input = self._prepare_heart_model_input(assessment_input)
             try:
-                prediction = heart_service.predict(assessment_input)
+                prediction = heart_service.predict(heart_input)
+                self.logger.info(
+                    "HeartDiseaseService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+                self.logger.debug("HeartDiseaseService input keys=%s", list(heart_input.keys()))
             except Exception as exc:
-                prediction = None
+                self.logger.warning("HeartDiseaseService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"HeartDiseaseService error: {exc}")
                 assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
+
+        if prediction is None and has_kidney_features:
+            kidney_service = get_kidney_disease_service(Path(settings.KIDNEY_DISEASE_MODEL_DIRECTORY))
+            kidney_input = self._prepare_kidney_model_input(assessment_input)
+            try:
+                prediction = kidney_service.predict(kidney_input)
+                prediction["condition"] = "Kidney Disease Risk"
+                prediction["risk_category"] = "high" if float(prediction.get("probability", 0.0)) >= 0.5 else "low"
+                prediction["risk_level"] = prediction["risk_category"]
+                prediction["disease"] = "kidney_disease"
+                prediction["model_used"] = "kidney_disease_model"
+                prediction["risk_source"] = "model"
+                self.logger.info(
+                    "KidneyDiseaseService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+            except Exception as exc:
+                self.logger.warning("KidneyDiseaseService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"KidneyDiseaseService error: {exc}")
+                assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
+
+        if prediction is None and has_liver_features:
+            liver_service = get_liver_disease_service(Path(settings.LIVER_DISEASE_MODEL_DIRECTORY))
+            liver_input = self._prepare_kidney_model_input(assessment_input)
+            try:
+                prediction = liver_service.predict(liver_input)
+                prediction["condition"] = "Liver Disease Risk"
+                prediction["risk_category"] = "high" if float(prediction.get("probability", 0.0)) >= 0.5 else "low"
+                prediction["risk_level"] = prediction["risk_category"]
+                prediction["disease"] = "liver_disease"
+                prediction["model_used"] = "liver_disease_model"
+                prediction["risk_source"] = "model"
+                self.logger.info(
+                    "LiverDiseaseService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+            except Exception as exc:
+                self.logger.warning("LiverDiseaseService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"LiverDiseaseService error: {exc}")
+                assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
+
+        if prediction is None and has_diabetes_features:
+            diabetes_service = get_diabetes_service(Path("models/diabetes_model"))
+            diabetes_input = self._prepare_diabetes_model_input(assessment_input)
+            try:
+                prediction = diabetes_service.predict(diabetes_input)
+                prediction["condition"] = "Diabetes Risk"
+                prediction["risk_category"] = "high" if float(prediction.get("probability", 0.0)) >= 0.5 else "low"
+                prediction["risk_level"] = prediction["risk_category"]
+                prediction["disease"] = "diabetes"
+                prediction["model_used"] = "diabetes_model"
+                prediction["risk_source"] = "model"
+                self.logger.info(
+                    "DiabetesService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+            except Exception as exc:
+                self.logger.warning("DiabetesService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"DiabetesService error: {exc}")
+                assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
 
         if prediction is None:
             risk_service = get_risk_service()
             prediction = risk_service.predict(patient=None, metrics=assessment_input)
+            self.logger.info("RiskService returned prediction keys=%s", list(prediction.keys()) if isinstance(prediction, dict) else type(prediction))
+
+        if not isinstance(prediction, dict) or not prediction:
+            raise RuntimeError("Disease risk prediction failed to produce a valid result.")
 
         normalized_prediction = self._normalize_prediction(prediction)
+        self.logger.info("DiseaseRiskAgent normalized prediction keys=%s", list(normalized_prediction.keys()))
         state.disease_risk = normalized_prediction
         state.metadata["risk_source"] = normalized_prediction.get("risk_source", "model" if "model_used" in normalized_prediction else "heuristic")
         state.metadata["risk_model"] = normalized_prediction.get("model_used")

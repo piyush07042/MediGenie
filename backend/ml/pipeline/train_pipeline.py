@@ -109,6 +109,14 @@ class TrainingPipeline:
         return self.preprocessor_dir / "processed_dataset.csv"
 
     @property
+    def preprocessor_path(self) -> Path:
+        return self.preprocessor_dir / "preprocessor.joblib"
+
+    @property
+    def feature_names_path(self) -> Path:
+        return self.preprocessor_dir / "feature_names.json"
+
+    @property
     def train_path(self) -> Path:
         return self.split_dir / "train.csv"
 
@@ -285,6 +293,8 @@ class TrainingPipeline:
         packager = ModelPackager(
             PackageConfig(
                 model_path=self.best_model_path,
+                preprocessor_path=self.preprocessor_path,
+                feature_names_path=self.feature_names_path,
                 scaler_path=None,
                 encoder_path=None,
                 schema_path=self.schema_json_path,

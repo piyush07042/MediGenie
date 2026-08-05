@@ -13,8 +13,15 @@ from app.core.feature_builder import FeatureBuilder
 
 _DEFAULT_MODEL_ROOT = Path(__file__).resolve().parents[2] / "ml" / "models"
 
-
 _prediction_service = PredictionService(model_root=_DEFAULT_MODEL_ROOT)
+
+
+def get_prediction_service() -> PredictionService:
+    """Return the shared prediction service, preferring the startup-initialized one."""
+    from app.core.startup import app_state
+
+    return app_state.prediction_service or _prediction_service
+
 
 # Backwards-compatible constant for tests that expect MODEL_PATHS
 MODEL_PATHS: list[str] = []
@@ -100,7 +107,8 @@ def _build_model_input(
     metrics: dict[str, Any] | None,
     model_name: str,
 ) -> dict[str, Any]:
-    required_features = _prediction_service.get_model_required_features(model_name)
+    prediction_service = get_prediction_service()
+    required_features = prediction_service.get_model_required_features(model_name)
     if required_features:
         return FeatureBuilder.build(
             patient=patient,
@@ -194,12 +202,13 @@ def predict_disease_risk(patient_metrics: dict[str, Any]) -> dict[str, Any]:
         or patient_metrics.get("evaluated_condition")
     )
 
+    prediction_service = get_prediction_service()
     for model_name in candidate_models:
-        if not _prediction_service.has_model(model_name):
+        if not prediction_service.has_model(model_name):
             continue
 
         features = _build_model_input(None, patient_metrics, model_name)
-        result = _prediction_service.predict(model_name, features)
+        result = prediction_service.predict(model_name, features)
 
         if result is None:
             continue

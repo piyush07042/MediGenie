@@ -180,15 +180,36 @@ class HeartDiseaseService:
         }
 
 
-_service: HeartDiseaseService | None = None
+_service: dict[str, HeartDiseaseService] = {}
 
 
 def get_heart_disease_service(model_directory: str | Path) -> HeartDiseaseService:
     """Return singleton service instance."""
 
-    global _service
+    from app.core.startup import app_state
 
-    if _service is None:
-        _service = HeartDiseaseService(model_directory)
+    resolved_model_dir = str(_resolve_model_directory(model_directory))
 
-    return _service
+    if resolved_model_dir in _service:
+        return _service[resolved_model_dir]
+
+    if app_state.heart_disease_service is not None:
+        try:
+            cached_dir = str(app_state.heart_disease_service.model_directory)
+        except Exception:
+            cached_dir = None
+
+        if cached_dir == resolved_model_dir:
+            _service[resolved_model_dir] = app_state.heart_disease_service
+            return app_state.heart_disease_service
+
+    service = HeartDiseaseService(model_directory)
+    _service[resolved_model_dir] = service
+
+    try:
+        if app_state.heart_disease_service is None:
+            app_state.heart_disease_service = service
+    except Exception:
+        pass
+
+    return service
