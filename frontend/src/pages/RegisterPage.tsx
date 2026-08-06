@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { z } from "zod";
 import { registerSchema } from "../utils/validation";
 import { register } from "../services/authService";
 import type { RegisterFormValues } from "../types/form";
@@ -13,13 +14,17 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const registrationSchema = registerSchema.extend({
+    confirmPassword: z.string().min(1, "Please confirm your password."),
+  });
+
   const {
     register: registerField,
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues & { confirmPassword: string }>({
-    resolver: zodResolver(registerSchema.extend({ confirmPassword: z.string().min(1, "Please confirm your password.") })),
+    resolver: zodResolver(registrationSchema),
   });
 
   const password = watch("password") ?? "";
