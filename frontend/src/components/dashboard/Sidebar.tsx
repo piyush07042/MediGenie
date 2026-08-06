@@ -18,7 +18,7 @@ const navItems = [
   { label: "AI Reports", path: "/reports", icon: ClipboardPaste },
   { label: "Drug Safety", path: "/drug-safety", icon: BookOpen },
   { label: "AI Chat", path: "/chat", icon: MessageSquare },
-  { label: "Settings", path: "/knowledge", icon: Settings },
+  { label: "Settings", path: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
