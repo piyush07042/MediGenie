@@ -274,6 +274,20 @@ class DiseaseRiskAgent(BaseAgent):
                 explicit_disease = "hepatitis"
             elif "liver" in disease_hint:
                 explicit_disease = "liver_disease"
+            elif "diabetes" in disease_hint:
+                explicit_disease = "diabetes"
+            elif "stroke" in disease_hint or "cerebrovascular" in disease_hint:
+                explicit_disease = "stroke"
+            elif "heart failure" in disease_hint or "heart_failure" in disease_hint:
+                explicit_disease = "heart_failure"
+            elif "kidney" in disease_hint or "ckd" in disease_hint or "renal" in disease_hint:
+                explicit_disease = "kidney_disease"
+            elif "parkinson" in disease_hint:
+                explicit_disease = "parkinsons"
+            elif "breast" in disease_hint or "cancer" in disease_hint:
+                explicit_disease = "breast_cancer"
+            elif "heart disease" in disease_hint or ("heart" in disease_hint and explicit_disease is None):
+                explicit_disease = "heart_disease"
 
         if explicit_disease is None:
             symptom_text = " ".join(str(symptom).lower() for symptom in (state.symptoms or []))
@@ -283,6 +297,8 @@ class DiseaseRiskAgent(BaseAgent):
                 explicit_disease = "liver_disease"
             elif any(token in symptom_text for token in ["weakness", "speech", "facial droop", "stroke", "numbness"]):
                 explicit_disease = "stroke"
+            elif any(token in symptom_text for token in ["diabetes", "hyperglycemia", "insulin"]):
+                explicit_disease = "diabetes"
 
         state.metadata["target_disease"] = explicit_disease or state.metadata.get("target_disease")
 
@@ -331,7 +347,7 @@ class DiseaseRiskAgent(BaseAgent):
                 assessment_input.setdefault("risk_fallback_reason", str(exc))
                 prediction = None
 
-        if prediction is None and has_stroke_features:
+        if prediction is None and explicit_disease == "stroke":
             stroke_service = get_stroke_service(Path(settings.STROKE_MODEL_DIRECTORY))
             stroke_input = {
                 key: assessment_input[key]
@@ -356,7 +372,7 @@ class DiseaseRiskAgent(BaseAgent):
                 assessment_input.setdefault("risk_fallback_reason", str(exc))
                 prediction = None
 
-        if prediction is None and has_diabetes_features:
+        if prediction is None and explicit_disease == "diabetes":
             diabetes_service = get_diabetes_service(Path(settings.DIABETES_MODEL_DIRECTORY))
             diabetes_input = self._prepare_diabetes_model_input(assessment_input)
             try:
@@ -374,6 +390,52 @@ class DiseaseRiskAgent(BaseAgent):
             except Exception as exc:
                 self.logger.warning("DiabetesService failed; falling back to risk service: %s", exc)
                 state.add_warning(f"DiabetesService error: {exc}")
+                assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
+
+        if prediction is None and has_diabetes_features and explicit_disease != "stroke":
+            diabetes_service = get_diabetes_service(Path(settings.DIABETES_MODEL_DIRECTORY))
+            diabetes_input = self._prepare_diabetes_model_input(assessment_input)
+            try:
+                prediction = diabetes_service.predict(diabetes_input)
+                prediction["condition"] = "Diabetes Risk"
+                prediction["risk_category"] = "high" if float(prediction.get("probability", 0.0)) >= 0.5 else "low"
+                prediction["risk_level"] = prediction["risk_category"]
+                prediction["disease"] = "diabetes"
+                prediction["model_used"] = "diabetes_model"
+                prediction["risk_source"] = "model"
+                self.logger.info(
+                    "DiabetesService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+            except Exception as exc:
+                self.logger.warning("DiabetesService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"DiabetesService error: {exc}")
+                assessment_input.setdefault("risk_fallback_reason", str(exc))
+                prediction = None
+
+        if prediction is None and has_stroke_features and explicit_disease != "diabetes":
+            stroke_service = get_stroke_service(Path(settings.STROKE_MODEL_DIRECTORY))
+            stroke_input = {
+                key: assessment_input[key]
+                for key in ["age", "hypertension", "heart_disease", "avg_glucose_level", "bmi", "smoking_status"]
+                if key in assessment_input
+            }
+            try:
+                prediction = stroke_service.predict(stroke_input)
+                prediction["condition"] = "Stroke Risk"
+                prediction["risk_category"] = "high" if float(prediction.get("probability", 0.0)) >= 0.5 else "low"
+                prediction["risk_level"] = prediction["risk_category"]
+                prediction["disease"] = "stroke"
+                prediction["model_used"] = "stroke_model"
+                prediction["risk_source"] = "model"
+                self.logger.info(
+                    "StrokeService returned prediction keys=%s",
+                    list(prediction.keys()) if isinstance(prediction, dict) else type(prediction),
+                )
+            except Exception as exc:
+                self.logger.warning("StrokeService failed; falling back to risk service: %s", exc)
+                state.add_warning(f"StrokeService error: {exc}")
                 assessment_input.setdefault("risk_fallback_reason", str(exc))
                 prediction = None
 
