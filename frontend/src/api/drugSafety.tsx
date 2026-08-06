@@ -9,11 +9,23 @@ export type DrugSafetyPayload = {
 export type DrugSafetyAssessment = {
   id: number;
   created_at: string;
-  assessment: string;
+  assessment: Record<string, any>;
 };
 
-export const analyzeDrugSafety = async (payload: DrugSafetyPayload): Promise<ApiResponse<string>> => {
-  const response = await api.post<ApiResponse<string>>("/drug-safety/analyze", payload);
+export type DrugSafetyStoreResponse = {
+  id: number;
+  status: Record<string, any>;
+};
+
+export const analyzeDrugSafety = async (payload: DrugSafetyPayload): Promise<ApiResponse<Record<string, any>>> => {
+  const response = await api.post<ApiResponse<Record<string, any>>>("/drug-safety/analyze", payload);
+  return response.data;
+};
+
+export const storeDrugSafetyAssessment = async (
+  payload: DrugSafetyPayload & { patient_id?: number }
+): Promise<ApiResponse<DrugSafetyStoreResponse>> => {
+  const response = await api.post<ApiResponse<DrugSafetyStoreResponse>>("/drug-safety/store", payload);
   return response.data;
 };
 

@@ -10,7 +10,15 @@ export type ChatPayload = {
   report_text?: string;
 };
 
-export const sendChat = async (payload: ChatPayload): Promise<ApiResponse<{ reply: string }>> => {
-  const response = await api.post<ApiResponse<{ reply: string }>>("/chat/", payload);
+export type ChatResponseData = {
+  reply: string;
+  workflow_state?: Record<string, any> | null;
+  agent_results?: Array<Record<string, any>> | null;
+  metrics?: Record<string, any> | null;
+  clinical_summary?: string | null;
+};
+
+export const sendChat = async (payload: ChatPayload): Promise<ApiResponse<ChatResponseData>> => {
+  const response = await api.post<ApiResponse<ChatResponseData>>("/chat/", payload);
   return response.data;
 };

@@ -1,7 +1,15 @@
+import axios from "axios";
 import api from "./client";
-import { ApiResponse } from "../types/api";
+import { ApiResponse, UploadReportResponse } from "../types/api";
 
-export const uploadReport = async (file: File, patientContext?: Record<string, any>): Promise<ApiResponse<any>> => {
+export type UploadProgressCallback = (progress: number) => void;
+
+export const uploadReport = async (
+  file: File,
+  patientContext?: Record<string, any>,
+  onProgress?: UploadProgressCallback,
+  signal?: AbortSignal
+): Promise<ApiResponse<UploadReportResponse>> => {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -9,6 +17,17 @@ export const uploadReport = async (file: File, patientContext?: Record<string, a
     formData.append("patient_context_json", JSON.stringify(patientContext));
   }
 
-  const response = await api.post<ApiResponse<any>>("/upload/report", formData);
+  const response = await api.post<ApiResponse<UploadReportResponse>>("/upload/report", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    onUploadProgress: (event) => {
+      if (!event.total) return;
+      const percent = Math.round((event.loaded * 100) / event.total);
+      onProgress?.(percent);
+    },
+    signal,
+  });
+
   return response.data;
 };
