@@ -14,6 +14,7 @@ export default function LoginPage() {
   const login = useAuthStore((state) => state.login);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const {
     register,
@@ -24,12 +25,15 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
+    setFormError(null);
     try {
       await login({ email: data.email, password: data.password, rememberMe });
       toast.success("Logged in successfully");
       navigate("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed. Please check your credentials.");
+      const message = error instanceof Error ? error.message : "Login failed. Please check your credentials.";
+      setFormError(message);
+      toast.error(message);
     }
   };
 
@@ -58,6 +62,7 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {formError ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div> : null}
               <FormField label="Email or username" type="email" placeholder="you@example.com" register={register("email")} error={errors.email} />
 
               <div className="space-y-2">

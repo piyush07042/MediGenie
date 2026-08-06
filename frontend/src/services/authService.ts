@@ -47,18 +47,36 @@ type RegisterApiResponse = {
 
 function extractErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
-    const detail = error.response?.data?.detail;
+    const responseData = error.response?.data as Record<string, unknown> | undefined;
+    const detail = responseData?.detail;
+    const message = responseData?.message;
+
+    if (typeof message === "string" && message.length > 0) {
+      return message;
+    }
 
     if (typeof detail === "string") {
       return detail;
     }
 
     if (Array.isArray(detail)) {
-      return detail.map((item) => (typeof item === "string" ? item : item.msg ?? "Request failed.")).join(" ");
+      return detail
+        .map((item) =>
+          typeof item === "string"
+            ? item
+            : typeof item === "object" && item !== null && "msg" in item
+            ? String((item as Record<string, unknown>).msg ?? "Request failed.")
+            : "Request failed."
+        )
+        .join(" ");
     }
 
-    if (typeof detail === "object" && detail && "msg" in detail) {
-      return String(detail.msg);
+    if (typeof detail === "object" && detail !== null && "msg" in detail) {
+      return String((detail as Record<string, unknown>).msg ?? "Request failed.");
+    }
+
+    if (typeof responseData === "string") {
+      return responseData;
     }
 
     if (error.response?.status === 401) {
@@ -73,7 +91,7 @@ function extractErrorMessage(error: unknown): string {
       return "The server is currently unavailable. Please try again shortly.";
     }
 
-    return "Unable to complete the request right now.";
+    return error.response?.statusText || "Unable to complete the request right now.";
   }
 
   if (error instanceof Error) {

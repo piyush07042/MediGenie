@@ -63,6 +63,8 @@ async def lifespan(app: FastAPI):
             from pathlib import Path
             from app.services.heart_disease_service import HeartDiseaseService
             from app.services.diabetes_service import DiabetesService
+            from app.services.breast_cancer_service import BreastCancerService
+            from app.services.parkinsons_service import ParkinsonsService
             from app.core.risk_assessment import _prediction_service as risk_prediction_service
 
             app_state.heart_disease_service = HeartDiseaseService(
@@ -70,6 +72,12 @@ async def lifespan(app: FastAPI):
             )
             app_state.diabetes_service = DiabetesService(
                 Path("models/diabetes_model")
+            )
+            app_state.breast_cancer_service = BreastCancerService(
+                Path(settings.BREAST_CANCER_MODEL_DIRECTORY)
+            )
+            app_state.parkinsons_service = ParkinsonsService(
+                Path(settings.PARKINSONS_MODEL_DIRECTORY)
             )
             from app.services.kidney_disease_service import KidneyDiseaseService
             app_state.kidney_disease_service = KidneyDiseaseService(

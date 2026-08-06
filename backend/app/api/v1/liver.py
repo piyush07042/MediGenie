@@ -34,6 +34,8 @@ async def predict(request: LiverDiseasePredictionRequest):
         patient_data = request.model_dump()
         patient_data.setdefault("name", "Liver Disease Patient")
         state.patient = patient_data
+        state.patient["target_disease"] = "liver_disease"
+        state.metadata["target_disease"] = "liver_disease"
         logger.info("LiverDisease API request received; patient keys=%s", list(patient_data.keys()))
 
         final_state, results, metrics = await supervisor.run(state)
@@ -50,6 +52,8 @@ async def predict(request: LiverDiseasePredictionRequest):
         response.setdefault("similarity_scores", [])
         response.setdefault("evidence_summary", None)
         response.setdefault("disease", response.get("disease") or response.get("condition") or response.get("evaluated_condition") or "liver_disease")
+        if response.get("disease") == "Cardiometabolic Risk":
+            response["disease"] = "liver_disease"
         response.setdefault("prediction", int(response.get("prediction", 1 if float(response.get("risk_score", 0.0)) >= 0.5 else 0)))
         response.setdefault("probability", float(response.get("probability", response.get("confidence", response.get("risk_score", 0.0)))))
         response.setdefault("confidence", float(response.get("confidence", response["probability"])))

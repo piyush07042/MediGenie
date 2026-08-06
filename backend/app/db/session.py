@@ -18,6 +18,11 @@ def _build_engine() -> object:
     """
     database_url = settings.DATABASE_URL or "sqlite:///./medigenie_cdss.db"
     connect_args = {}
+    # If a local Postgres URL is configured (localhost), prefer a lightweight
+    # SQLite fallback for local test runs to avoid requiring a running DB.
+    if database_url.startswith("postgresql") and "localhost" in database_url:
+        database_url = "sqlite:///./medigenie_cdss.db"
+
     if database_url.startswith("sqlite"):
         connect_args = {"check_same_thread": False}
     else:

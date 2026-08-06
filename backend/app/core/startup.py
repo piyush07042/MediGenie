@@ -26,9 +26,15 @@ class AppState:
     ocr_engine: Any = None
     model_registry: dict[str, Any] | None = None
     heart_disease_service: Any = None
+    heart_failure_service: Any = None
     diabetes_service: Any = None
     kidney_disease_service: Any = None
     liver_disease_service: Any = None
+    breast_cancer_service: Any = None
+    parkinsons_service: Any = None
+    hepatitis_service: Any = None
+    stroke_service: Any = None
+    stroke_model_directory: str | None = None
     prediction_service: Any = None
 
 
@@ -45,8 +51,13 @@ def validate_environment() -> None:
     _validate_database_connection()
     _validate_model_registry()
     _validate_heart_disease_model_path()
+    _validate_heart_failure_model_path()
     _validate_kidney_disease_model_path()
     _validate_liver_disease_model_path()
+    _validate_breast_cancer_model_path()
+    _validate_parkinsons_model_path()
+    _validate_hepatitis_model_path()
+    _validate_stroke_model_path()
 
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
@@ -139,6 +150,22 @@ def _validate_heart_disease_model_path() -> None:
             pass
 
 
+def _validate_heart_failure_model_path() -> None:
+    model_path = resolve_model_directory("heart_failure_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Heart failure model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Heart failure model directory is missing required artifacts: {model_path}"
+        )
+
+
 def _validate_kidney_disease_model_path() -> None:
     model_path = resolve_model_directory("kidney_disease_model")
     if not model_path.exists() or not model_path.is_dir():
@@ -168,4 +195,68 @@ def _validate_liver_disease_model_path() -> None:
     ):
         raise RuntimeError(
             f"Liver disease model directory is missing required artifacts: {model_path}"
+        )
+
+
+def _validate_breast_cancer_model_path() -> None:
+    model_path = resolve_model_directory("breast_cancer_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Breast cancer model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Breast cancer model directory is missing required artifacts: {model_path}"
+        )
+
+
+def _validate_parkinsons_model_path() -> None:
+    model_path = resolve_model_directory("parkinsons_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Parkinson's model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Parkinson's model directory is missing required artifacts: {model_path}"
+        )
+
+
+def _validate_hepatitis_model_path() -> None:
+    model_path = resolve_model_directory("hepatitis_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Hepatitis model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "preprocessor.joblib", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Hepatitis model directory is missing required artifacts: {model_path}"
+        )
+
+
+def _validate_stroke_model_path() -> None:
+    model_path = resolve_model_directory("stroke_model")
+    if not model_path.exists() or not model_path.is_dir():
+        raise RuntimeError(
+            f"Stroke model directory not found: {model_path}"
+        )
+
+    if not any(
+        (model_path / filename).exists()
+        for filename in ["model.joblib", "model.json", "schema.json"]
+    ):
+        raise RuntimeError(
+            f"Stroke model directory is missing required artifacts: {model_path}"
         )

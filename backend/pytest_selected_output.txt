@@ -1,0 +1,1211 @@
+.FFF.FFF.FF....                                                          [100%]
+================================== FAILURES ===================================
+_____________________ test_hepatitis_api_predict_endpoint _____________________
+
+client = <httpx.Client object at 0x000001EDAF6A2510>
+
+    def test_hepatitis_api_predict_endpoint(client):
+        response = client.post(
+            "/api/v1/hepatitis/predict",
+            json=REQUEST_EXAMPLE,
+        )
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests\test_integration_hepatitis.py:27: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:44,370 | INFO | Hepatitis API request received; patient keys=['age', 'bilirubin', 'alk_phosphatase', 'sgpt', 'sgot', 'name']
+2026-08-05 20:41:44,370 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:44,370 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:44,370 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:44,370 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:44,370 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:44,370 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:44,370 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:44,376 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:44,376 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:44,376 | INFO | MedicalKnowledgeAgent started.
+2026-08-05 20:41:48,727 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:48,764 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:49,030 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:49,078 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:49,084 | INFO | Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+2026-08-05 20:41:49,446 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:49,495 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:49,856 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-05 20:41:49,860 | WARNING | Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-08-05 20:41:49,895 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md "HTTP/1.1 200 OK"
+2026-08-05 20:41:50,287 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:50,320 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:50,677 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:50,729 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:51,087 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:51,395 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:51,434 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 5334.81it/s]
+2026-08-05 20:41:51,861 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:52,129 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:52,530 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:52,828 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:53,103 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:53,143 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:53,395 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:53,449 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:53,850 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:53,884 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:54,151 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:54,208 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:54,471 | INFO | HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-08-05 20:41:54,734 | INFO | HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-08-05 20:41:55,030 | INFO | HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-08-05 20:41:55,084 | INFO | HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+2026-08-05 20:41:55,382 | INFO | HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 26.14it/s]
+2026-08-05 20:41:55,514 | INFO | MedicalKnowledgeAgent completed in 11.136s
+2026-08-05 20:41:55,514 | INFO | RecommendationAgent started.
+2026-08-05 20:41:55,514 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:55,517 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:55,517 | INFO | ReportGenerationAgent completed in 0.000s
+2026-08-05 20:41:55,517 | ERROR | Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\hepatitis.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+2026-08-05 20:41:55,522 | INFO | HTTP Request: POST http://testserver/api/v1/hepatitis/predict "HTTP/1.1 500 Internal Server Error"
+------------------------------ Captured log call ------------------------------
+INFO     app.api.v1.hepatitis:hepatitis.py:40 Hepatitis API request received; patient keys=['age', 'bilirubin', 'alk_phosphatase', 'sgpt', 'sgot', 'name']
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO     sentence_transformers.base.model:model.py:1001 Loading SentenceTransformer model from sentence-transformers/all-MiniLM-L6-v2.
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config_sentence_transformers.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config_sentence_transformers.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/README.md "HTTP/1.1 307 Temporary Redirect"
+WARNING  huggingface_hub.utils._http:_http.py:951 Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/README.md "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/modules.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/modules.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/sentence_bert_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/sentence_bert_config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/adapter_config.json "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/processor_config.json "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/video_preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/preprocessor_config.json "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/tokenizer_config.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+INFO     httpx:_client.py:1025 HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2/resolve/main/1_Pooling/config.json "HTTP/1.1 307 Temporary Redirect"
+INFO     httpx:_client.py:1025 HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/sentence-transformers/all-MiniLM-L6-v2/1110a243fdf4706b3f48f1d95db1a4f5529b4d41/1_Pooling%2Fconfig.json "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: GET https://huggingface.co/api/models/sentence-transformers/all-MiniLM-L6-v2 "HTTP/1.1 200 OK"
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 11.136s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+ERROR    app.api.v1.hepatitis:hepatitis.py:94 Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\hepatitis.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/hepatitis/predict "HTTP/1.1 500 Internal Server Error"
+__________________ test_api_hepatitis_predict_full_response ___________________
+
+request = HepatitisPredictionRequest(age=45.0, bilirubin=1.2, alk_phosphatase=85.0, sgpt=30.0, sgot=40.0, name=None)
+
+    @router.post(
+        "/predict",
+        response_model=HepatitisPredictionResponse,
+        status_code=status.HTTP_200_OK,
+    )
+    async def predict(request: HepatitisPredictionRequest):
+        try:
+            supervisor = get_supervisor()
+            state = AgentState()
+            patient_data = request.model_dump()
+            patient_data.setdefault("name", "Hepatitis Patient")
+            state.patient = patient_data
+            logger.info("Hepatitis API request received; patient keys=%s", list(patient_data.keys()))
+    
+            final_state, results, metrics = await supervisor.run(state)
+            prediction = final_state.disease_risk or {}
+            if not prediction:
+>               raise RuntimeError("Disease risk not produced by workflow")
+E               RuntimeError: Disease risk not produced by workflow
+
+app\api\v1\hepatitis.py:45: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+    @pytest.mark.asyncio
+    async def test_api_hepatitis_predict_full_response():
+        from app.api.v1.hepatitis import predict
+    
+        request_model = HepatitisPredictionRequest(**REQUEST_EXAMPLE)
+>       data = await predict(request_model)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_integration_hepatitis.py:41: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = HepatitisPredictionRequest(age=45.0, bilirubin=1.2, alk_phosphatase=85.0, sgpt=30.0, sgot=40.0, name=None)
+
+    @router.post(
+        "/predict",
+        response_model=HepatitisPredictionResponse,
+        status_code=status.HTTP_200_OK,
+    )
+    async def predict(request: HepatitisPredictionRequest):
+        try:
+            supervisor = get_supervisor()
+            state = AgentState()
+            patient_data = request.model_dump()
+            patient_data.setdefault("name", "Hepatitis Patient")
+            state.patient = patient_data
+            logger.info("Hepatitis API request received; patient keys=%s", list(patient_data.keys()))
+    
+            final_state, results, metrics = await supervisor.run(state)
+            prediction = final_state.disease_risk or {}
+            if not prediction:
+                raise RuntimeError("Disease risk not produced by workflow")
+    
+            response = dict(prediction)
+            response["recommendations"] = final_state.recommendations or []
+            response["structured_recommendation"] = final_state.recommendations[0] if final_state.recommendations else None
+            response.setdefault("final_report", final_state.final_report)
+            response.setdefault("evidence", [])
+            response.setdefault("citations", [])
+            response.setdefault("similarity_scores", [])
+            response.setdefault("evidence_summary", None)
+            response.setdefault(
+                "disease",
+                response.get("disease")
+                or response.get("condition")
+                or response.get("evaluated_condition")
+                or "hepatitis",
+            )
+            response.setdefault("prediction", int(response.get("prediction", 1 if float(response.get("risk_score", 0.0)) >= 0.5 else 0)))
+            response.setdefault("probability", float(response.get("probability", response.get("confidence", response.get("risk_score", 0.0)))))
+            response.setdefault("confidence", float(response.get("confidence", response["probability"])))
+            response.setdefault("confidence_label", response.get("confidence_label") or response.get("risk_level") or None)
+            response.setdefault("drug_safety", final_state.drug_analysis or {})
+    
+            if not isinstance(response.get("class_probabilities"), dict):
+                probability_value = float(response.get("probability", 0.0))
+                response["class_probabilities"] = {
+                    "0": round(max(0.0, 1.0 - probability_value), 3),
+                    "1": round(min(1.0, probability_value), 3),
+                }
+    
+            if isinstance(response["recommendations"], list):
+                normalized = []
+                for item in response["recommendations"]:
+                    if isinstance(item, dict):
+                        normalized.append(item)
+                    else:
+                        normalized.append({
+                            "priority": "Medium",
+                            "title": "Clinical Recommendation",
+                            "recommendation": str(item),
+                            "evidence": response.get("evidence", []),
+                            "citations": response.get("citations", []),
+                            "similarity_scores": response.get("similarity_scores", []),
+                            "evidence_summary": response.get("evidence_summary"),
+                        })
+                response["recommendations"] = normalized
+    
+            return HepatitisPredictionResponse(**response)
+        except Exception as exc:
+            logger.exception(exc)
+>           raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+E           fastapi.exceptions.HTTPException: 500: Disease risk not produced by workflow
+
+app\api\v1\hepatitis.py:95: HTTPException
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:55,936 | INFO | Hepatitis API request received; patient keys=['age', 'bilirubin', 'alk_phosphatase', 'sgpt', 'sgot', 'name']
+2026-08-05 20:41:55,940 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:55,940 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:55,940 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:55,940 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:55,940 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:55,940 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:55,940 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:55,940 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:55,940 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:55,940 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 82.53it/s]
+2026-08-05 20:41:55,959 | INFO | MedicalKnowledgeAgent completed in 0.018s
+2026-08-05 20:41:55,960 | INFO | RecommendationAgent started.
+2026-08-05 20:41:55,960 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:55,960 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:55,960 | INFO | ReportGenerationAgent completed in 0.000s
+2026-08-05 20:41:55,962 | ERROR | Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\hepatitis.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+------------------------------ Captured log call ------------------------------
+INFO     app.api.v1.hepatitis:hepatitis.py:40 Hepatitis API request received; patient keys=['age', 'bilirubin', 'alk_phosphatase', 'sgpt', 'sgot', 'name']
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.018s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+ERROR    app.api.v1.hepatitis:hepatitis.py:94 Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\hepatitis.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+_____________________ test_supervisor_hepatitis_workflow ______________________
+
+    @pytest.mark.asyncio
+    async def test_supervisor_hepatitis_workflow():
+        from app.agents.supervisor.supervisor import Supervisor
+    
+        supervisor = Supervisor()
+        state = AgentState()
+        state.patient = REQUEST_EXAMPLE.copy()
+        state.patient.setdefault("name", "Test Hepatitis Patient")
+        state.symptoms = ["jaundice"]
+    
+        final_state, results, metrics = await supervisor.run(state)
+    
+>       assert final_state.disease_risk, "Disease risk must be produced"
+E       AssertionError: Disease risk must be produced
+E       assert {}
+E        +  where {} = AgentState(patient={'age': 45, 'bilirubin': 1.2, 'alk_phosphatase': 85, 'sgpt': 30, 'sgot': 40, 'name': 'Test Hepatiti... with a value", "DiseaseRiskAgent: cannot access local variable 'prediction' where it is not associated with a value"]).disease_risk
+
+tests\test_integration_hepatitis.py:64: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:55,984 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:55,984 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:55,984 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:55,984 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:55,984 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:55,984 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:55,986 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:55,986 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:55,986 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:55,986 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 93.11it/s]
+2026-08-05 20:41:56,006 | INFO | MedicalKnowledgeAgent completed in 0.019s
+2026-08-05 20:41:56,006 | INFO | RecommendationAgent started.
+2026-08-05 20:41:56,006 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:56,008 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:56,008 | INFO | ReportGenerationAgent completed in 0.000s
+------------------------------ Captured log call ------------------------------
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.019s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+___________________ test_breast_cancer_api_predict_endpoint ___________________
+
+client = <httpx.Client object at 0x000001EDAF725190>
+
+    def test_breast_cancer_api_predict_endpoint(client):
+        response = client.post(
+            "/api/v1/breast-cancer/predict",
+            json=REQUEST_EXAMPLE,
+        )
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests\test_integration_breast_cancer.py:36: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:56,105 | INFO | BreastCancer API request received; patient keys=['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean', 'name']
+2026-08-05 20:41:56,105 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:56,105 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,105 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,105 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,105 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,107 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,107 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,107 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,107 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,109 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 94.63it/s]
+2026-08-05 20:41:56,126 | INFO | MedicalKnowledgeAgent completed in 0.017s
+2026-08-05 20:41:56,127 | INFO | RecommendationAgent started.
+2026-08-05 20:41:56,127 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:56,127 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:56,127 | INFO | ReportGenerationAgent completed in 0.000s
+2026-08-05 20:41:56,129 | ERROR | Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\breast_cancer.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+2026-08-05 20:41:56,132 | INFO | HTTP Request: POST http://testserver/api/v1/breast-cancer/predict "HTTP/1.1 500 Internal Server Error"
+------------------------------ Captured log call ------------------------------
+INFO     app.api.v1.breast_cancer:breast_cancer.py:40 BreastCancer API request received; patient keys=['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean', 'name']
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 210, in run
+    if prediction is None and has_diabetes_features:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.017s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+ERROR    app.api.v1.breast_cancer:breast_cancer.py:88 Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\breast_cancer.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/breast-cancer/predict "HTTP/1.1 500 Internal Server Error"
+________________ test_api_breast_cancer_predict_full_response _________________
+
+request = BreastCancerPredictionRequest(radius_mean=17.99, texture_mean=10.38, perimeter_mean=122.8, area_mean=1001.0, smoothness_mean=0.1184, name='Test Breast Cancer Patient')
+
+    @router.post(
+        "/predict",
+        response_model=BreastCancerPredictionResponse,
+        status_code=status.HTTP_200_OK,
+    )
+    async def predict(request: BreastCancerPredictionRequest):
+        try:
+            supervisor = get_supervisor()
+            state = AgentState()
+            patient_data = request.model_dump()
+            patient_data.setdefault("name", "Breast Cancer Patient")
+            state.patient = patient_data
+            logger.info("BreastCancer API request received; patient keys=%s", list(patient_data.keys()))
+    
+            final_state, results, metrics = await supervisor.run(state)
+            prediction = final_state.disease_risk or {}
+            if not prediction:
+>               raise RuntimeError("Disease risk not produced by workflow")
+E               RuntimeError: Disease risk not produced by workflow
+
+app\api\v1\breast_cancer.py:45: RuntimeError
+
+During handling of the above exception, another exception occurred:
+
+    @pytest.mark.asyncio
+    async def test_api_breast_cancer_predict_full_response():
+        from app.api.v1.breast_cancer import predict
+    
+        request_model = BreastCancerPredictionRequest(**REQUEST_EXAMPLE)
+>       data = await predict(request_model)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_integration_breast_cancer.py:50: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+request = BreastCancerPredictionRequest(radius_mean=17.99, texture_mean=10.38, perimeter_mean=122.8, area_mean=1001.0, smoothness_mean=0.1184, name='Test Breast Cancer Patient')
+
+    @router.post(
+        "/predict",
+        response_model=BreastCancerPredictionResponse,
+        status_code=status.HTTP_200_OK,
+    )
+    async def predict(request: BreastCancerPredictionRequest):
+        try:
+            supervisor = get_supervisor()
+            state = AgentState()
+            patient_data = request.model_dump()
+            patient_data.setdefault("name", "Breast Cancer Patient")
+            state.patient = patient_data
+            logger.info("BreastCancer API request received; patient keys=%s", list(patient_data.keys()))
+    
+            final_state, results, metrics = await supervisor.run(state)
+            prediction = final_state.disease_risk or {}
+            if not prediction:
+                raise RuntimeError("Disease risk not produced by workflow")
+    
+            response = dict(prediction)
+            response["recommendations"] = final_state.recommendations or []
+            response["structured_recommendation"] = final_state.recommendations[0] if final_state.recommendations else None
+            response.setdefault("final_report", final_state.final_report)
+            response.setdefault("evidence", [])
+            response.setdefault("citations", [])
+            response.setdefault("similarity_scores", [])
+            response.setdefault("evidence_summary", None)
+            response.setdefault("disease", response.get("disease") or response.get("condition") or response.get("evaluated_condition") or "breast_cancer")
+            response.setdefault("prediction", int(response.get("prediction", 1 if float(response.get("risk_score", 0.0)) >= 0.5 else 0)))
+            response.setdefault("probability", float(response.get("probability", response.get("confidence", response.get("risk_score", 0.0)))))
+            response.setdefault("confidence", float(response.get("confidence", response["probability"])))
+            response.setdefault("confidence_label", response.get("confidence_label") or response.get("risk_level") or None)
+            response.setdefault("drug_safety", final_state.drug_analysis or {})
+    
+            if not isinstance(response.get("class_probabilities"), dict):
+                probability_value = float(response.get("probability", 0.0))
+                response["class_probabilities"] = {
+                    "0": round(max(0.0, 1.0 - probability_value), 3),
+                    "1": round(min(1.0, probability_value), 3),
+                }
+    
+            if isinstance(response["recommendations"], list):
+                normalized = []
+                for item in response["recommendations"]:
+                    if isinstance(item, dict):
+                        normalized.append(item)
+                    else:
+                        normalized.append({
+                            "priority": "Medium",
+                            "title": "Clinical Recommendation",
+                            "recommendation": str(item),
+                            "evidence": response.get("evidence", []),
+                            "citations": response.get("citations", []),
+                            "similarity_scores": response.get("similarity_scores", []),
+                            "evidence_summary": response.get("evidence_summary"),
+                        })
+                response["recommendations"] = normalized
+    
+            return BreastCancerPredictionResponse(**response)
+        except Exception as exc:
+            logger.exception(exc)
+>           raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc))
+E           fastapi.exceptions.HTTPException: 500: Disease risk not produced by workflow
+
+app\api\v1\breast_cancer.py:89: HTTPException
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:56,146 | INFO | BreastCancer API request received; patient keys=['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean', 'name']
+2026-08-05 20:41:56,146 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:56,146 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,146 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,146 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,146 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,148 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,148 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,148 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,148 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,150 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 93.27it/s]
+2026-08-05 20:41:56,169 | INFO | MedicalKnowledgeAgent completed in 0.020s
+2026-08-05 20:41:56,171 | INFO | RecommendationAgent started.
+2026-08-05 20:41:56,171 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:56,171 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:56,171 | INFO | ReportGenerationAgent completed in 0.000s
+2026-08-05 20:41:56,171 | ERROR | Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\breast_cancer.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+------------------------------ Captured log call ------------------------------
+INFO     app.api.v1.breast_cancer:breast_cancer.py:40 BreastCancer API request received; patient keys=['radius_mean', 'texture_mean', 'perimeter_mean', 'area_mean', 'smoothness_mean', 'name']
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.020s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+ERROR    app.api.v1.breast_cancer:breast_cancer.py:88 Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\breast_cancer.py", line 45, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+___________________ test_supervisor_breast_cancer_workflow ____________________
+
+    @pytest.mark.asyncio
+    async def test_supervisor_breast_cancer_workflow():
+        from app.agents.supervisor.supervisor import Supervisor
+    
+        supervisor = Supervisor()
+        state = AgentState()
+        state.patient = REQUEST_EXAMPLE.copy()
+        state.patient.setdefault("name", "Test Breast Cancer Patient")
+        state.symptoms = ["breast pain"]
+    
+        final_state, results, metrics = await supervisor.run(state)
+    
+>       assert final_state.disease_risk, "Disease risk must be produced"
+E       AssertionError: Disease risk must be produced
+E       assert {}
+E        +  where {} = AgentState(patient={'radius_mean': 17.99, 'texture_mean': 10.38, 'perimeter_mean': 122.8, 'area_mean': 1001.0, 'smooth... with a value", "DiseaseRiskAgent: cannot access local variable 'prediction' where it is not associated with a value"]).disease_risk
+
+tests\test_integration_breast_cancer.py:73: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:56,193 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:56,194 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,194 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,194 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,194 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,194 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,194 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,196 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,196 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,196 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 115.41it/s]
+2026-08-05 20:41:56,214 | INFO | MedicalKnowledgeAgent completed in 0.018s
+2026-08-05 20:41:56,214 | INFO | RecommendationAgent started.
+2026-08-05 20:41:56,214 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:56,214 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:56,216 | INFO | ReportGenerationAgent completed in 0.000s
+------------------------------ Captured log call ------------------------------
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.018s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+_____________________ test_diabetes_api_predict_endpoint ______________________
+
+client = <httpx.Client object at 0x000001EDB1CF1A90>
+
+    def test_diabetes_api_predict_endpoint(client):
+        response = client.post(
+            "/api/v1/diabetes/predict",
+            json=REQUEST_EXAMPLE,
+        )
+    
+>       assert response.status_code == 200
+E       assert 500 == 200
+E        +  where 500 = <Response [500 Internal Server Error]>.status_code
+
+tests\test_integration_diabetes.py:38: AssertionError
+---------------------------- Captured stderr call -----------------------------
+2026-08-05 20:41:56,251 | INFO | Diabetes API request received; patient keys=['age', 'bmi', 'glucose', 'systolic_bp', 'insulin', 'name']
+2026-08-05 20:41:56,251 | INFO | Starting MediGenie workflow
+2026-08-05 20:41:56,251 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,251 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,251 | INFO | PatientIntakeAgent started.
+2026-08-05 20:41:56,251 | INFO | PatientIntakeAgent completed in 0.000s
+2026-08-05 20:41:56,251 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,251 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,253 | INFO | DiseaseRiskAgent started.
+2026-08-05 20:41:56,253 | ERROR | DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+2026-08-05 20:41:56,253 | INFO | MedicalKnowledgeAgent started.
+Batches:   0%|          | 0/1 [00:00<?, ?it/s]Batches: 100%|██████████| 1/1 [00:00<00:00, 134.52it/s]
+2026-08-05 20:41:56,271 | INFO | MedicalKnowledgeAgent completed in 0.018s
+2026-08-05 20:41:56,271 | INFO | RecommendationAgent started.
+2026-08-05 20:41:56,271 | INFO | RecommendationAgent completed in 0.000s
+2026-08-05 20:41:56,273 | INFO | ReportGenerationAgent started.
+2026-08-05 20:41:56,273 | INFO | ReportGenerationAgent completed in 0.000s
+2026-08-05 20:41:56,273 | ERROR | Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\diabetes.py", line 43, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+2026-08-05 20:41:56,279 | INFO | HTTP Request: POST http://testserver/api/v1/diabetes/predict "HTTP/1.1 500 Internal Server Error"
+------------------------------ Captured log call ------------------------------
+INFO     app.api.v1.diabetes:diabetes.py:38 Diabetes API request received; patient keys=['age', 'bmi', 'glucose', 'systolic_bp', 'insulin', 'name']
+INFO     app.agents.supervisor.supervisor:supervisor.py:34 Starting MediGenie workflow
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     PatientIntakeAgent:base_agent.py:54 PatientIntakeAgent started.
+INFO     PatientIntakeAgent:base_agent.py:70 PatientIntakeAgent completed in 0.000s
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     DiseaseRiskAgent:base_agent.py:54 DiseaseRiskAgent started.
+ERROR    DiseaseRiskAgent:base_agent.py:84 DiseaseRiskAgent failed: cannot access local variable 'prediction' where it is not associated with a value
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\agents\base\base_agent.py", line 60, in execute
+    result = await self.run(state)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "D:\medigenie\backend\app\agents\risk\disease_risk_agent.py", line 205, in run
+    has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+    ^^^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+INFO     MedicalKnowledgeAgent:base_agent.py:54 MedicalKnowledgeAgent started.
+INFO     MedicalKnowledgeAgent:base_agent.py:70 MedicalKnowledgeAgent completed in 0.018s
+INFO     RecommendationAgent:base_agent.py:54 RecommendationAgent started.
+INFO     RecommendationAgent:base_agent.py:70 RecommendationAgent completed in 0.000s
+INFO     ReportGenerationAgent:base_agent.py:54 ReportGenerationAgent started.
+INFO     ReportGenerationAgent:base_agent.py:70 ReportGenerationAgent completed in 0.000s
+ERROR    app.api.v1.diabetes:diabetes.py:86 Disease risk not produced by workflow
+Traceback (most recent call last):
+  File "D:\medigenie\backend\app\api\v1\diabetes.py", line 43, in predict
+    raise RuntimeError("Disease risk not produced by workflow")
+RuntimeError: Disease risk not produced by workflow
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/api/v1/diabetes/predict "HTTP/1.1 500 Internal Server Error"
+_____ test_disease_risk_agent_uses_diabetes_service_for_diabetes_context ______
+
+    @pytest.mark.asyncio
+    async def test_disease_risk_agent_uses_diabetes_service_for_diabetes_context():
+        state = AgentState()
+        state.patient_context = {
+            "age": 55,
+            "bmi": 32,
+            "glucose": 150,
+            "systolic_bp": 140,
+            "insulin": 80,
+            "diagnosis": "Type 2 Diabetes",
+        }
+    
+        agent = DiseaseRiskAgent()
+>       result = await agent.run(state)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_integration_diabetes.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <app.agents.risk.disease_risk_agent.DiseaseRiskAgent object at 0x000001EDB338ED90>
+state = AgentState(patient={'age': 55, 'bmi': 32, 'glucose': 150, 'systolic_bp': 140, 'insulin': 80, 'diagnosis': 'Type 2 Diab... agent_confidence={}, execution_times={}, execution_trace=[], metadata={}, workflow_summary={}, warnings=[], errors=[])
+
+    async def run(
+        self,
+        state: AgentState,
+    ) -> AgentResult:
+    
+        start = time.perf_counter()
+    
+        # Accept either pre-extracted metrics or fall back to patient_context
+        metrics = state.extracted_metrics or state.patient_context or state.patient
+    
+        if not metrics:
+            return AgentResult(
+                agent=self.agent_name,
+                status="FAILED",
+                confidence=0.0,
+                result={},
+                warnings=[
+                    "No extracted metrics or patient context available."
+                ],
+            )
+    
+        # Merge patient and metrics into a single input dict and call
+        # the centralized prediction function directly.
+        assessment_input: dict = {}
+    
+        if state.patient:
+            assessment_input.update(state.patient)
+    
+        if state.patient_context:
+            assessment_input.update(state.patient_context)
+    
+        if metrics:
+            assessment_input.update(metrics)
+    
+        # Prefer specialized Heart Disease or Kidney Disease services when specific features are present.
+        # If the model rejects partial/unsupported input, fall back to the general risk engine.
+        heart_keys = {"cholesterol", "chol", "systolic_bp", "trestbps", "blood_pressure", "thalach", "oldpeak"}
+        diabetes_keys = {"bmi", "glucose", "insulin", "blood_glucose", "diabetes"}
+        kidney_keys = {"creatinine", "blood_urea", "sgpt", "albumin", "egfr", "ckd", "renal"}
+        liver_keys = {"bilirubin", "alk_phosphatase", "alkphos", "sgpt", "sgot", "alt", "ast", "bilirubin_level"}
+        has_heart_features = any(k in assessment_input for k in heart_keys)
+>       has_diabetes_features = any(k in assessment_input for k in diabetes_keys) or (
+        ^^^^^^^^^^^^^^^^^^^^^
+            "diagnosis" in assessment_input and "diabetes" in str(assessment_input.get("diagnosis", "")).lower()
+        )
+E       UnboundLocalError: cannot access local variable 'prediction' where it is not associated with a value
+
+app\agents\risk\disease_risk_agent.py:205: UnboundLocalError
+============================== warnings summary ===============================
+app\schemas\schemas.py:13
+  D:\medigenie\backend\app\schemas\schemas.py:13: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class UserResponse(BaseModel):
+
+app\schemas\schemas.py:46
+  D:\medigenie\backend\app\schemas\schemas.py:46: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class PatientResponse(PatientCreate):
+
+app\schemas\cdss.py:5
+  D:\medigenie\backend\app\schemas\cdss.py:5: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    id: Optional[int] = Field(default=None, example=1)
+
+app\schemas\cdss.py:6
+  D:\medigenie\backend\app\schemas\cdss.py:6: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    patient_id: Optional[int] = Field(default=None, example=1)
+
+app\schemas\cdss.py:7
+  D:\medigenie\backend\app\schemas\cdss.py:7: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: Optional[int] = Field(default=None, example=52)
+
+app\schemas\cdss.py:8
+  D:\medigenie\backend\app\schemas\cdss.py:8: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bmi: Optional[float] = Field(default=None, example=31.5)
+
+app\schemas\cdss.py:9
+  D:\medigenie\backend\app\schemas\cdss.py:9: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    glucose: Optional[float] = Field(default=None, example=145.0)
+
+app\schemas\cdss.py:10
+  D:\medigenie\backend\app\schemas\cdss.py:10: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    systolic_bp: Optional[float] = Field(default=None, example=138.0)
+
+app\schemas\cdss.py:11
+  D:\medigenie\backend\app\schemas\cdss.py:11: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cholesterol: Optional[float] = Field(default=None, example=210.0)
+
+app\schemas\cdss.py:12
+  D:\medigenie\backend\app\schemas\cdss.py:12: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    diagnosis: Optional[str] = Field(default=None, example="Type 2 Diabetes")
+
+app\schemas\cdss.py:13
+  D:\medigenie\backend\app\schemas\cdss.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    current_medications: Optional[List[str]] = Field(default_factory=list, example=["Lisinopril", "Metformin"])
+
+app\schemas\cdss.py:14
+  D:\medigenie\backend\app\schemas\cdss.py:14: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    allergies: Optional[List[str]] = Field(default_factory=list, example=["Penicillin"])
+
+app\schemas\cdss.py:18
+  D:\medigenie\backend\app\schemas\cdss.py:18: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    raw_report_text: Optional[str] = Field(default="", example="Patient has history of uncontrolled hypertension and morning fatigue.")
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:47
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:47: PendingDeprecationWarning: The set_bad function will be deprecated in a future version. Use cmap.with_extremes(bad=...) or Colormap(bad=...) instead.
+    red_blue.set_bad(gray_rgb.tolist(), 1.0)
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:48
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:48: PendingDeprecationWarning: The set_over function will be deprecated in a future version. Use cmap.with_extremes(over=...) or Colormap(over=...) instead.
+    red_blue.set_over(gray_rgb.tolist(), 1.0)
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:49
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\shap\plots\colors\_colors.py:49: PendingDeprecationWarning: The set_under function will be deprecated in a future version. Use cmap.with_extremes(under=...) or Colormap(under=...) instead.
+    red_blue.set_under(gray_rgb.tolist(), 1.0)  # "under" is incorrectly used instead of "bad" in the scatter plot
+
+app\schemas\heart_disease.py:19
+  D:\medigenie\backend\app\schemas\heart_disease.py:19: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=63)
+
+app\schemas\heart_disease.py:20
+  D:\medigenie\backend\app\schemas\heart_disease.py:20: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sex: int = Field(..., ge=0, le=1, description="0 = Female, 1 = Male", example=1)
+
+app\schemas\heart_disease.py:21
+  D:\medigenie\backend\app\schemas\heart_disease.py:21: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    cp: int = Field(..., ge=1, le=4, description="Chest pain type", example=3)
+
+app\schemas\heart_disease.py:22
+  D:\medigenie\backend\app\schemas\heart_disease.py:22: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    trestbps: float = Field(..., ge=50, le=300, description="Resting blood pressure", example=145)
+
+app\schemas\heart_disease.py:23
+  D:\medigenie\backend\app\schemas\heart_disease.py:23: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    chol: float = Field(..., ge=50, le=700, description="Serum cholesterol", example=233)
+
+app\schemas\heart_disease.py:24
+  D:\medigenie\backend\app\schemas\heart_disease.py:24: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    fbs: int = Field(..., ge=0, le=1, description="Fasting blood sugar >120 mg/dl", example=1)
+
+app\schemas\heart_disease.py:25
+  D:\medigenie\backend\app\schemas\heart_disease.py:25: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    restecg: int = Field(..., ge=0, le=2, example=2)
+
+app\schemas\heart_disease.py:26
+  D:\medigenie\backend\app\schemas\heart_disease.py:26: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thalach: float = Field(..., ge=50, le=250, example=150)
+
+app\schemas\heart_disease.py:27
+  D:\medigenie\backend\app\schemas\heart_disease.py:27: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    exang: int = Field(..., ge=0, le=1, example=0)
+
+app\schemas\heart_disease.py:28
+  D:\medigenie\backend\app\schemas\heart_disease.py:28: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    oldpeak: float = Field(..., ge=0, le=10, example=2.3)
+
+app\schemas\heart_disease.py:29
+  D:\medigenie\backend\app\schemas\heart_disease.py:29: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    slope: int = Field(..., ge=1, le=3, example=3)
+
+app\schemas\heart_disease.py:30
+  D:\medigenie\backend\app\schemas\heart_disease.py:30: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    ca: int = Field(..., ge=0, le=4, example=0)
+
+app\schemas\heart_disease.py:31
+  D:\medigenie\backend\app\schemas\heart_disease.py:31: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    thal: int = Field(..., ge=3, le=7, example=6)
+
+app\schemas\diabetes.py:13
+  D:\medigenie\backend\app\schemas\diabetes.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=55)
+
+app\schemas\diabetes.py:14
+  D:\medigenie\backend\app\schemas\diabetes.py:14: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bmi: float = Field(..., ge=10, le=80, description="BMI", example=32.5)
+
+app\schemas\diabetes.py:15
+  D:\medigenie\backend\app\schemas\diabetes.py:15: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    glucose: float = Field(..., ge=50, le=400, description="Glucose level", example=160)
+
+app\schemas\diabetes.py:16
+  D:\medigenie\backend\app\schemas\diabetes.py:16: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    systolic_bp: float = Field(..., ge=50, le=250, description="Systolic blood pressure", example=140)
+
+app\schemas\diabetes.py:17
+  D:\medigenie\backend\app\schemas\diabetes.py:17: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    insulin: float = Field(..., ge=0, le=1000, description="Insulin level", example=85)
+
+app\schemas\kidney_disease.py:13
+  D:\medigenie\backend\app\schemas\kidney_disease.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=55)
+
+app\schemas\kidney_disease.py:14
+  D:\medigenie\backend\app\schemas\kidney_disease.py:14: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    creatinine: float = Field(..., ge=0.1, le=50.0, description="Serum creatinine", example=1.2)
+
+app\schemas\kidney_disease.py:15
+  D:\medigenie\backend\app\schemas\kidney_disease.py:15: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    blood_urea: float = Field(..., ge=0.0, le=300.0, description="Blood urea", example=30.0)
+
+app\schemas\kidney_disease.py:16
+  D:\medigenie\backend\app\schemas\kidney_disease.py:16: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sgpt: float = Field(..., ge=0.0, le=300.0, description="SGPT / ALT", example=35.0)
+
+app\schemas\kidney_disease.py:17
+  D:\medigenie\backend\app\schemas\kidney_disease.py:17: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    albumin: float = Field(..., ge=0.0, le=10.0, description="Serum albumin", example=4.2)
+
+app\schemas\liver_disease.py:13
+  D:\medigenie\backend\app\schemas\liver_disease.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: int = Field(..., ge=1, le=120, description="Age in years", example=55)
+
+app\schemas\liver_disease.py:14
+  D:\medigenie\backend\app\schemas\liver_disease.py:14: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bilirubin: float = Field(..., ge=0.0, le=50.0, description="Serum bilirubin", example=1.2)
+
+app\schemas\liver_disease.py:15
+  D:\medigenie\backend\app\schemas\liver_disease.py:15: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    alk_phosphatase: float = Field(..., ge=0.0, le=1000.0, description="Alkaline phosphatase", example=120.0)
+
+app\schemas\liver_disease.py:16
+  D:\medigenie\backend\app\schemas\liver_disease.py:16: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sgpt: float = Field(..., ge=0.0, le=1000.0, description="SGPT / ALT", example=35.0)
+
+app\schemas\liver_disease.py:17
+  D:\medigenie\backend\app\schemas\liver_disease.py:17: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sgot: float = Field(..., ge=0.0, le=1000.0, description="SGOT / AST", example=40.0)
+
+app\schemas\hepatitis.py:10
+  D:\medigenie\backend\app\schemas\hepatitis.py:10: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    age: float = Field(..., description="Age in years", example=45)
+
+app\schemas\hepatitis.py:11
+  D:\medigenie\backend\app\schemas\hepatitis.py:11: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    bilirubin: float = Field(..., description="Bilirubin level", example=1.2)
+
+app\schemas\hepatitis.py:12
+  D:\medigenie\backend\app\schemas\hepatitis.py:12: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    alk_phosphatase: float = Field(..., description="Alkaline phosphatase", example=85)
+
+app\schemas\hepatitis.py:13
+  D:\medigenie\backend\app\schemas\hepatitis.py:13: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sgpt: float = Field(..., description="SGPT / ALT", example=30)
+
+app\schemas\hepatitis.py:14
+  D:\medigenie\backend\app\schemas\hepatitis.py:14: PydanticDeprecatedSince20: Using extra keyword arguments on `Field` is deprecated and will be removed. Use `json_schema_extra` instead. (Extra keys: 'example'). Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    sgot: float = Field(..., description="SGOT / AST", example=40)
+
+tests/test_integration_breast_cancer.py::test_breast_cancer_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator DecisionTreeClassifier from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_breast_cancer.py::test_breast_cancer_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator RandomForestClassifier from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_breast_cancer.py::test_breast_cancer_service_predicts_and_returns_explanations
+tests/test_integration_diabetes.py::test_diabetes_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator FunctionTransformer from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_breast_cancer.py::test_breast_cancer_service_predicts_and_returns_explanations
+tests/test_integration_diabetes.py::test_diabetes_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator StandardScaler from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_breast_cancer.py::test_breast_cancer_service_predicts_and_returns_explanations
+tests/test_integration_diabetes.py::test_diabetes_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator Pipeline from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+tests/test_integration_diabetes.py::test_diabetes_service_predicts_and_returns_explanations
+  C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\sklearn\base.py:525: InconsistentVersionWarning: Trying to unpickle estimator LogisticRegression from version 1.7.2 when using version 1.9.0. This might lead to breaking code or invalid results. Use at your own risk. For more info please refer to:
+  https://scikit-learn.org/stable/model_persistence.html#security-maintainability-limitations
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_integration_hepatitis.py::test_hepatitis_api_predict_endpoint
+FAILED tests/test_integration_hepatitis.py::test_api_hepatitis_predict_full_response
+FAILED tests/test_integration_hepatitis.py::test_supervisor_hepatitis_workflow
+FAILED tests/test_integration_breast_cancer.py::test_breast_cancer_api_predict_endpoint
+FAILED tests/test_integration_breast_cancer.py::test_api_breast_cancer_predict_full_response
+FAILED tests/test_integration_breast_cancer.py::test_supervisor_breast_cancer_workflow
+FAILED tests/test_integration_diabetes.py::test_diabetes_api_predict_endpoint
+FAILED tests/test_integration_diabetes.py::test_disease_risk_agent_uses_diabetes_service_for_diabetes_context
+8 failed, 7 passed, 58 warnings in 12.16s
+
+EXIT_CODE: 1

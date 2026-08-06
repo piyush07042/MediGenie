@@ -24,9 +24,14 @@ from app.api.reporting import router as reporting_router
 from app.api.upload import router as upload_router
 from app.api.version import router as version_router
 from app.api.v1.heart_disease import router as heart_disease_router
+from app.api.v1.heart_failure import router as heart_failure_router
 from app.api.v1.diabetes import router as diabetes_router
 from app.api.v1.kidney_disease import router as kidney_disease_router
 from app.api.v1.liver import router as liver_router
+from app.api.v1.breast_cancer import router as breast_cancer_router
+from app.api.v1.parkinsons import router as parkinsons_router
+from app.api.v1.hepatitis import router as hepatitis_router
+from app.api.v1.stroke import router as stroke_router
 
 api_router = APIRouter()
 
@@ -105,9 +110,14 @@ api_router.include_router(
     version_router,
 )
 api_router.include_router(heart_disease_router)
+api_router.include_router(heart_failure_router)
 api_router.include_router(diabetes_router)
 api_router.include_router(kidney_disease_router)
 api_router.include_router(liver_router)
+api_router.include_router(breast_cancer_router)
+api_router.include_router(parkinsons_router)
+api_router.include_router(hepatitis_router)
+api_router.include_router(stroke_router)
 api_router.include_router(diagnostics_router, prefix="/diagnostics")
 
 # =====================================================

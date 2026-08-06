@@ -102,14 +102,26 @@ class Settings(BaseSettings):
 
     MODEL_ROOT: str = "models"
     HEART_DISEASE_MODEL_DIRECTORY: str = "models/heart_disease"
+    HEART_FAILURE_MODEL_DIRECTORY: str = "models/heart_failure_model"
+    STROKE_MODEL_DIRECTORY: str = "models/stroke_model"
+    DIABETES_MODEL_DIRECTORY: str = "models/diabetes"
     KIDNEY_DISEASE_MODEL_DIRECTORY: str = "models/kidney_disease_model"
     LIVER_DISEASE_MODEL_DIRECTORY: str = "models/liver_disease_model"
+    BREAST_CANCER_MODEL_DIRECTORY: str = "models/breast_cancer_model"
+    PARKINSONS_MODEL_DIRECTORY: str = "models/parkinsons_model"
+    HEPATITIS_MODEL_DIRECTORY: str = "models/hepatitis_model"
     RAG_DB_DIRECTORY: str = "medigenie_rag_db"
+    # ==========================================================
+    # Parkinson's Disease Confidence Thresholds (configurable)
+    PARKINSONS_CONFIDENCE_HIGH: float = 0.85
+    PARKINSONS_CONFIDENCE_MEDIUM: float = 0.65
     # ==========================================================
     # Heart Disease Confidence Thresholds (configurable)
     # ==========================================================
     HEART_CONFIDENCE_HIGH: float = 0.85
     HEART_CONFIDENCE_MEDIUM: float = 0.65
+    HEART_FAILURE_CONFIDENCE_HIGH: float = 0.85
+    HEART_FAILURE_CONFIDENCE_MEDIUM: float = 0.65
     # ==========================================================
     # Kidney Disease Confidence Thresholds (configurable)
     # ==========================================================
@@ -120,6 +132,17 @@ class Settings(BaseSettings):
     # ==========================================================
     LIVER_CONFIDENCE_HIGH: float = 0.85
     LIVER_CONFIDENCE_MEDIUM: float = 0.65
+    # ==========================================================
+    # Breast Cancer Confidence Thresholds (configurable)
+    # ==========================================================
+    BREAST_CANCER_CONFIDENCE_HIGH: float = 0.85
+    BREAST_CANCER_CONFIDENCE_MEDIUM: float = 0.65
+    # ==========================================================
+    # Hepatitis Confidence Thresholds (configurable)
+    HEPATITIS_CONFIDENCE_HIGH: float = 0.85
+    HEPATITIS_CONFIDENCE_MEDIUM: float = 0.65
+    STROKE_CONFIDENCE_HIGH: float = 0.85
+    STROKE_CONFIDENCE_MEDIUM: float = 0.65
 
     # ==========================================================
     # OCR

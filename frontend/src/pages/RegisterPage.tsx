@@ -6,7 +6,8 @@ import toast from "react-hot-toast";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { registerSchema } from "../utils/validation";
-import { register } from "../services/authService";
+import { register as registerUser } from "../services/authService";
+import { useAuthStore } from "../store/authStore";
 import type { RegisterFormValues } from "../types/form";
 import FormField from "../components/FormField";
 
@@ -29,18 +30,27 @@ export default function RegisterPage() {
 
   const password = watch("password") ?? "";
 
+  const [formError, setFormError] = useState<string | null>(null);
+  const login = useAuthStore((state) => state.login);
+
   const onSubmit = async (data: RegisterFormValues & { confirmPassword: string }) => {
+    setFormError(null);
+
     if (data.password !== data.confirmPassword) {
+      setFormError("Passwords do not match.");
       toast.error("Passwords do not match.");
       return;
     }
 
     try {
-      await register({ email: data.email, password: data.password, full_name: data.full_name });
-      toast.success("Registration successful. Please log in.");
-      navigate("/login");
+      await registerUser({ email: data.email, password: data.password, full_name: data.full_name });
+      await login({ email: data.email, password: data.password });
+      toast.success("Registration successful. Redirecting to dashboard...");
+      navigate("/");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Registration failed. Try again.");
+      const message = error instanceof Error ? error.message : "Registration failed. Try again.";
+      setFormError(message);
+      toast.error(message);
     }
   };
 
@@ -73,6 +83,7 @@ export default function RegisterPage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              {formError ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{formError}</div> : null}
               <FormField label="Full name" placeholder="Jane Doe" register={registerField("full_name")} error={errors.full_name} />
               <FormField label="Email" type="email" placeholder="you@example.com" register={registerField("email")} error={errors.email} />
 

@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="30" time="26.158" timestamp="2026-08-05T20:44:17.359912+05:30" hostname="DESKTOP-DR0UDHB"><testcase classname="tests.agents.test_disease_risk" name="test_prepare_heart_model_input_creates_heart_fields" time="0.062" /><testcase classname="tests.agents.test_disease_risk" name="test_disease_risk" time="0.024"><failure message="AttributeError: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'">@pytest.mark.asyncio
+    async def test_disease_risk():
+    
+        state = AgentState()
+    
+        state.patient_context = {
+            "age": 58,
+            "glucose": 175,
+            "bmi": 31,
+        }
+    
+        agent = DiseaseRiskAgent()
+    
+&gt;       result = await agent.run(state)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\agents\test_disease_risk.py:43: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\agents\risk\disease_risk_agent.py:250: in run
+    diabetes_service = get_diabetes_service(Path(settings.DIABETES_MODEL_DIRECTORY))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Settings(APP_NAME='MediGenie', APP_VERSION='1.0.0', ENVIRONMENT='development', DEBUG=True, REQUEST_ID_HEADER='X-Reques...NDS=0, SCHEDULER_PATIENT_ID=None, SCHEDULER_OUT_DIR='temp_reports', SCHEDULER_DRY_RUN=True, AGENT_FALLBACK_MAPPINGS={})
+item = 'DIABETES_MODEL_DIRECTORY'
+
+    def __getattr__(self, item: str) -&gt; Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+&gt;                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\main.py:1042: AttributeError</failure></testcase><testcase classname="tests.agents.test_disease_risk" name="test_disease_risk_uses_diabetes_model_when_diagnosis_is_diabetes" time="0.072"><failure message="AttributeError: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'">@pytest.mark.asyncio
+    async def test_disease_risk_uses_diabetes_model_when_diagnosis_is_diabetes():
+    
+        state = AgentState()
+    
+        state.patient_context = {
+            "age": 55,
+            "bmi": 32,
+            "glucose": 150,
+            "systolic_bp": 140,
+            "cholesterol": 220,
+            "diagnosis": "Type 2 Diabetes",
+        }
+    
+        agent = DiseaseRiskAgent()
+    
+&gt;       result = await agent.run(state)
+                 ^^^^^^^^^^^^^^^^^^^^^^
+
+tests\agents\test_disease_risk.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\agents\risk\disease_risk_agent.py:250: in run
+    diabetes_service = get_diabetes_service(Path(settings.DIABETES_MODEL_DIRECTORY))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = Settings(APP_NAME='MediGenie', APP_VERSION='1.0.0', ENVIRONMENT='development', DEBUG=True, REQUEST_ID_HEADER='X-Reques...NDS=0, SCHEDULER_PATIENT_ID=None, SCHEDULER_OUT_DIR='temp_reports', SCHEDULER_DRY_RUN=True, AGENT_FALLBACK_MAPPINGS={})
+item = 'DIABETES_MODEL_DIRECTORY'
+
+    def __getattr__(self, item: str) -&gt; Any:
+        private_attributes = object.__getattribute__(self, '__private_attributes__')
+        if item in private_attributes:
+            attribute = private_attributes[item]
+            if hasattr(attribute, '__get__'):
+                return attribute.__get__(self, type(self))  # type: ignore
+    
+            try:
+                # Note: self.__pydantic_private__ cannot be None if self.__private_attributes__ has items
+                return self.__pydantic_private__[item]  # type: ignore
+            except KeyError as exc:
+                raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}') from exc
+        else:
+            # `__pydantic_extra__` can fail to be set if the model is not yet fully initialized.
+            # See `BaseModel.__repr_args__` for more details
+            try:
+                pydantic_extra = object.__getattribute__(self, '__pydantic_extra__')
+            except AttributeError:
+                pydantic_extra = None
+    
+            if pydantic_extra and item in pydantic_extra:
+                return pydantic_extra[item]
+            else:
+                if hasattr(self.__class__, item):
+                    return super().__getattribute__(item)  # Raises AttributeError if appropriate
+                else:
+                    # this is the current error
+&gt;                   raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+E                   AttributeError: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'
+
+C:\Users\Piyush Gupta\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\main.py:1042: AttributeError</failure></testcase><testcase classname="tests.agents.test_disease_risk" name="test_disease_risk_uses_kidney_model_when_diagnosis_is_kidney" time="0.059" /><testcase classname="tests.agents.test_drug_safety" name="test_drug_safety" time="0.007" /><testcase classname="tests.agents.test_drug_safety" name="test_drug_safety_service_interaction_and_allergy" time="0.002" /><testcase classname="tests.agents.test_drug_safety" name="test_drug_safety_service_pregnancy_and_renal_liver" time="0.002" /><testcase classname="tests.agents.test_medical_knowledge" name="test_medical_knowledge" time="10.797" /><testcase classname="tests.agents.test_patient_intake" name="test_patient_intake_success" time="0.004" /><testcase classname="tests.agents.test_patient_intake" name="test_patient_intake_empty_context" time="0.003" /><testcase classname="tests.agents.test_phase5_rag_integration" name="test_phase5_rag_integration_flow" time="0.273" /><testcase classname="tests.agents.test_phase5_rag_integration" name="test_http_phase5_response_includes_evidence" time="0.276" /><testcase classname="tests.agents.test_recommendation" name="test_recommendation" time="0.007" /><testcase classname="tests.agents.test_recommendation_evidence" name="test_recommendations_attach_retrieved_evidence" time="0.004" /><testcase classname="tests.agents.test_recommendation_service" name="test_generate_recommendation_combines_all_sources" time="0.004" /><testcase classname="tests.agents.test_report_analysis" name="test_report_analysis" time="0.011" /><testcase classname="tests.agents.test_report_analysis" name="test_parser_extracts_structured_metrics" time="0.005" /><testcase classname="tests.agents.test_report_analysis" name="test_parser_handles_abbreviations_units_and_reference_ranges" time="0.005" /><testcase classname="tests.agents.test_report_analysis" name="test_parser_handles_alternate_label_formats_and_missing_values" time="0.004" /><testcase classname="tests.agents.test_report_analysis" name="test_parser_ignores_invalid_or_missing_values" time="0.003" /><testcase classname="tests.agents.test_report_analysis" name="test_supervisor_pipeline_with_uploaded_pdf_and_image" time="0.054" /><testcase classname="tests.agents.test_report_analysis" name="test_supervisor_routes_parsed_metrics_to_disease_risk" time="0.030"><failure message="assert None in {'high', 'low', 'moderate'}&#10; +  where None = &lt;built-in method get of dict object at 0x0000029D2D944800&gt;('risk_level')&#10; +    where &lt;built-in method get of dict object at 0x0000029D2D944800&gt; = {}.get&#10; +      where {} = AgentState(patient={'patient_id': 'P2222', 'age': 60, 'sex': 'Male', 'gender': 'Male', 'systolic_bp': 145.0, 'diastoli...ribute 'DIABETES_MODEL_DIRECTORY'&quot;, &quot;DiseaseRiskAgent: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'&quot;]).disease_risk">monkeypatch = &lt;_pytest.monkeypatch.MonkeyPatch object at 0x0000029D2D4FF850&gt;
+tmp_path = WindowsPath('C:/Users/Piyush Gupta/AppData/Local/Temp/pytest-of-Piyush Gupta/pytest-9/test_supervisor_routes_parsed_0')
+
+    @pytest.mark.asyncio
+    async def test_supervisor_routes_parsed_metrics_to_disease_risk(monkeypatch, tmp_path):
+        report_path = tmp_path / "risk_report.pdf"
+        report_path.write_bytes(b"pdf")
+    
+        def fake_extract_text(self, file_path: str) -&gt; str:
+            return "Patient ID: P2222\nAge: 60 years\nSex: Male\nBP: 145/95 mmHg\nFBS: 132 mg/dL\nCholesterol: 240\nBMI: 31\nECG: ST-T changes noted"
+    
+        monkeypatch.setattr(
+            "app.agents.report_analysis.medical_report_analysis_agent.OCRService.extract_text",
+            fake_extract_text,
+        )
+    
+        state = AgentState(uploaded_reports=[str(report_path)])
+        supervisor = Supervisor()
+        updated_state, workflow_results, _ = await supervisor.run(state)
+    
+        assert updated_state.extracted_metrics["glucose"] == 132.0
+        assert updated_state.patient["age"] == 60
+&gt;       assert updated_state.disease_risk.get("risk_level") in {"low", "moderate", "high"}
+E       assert None in {'high', 'low', 'moderate'}
+E        +  where None = &lt;built-in method get of dict object at 0x0000029D2D944800&gt;('risk_level')
+E        +    where &lt;built-in method get of dict object at 0x0000029D2D944800&gt; = {}.get
+E        +      where {} = AgentState(patient={'patient_id': 'P2222', 'age': 60, 'sex': 'Male', 'gender': 'Male', 'systolic_bp': 145.0, 'diastoli...ribute 'DIABETES_MODEL_DIRECTORY'", "DiseaseRiskAgent: 'Settings' object has no attribute 'DIABETES_MODEL_DIRECTORY'"]).disease_risk
+
+tests\agents\test_report_analysis.py:195: AssertionError</failure></testcase><testcase classname="tests.agents.test_report_analysis" name="test_supervisor_handles_ocr_failure_gracefully" time="0.007" /><testcase classname="tests.agents.test_report_generation" name="test_report_generation_agent_builds_structured_report" time="0.004" /><testcase classname="tests.agents.test_report_generation" name="test_generate_clinical_pdf_report_includes_sections" time="0.021" /><testcase classname="tests.agents.test_report_generation" name="test_build_final_report_includes_required_sections" time="0.002" /><testcase classname="tests.agents.test_report_generation" name="test_build_report_from_storage_uses_persisted_ai_report" time="0.002" /><testcase classname="tests.agents.test_report_generation" name="test_generate_clinical_pdf_report_from_storage_report" time="0.020" /><testcase classname="tests.supervisor.test_executor" name="test_executor_executes_pipeline" time="0.006" /><testcase classname="tests.supervisor.test_supervisor" name="test_supervisor_initialization" time="0.004" /><testcase time="0.002" /></testsuite></testsuites>
