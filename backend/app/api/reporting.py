@@ -15,6 +15,9 @@ from app.core.report_renderer import (
     render_report_html,
 )
 from app.services.report.report_service import build_report_from_storage
+from app.utils.pdf_report import generate_medigenie_report
+from io import BytesIO
+from fastapi.responses import StreamingResponse
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +126,46 @@ def generate_pdf(
         media_type="application/pdf",
         filename=filename,
     )
+
+
+@router.get("/medigenie/{patient_id}/pdf")
+def generate_medigenie_pdf(
+    patient_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Generate a MediGenie-styled clinical PDF report for a patient using the ReportLab template.
+    """
+    patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id)
+        .first()
+    )
+
+    if patient is None:
+        raise HTTPException(status_code=404, detail="Patient not found")
+
+    summary = (
+        db.query(AIReport)
+        .filter(AIReport.patient_id == patient.id)
+        .order_by(AIReport.id.desc())
+        .first()
+    )
+
+    if summary is None:
+        raise HTTPException(status_code=404, detail="Clinical report not found for this patient.")
+
+    report = build_report_from_storage(
+        patient=_serialize_model(patient),
+        summary=_serialize_model(summary),
+        generated_at=summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
+    )
+
+    pdf_bytes = generate_medigenie_report(report)
+
+    stream = BytesIO(pdf_bytes)
+    stream.seek(0)
+    return StreamingResponse(stream, media_type="application/pdf", headers={"Content-Disposition": f"attachment; filename=MediGenie_Report_{patient.id}.pdf"})
 
 
 @router.get("/{patient_id}/html")

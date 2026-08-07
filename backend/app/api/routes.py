@@ -9,7 +9,9 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.auth import router as auth_router
+from app.api.dashboard import router as dashboard_router
 from app.api.chat import router as chat_router
+from app.api.settings import router as settings_router
 from app.api.clinical import router as clinical_router
 from app.api.diagnostics import router as diagnostics_router
 from app.api.drug_safety import router as drug_safety_router
@@ -48,6 +50,7 @@ api_router.include_router(
 # =====================================================
 
 api_router.include_router(patients_router)
+api_router.include_router(dashboard_router)
 
 # =====================================================
 # Clinical Decision Support
@@ -88,6 +91,7 @@ api_router.include_router(fhir_router)
 # =====================================================
 
 api_router.include_router(chat_router)
+api_router.include_router(settings_router)
 
 # =====================================================
 # Health & Monitoring

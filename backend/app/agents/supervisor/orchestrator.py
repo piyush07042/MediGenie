@@ -8,6 +8,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import logging
+import time
 
 from app.agents.base.agent_result import AgentResult
 from app.agents.base.agent_state import AgentState
@@ -170,7 +171,18 @@ class WorkflowOrchestrator:
         """Execute one agent with configurable retry and backoff."""
         timeout_seconds = self._get_timeout_for_agent(state, agent.agent_name)
         result: AgentResult | None = None
+
+        # ---- structured execution log: start ----
+        start_ts = time.time()
+        self.logger.info(
+            "[AGENT START] agent=%s attempt=1/%s timeout=%s",
+            agent.agent_name,
+            self.max_retries + 1,
+            timeout_seconds,
+        )
+
         for attempt in range(self.max_retries + 1):
+            attempt_start = time.time()
             try:
                 result = await asyncio.wait_for(agent.execute(state), timeout=timeout_seconds)
             except asyncio.TimeoutError:
@@ -181,6 +193,11 @@ class WorkflowOrchestrator:
                     result={},
                     error=f"Timed out after {timeout_seconds}s",
                 )
+                self.logger.warning(
+                    "[AGENT TIMEOUT] agent=%s timeout=%ss",
+                    agent.agent_name,
+                    timeout_seconds,
+                )
             except Exception as exc:
                 result = AgentResult(
                     agent=agent.agent_name,
@@ -189,8 +206,23 @@ class WorkflowOrchestrator:
                     result={},
                     error=str(exc),
                 )
+                self.logger.error(
+                    "[AGENT ERROR] agent=%s attempt=%s error=%s",
+                    agent.agent_name,
+                    attempt + 1,
+                    exc,
+                    exc_info=True,
+                )
 
+            attempt_duration_ms = round((time.time() - attempt_start) * 1000, 2)
             if result.success:
+                self.logger.info(
+                    "[AGENT SUCCESS] agent=%s attempt=%s duration_ms=%s confidence=%s",
+                    agent.agent_name,
+                    attempt + 1,
+                    attempt_duration_ms,
+                    result.confidence,
+                )
                 break
 
             if attempt < self.max_retries:
@@ -203,6 +235,14 @@ class WorkflowOrchestrator:
                     await asyncio.sleep(delay)
                 state.add_warning(
                     f"{agent.agent_name} failed; retrying ({attempt + 1}/{self.max_retries})"
+                )
+                self.logger.warning(
+                    "[AGENT RETRY] agent=%s attempt=%s/%s delay=%ss error=%s",
+                    agent.agent_name,
+                    attempt + 1,
+                    self.max_retries,
+                    delay,
+                    result.error if result else "unknown",
                 )
 
         if result is None:
@@ -232,6 +272,32 @@ class WorkflowOrchestrator:
 
         if result.error and self._is_agent_critical(agent.agent_name, state):
             state.metadata.setdefault("critical_failures", []).append(agent.agent_name)
+
+        # ---- structured execution log: finish ----
+        total_duration_ms = round((time.time() - start_ts) * 1000, 2)
+        log_entry = {
+            "agent": agent.agent_name,
+            "status": result.status if result else "FAILED",
+            "success": result.success if result else False,
+            "duration_ms": total_duration_ms,
+            "confidence": result.confidence if result else 0.0,
+            "error": result.error if result else None,
+        }
+        state.metadata.setdefault("execution_log", []).append(log_entry)
+
+        if result and not result.success:
+            self.logger.warning(
+                "[AGENT FAILED] agent=%s duration_ms=%s error=%s",
+                agent.agent_name,
+                total_duration_ms,
+                result.error,
+            )
+        else:
+            self.logger.info(
+                "[AGENT DONE] agent=%s duration_ms=%s",
+                agent.agent_name,
+                total_duration_ms,
+            )
 
         metrics.record(result)
         state.record_agent_result(

@@ -42,6 +42,43 @@ class PatientCreate(BaseModel):
     medical_history: Optional[Dict[str, Any]] = {}
     allergies: Optional[List[str]] = []
     current_medications: Optional[List[str]] = []
+    avatar_url: Optional[str] = None
+
+
+class PatientUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    medical_history: Optional[Dict[str, Any]] = None
+    allergies: Optional[List[str]] = None
+    current_medications: Optional[List[str]] = None
+    avatar_url: Optional[str] = None
+
+
+class MedicalHistoryEntryCreate(BaseModel):
+    title: str
+    description: str = ""
+    event_type: str = "note"
+    date: Optional[str] = None
+
+
+class TimelineEventSchema(BaseModel):
+    id: str
+    title: str
+    description: str
+    event_type: str
+    date: str
+    source: str
+
+
+class VisitRecordSchema(BaseModel):
+    id: str
+    date: str
+    visit_type: str
+    summary: str
+    status: str
+
 
 class PatientResponse(PatientCreate):
     id: int
@@ -50,3 +87,11 @@ class PatientResponse(PatientCreate):
 
     class Config:
         from_attributes = True
+
+
+class PaginatedPatientsSchema(BaseModel):
+    items: list[PatientResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

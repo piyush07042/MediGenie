@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import IllegalStateChangeError
 from sqlalchemy.engine import URL
 import logging
@@ -45,9 +45,32 @@ SessionLocal = sessionmaker(
 )
 
 
+def _ensure_patient_avatar_column() -> None:
+    """Add the avatar_url column to existing sqlite patient tables when missing."""
+    if not str(engine.url).startswith("sqlite"):
+        return
+
+    try:
+        with engine.begin() as connection:
+            existing_columns = {
+                row[1]
+                for row in connection.execute(text("PRAGMA table_info(patients)"))
+            }
+            if "avatar_url" not in existing_columns:
+                connection.execute(text("ALTER TABLE patients ADD COLUMN avatar_url VARCHAR"))
+    except Exception as exc:  # pragma: no cover - defensive migration path
+        logger = logging.getLogger("app.db.session")
+        logger.warning("Unable to ensure patients.avatar_url column exists: %s", exc)
+
+
 def create_database():
     """Create tables if the database is available."""
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:  # pragma: no cover - tolerate existing DB issues during startup
+        logger = logging.getLogger("app.db.session")
+        logger.warning("create_all raised an exception: %s", exc)
+    _ensure_patient_avatar_column()
 
 
 def get_db():

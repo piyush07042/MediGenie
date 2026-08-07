@@ -10,7 +10,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <main className="flex-1 flex flex-col">
           <TopNavbar />
           <div className="flex-1 overflow-hidden">
-            <div className="min-h-[calc(100vh-128px)] rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-soft sm:px-8 sm:py-8">
+            <div className="min-h-screen rounded-3xl border border-slate-200 bg-white px-6 py-6 shadow-soft sm:px-8 sm:py-8">
               {children}
             </div>
           </div>

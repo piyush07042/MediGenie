@@ -3,10 +3,12 @@ Medical Knowledge Agent
 
 Responsibilities
 ----------------
-1. Build a medical search query from the patient context.
+1. Build a disease-specific search query from the patient context.
 2. Retrieve evidence from the ChromaDB knowledge base.
-3. Store retrieved evidence into AgentState.
-4. Return standardized AgentResult.
+3. Re-rank results by combined similarity + disease-relevance boost.
+4. Deduplicate and attach rank + supporting references.
+5. Store retrieved evidence into AgentState.
+6. Return standardized AgentResult.
 """
 
 from __future__ import annotations
@@ -20,10 +22,43 @@ from app.core.rag import (
     query_knowledge_base,
 )
 
+# Disease keywords used to boost relevance of matching documents
+_DISEASE_KEYWORDS: dict[str, list[str]] = {
+    "diabetes": ["diabetes", "glucose", "hba1c", "insulin", "metformin", "ada", "glycemic"],
+    "heart disease": ["heart", "cardiac", "cardiovascular", "coronary", "aha", "acc", "ecg", "troponin"],
+    "stroke": ["stroke", "tpa", "thrombolysis", "ischemic", "hemorrhagic", "nihss", "asa"],
+    "kidney disease": ["kidney", "renal", "ckd", "egfr", "creatinine", "dialysis", "kdigo"],
+    "liver disease": ["liver", "hepatic", "cirrhosis", "alt", "ast", "bilirubin", "aasld"],
+    "breast cancer": ["breast", "cancer", "mammogram", "biopsy", "nccn", "oncology"],
+    "parkinson": ["parkinson", "dopamine", "levodopa", "aan", "tremor", "motor"],
+    "hepatitis": ["hepatitis", "hbsag", "hcv", "viral", "liver", "aasld"],
+    "thyroid": ["thyroid", "tsh", "hypothyroid", "hyperthyroid", "levothyroxine"],
+    "hypertension": ["hypertension", "blood pressure", "systolic", "diastolic", "antihypertensive"],
+}
+
+
+def _compute_relevance_boost(document_text: str, disease: str | None) -> float:
+    """Return 0.0–0.3 relevance boost based on disease-keyword overlap in the document."""
+    if not disease:
+        return 0.0
+    disease_lower = disease.lower()
+    # Find best matching keyword group
+    keywords: list[str] = []
+    for key, kws in _DISEASE_KEYWORDS.items():
+        if key in disease_lower or disease_lower in key:
+            keywords = kws
+            break
+    if not keywords:
+        return 0.0
+    doc_lower = document_text.lower()
+    matched = sum(1 for kw in keywords if kw in doc_lower)
+    return min(0.3, matched * 0.06)
+
 
 class MedicalKnowledgeAgent(BaseAgent):
     """
     Retrieves evidence from the medical knowledge base (RAG).
+    Applies disease-specific re-ranking and deduplication.
     """
 
     agent_name = "MedicalKnowledgeAgent"
@@ -36,14 +71,26 @@ class MedicalKnowledgeAgent(BaseAgent):
         # -----------------------------------------------------
         # Ensure knowledge base is initialized
         # -----------------------------------------------------
-
         seed_sample_guidelines()
 
         # -----------------------------------------------------
-        # Build query from available patient context
+        # Detect primary disease from state
         # -----------------------------------------------------
+        disease: str | None = (
+            (state.disease_risk or {}).get("disease")
+            or (state.disease_risk or {}).get("condition")
+            or (state.disease_risk or {}).get("label")
+            or (state.disease_risk or {}).get("prediction")
+            or (state.disease_risk or {}).get("risk_category")
+        )
 
-        query_parts = []
+        # -----------------------------------------------------
+        # Build query from patient context
+        # -----------------------------------------------------
+        query_parts: list[str] = []
+
+        if disease:
+            query_parts.append(str(disease))
 
         if state.symptoms:
             query_parts.extend(state.symptoms)
@@ -51,46 +98,41 @@ class MedicalKnowledgeAgent(BaseAgent):
         if state.disease_risk:
             risk = state.disease_risk.get("condition") or state.disease_risk.get("evaluated_condition")
             category = state.disease_risk.get("risk_category")
-
-            if risk:
+            if risk and risk not in query_parts:
                 query_parts.append(risk)
-
-            if category:
+            if category and category not in query_parts:
                 query_parts.append(category)
 
         if state.extracted_metrics:
-
             glucose = state.extracted_metrics.get("glucose")
-
             if glucose is not None and glucose >= 126:
-                query_parts.append("Diabetes")
-
+                if "Diabetes" not in query_parts:
+                    query_parts.append("Diabetes")
             systolic = state.extracted_metrics.get("systolic_bp")
-
             if systolic is not None and systolic >= 140:
-                query_parts.append("Hypertension")
+                if "Hypertension" not in query_parts:
+                    query_parts.append("Hypertension")
+
+        diagnosis = getattr(state, "diagnosis", None) or state.patient.get("diagnosis")
+        if diagnosis and str(diagnosis) not in query_parts:
+            query_parts.append(str(diagnosis))
 
         if not query_parts:
             query_parts.append("General Clinical Guidelines")
-
-        diagnosis = getattr(state, "diagnosis", None) or state.patient.get("diagnosis")
-        if diagnosis:
-            query_parts.append(str(diagnosis))
 
         query = " ".join(query_parts)
 
         # -----------------------------------------------------
         # Query RAG
         # -----------------------------------------------------
-
         documents = query_knowledge_base(
             query_text=query,
-            n_results=3,
+            n_results=5,  # retrieve more so re-ranking can select best
         )
 
-        knowledge = []
-        citations = []
-        evidence = []
+        knowledge: list[dict] = []
+        citations: list[dict] = []
+        evidence: list[str] = []
 
         for document in documents:
             if isinstance(document, dict):
@@ -122,7 +164,10 @@ class MedicalKnowledgeAgent(BaseAgent):
                 "similarity_score": similarity_score,
             })
 
-        unique_knowledge = []
+        # -----------------------------------------------------
+        # Deduplicate
+        # -----------------------------------------------------
+        unique_knowledge: list[dict] = []
         seen_docs: set[tuple[str, str]] = set()
         for entry in knowledge:
             doc_text = str(entry.get("document", "") or "").strip()
@@ -131,6 +176,34 @@ class MedicalKnowledgeAgent(BaseAgent):
             if key not in seen_docs and doc_text:
                 seen_docs.add(key)
                 unique_knowledge.append(entry)
+
+        # -----------------------------------------------------
+        # Disease-relevance re-ranking
+        # -----------------------------------------------------
+        for entry in unique_knowledge:
+            base_score = float(entry.get("similarity_score") or 0.0)
+            boost = _compute_relevance_boost(str(entry.get("document", "")), disease)
+            entry["relevance_score"] = round(base_score + boost, 4)
+
+        unique_knowledge.sort(key=lambda e: e.get("relevance_score", 0.0), reverse=True)
+
+        # Add rank and build references
+        references: list[dict] = []
+        for rank, entry in enumerate(unique_knowledge, start=1):
+            entry["rank"] = rank
+            meta = entry.get("metadata") or {}
+            src = meta.get("source") or meta.get("title") or "Clinical guideline"
+            references.append({
+                "rank": rank,
+                "source": src,
+                "excerpt": str(entry.get("document", ""))[:200],
+                "similarity_score": entry.get("similarity_score"),
+                "relevance_score": entry.get("relevance_score"),
+            })
+
+        # Keep only top 3 after re-ranking
+        unique_knowledge = unique_knowledge[:3]
+        references = references[:3]
 
         if not unique_knowledge:
             state.add_warning("No knowledge evidence was retrieved for the current query.")
@@ -146,7 +219,6 @@ class MedicalKnowledgeAgent(BaseAgent):
         # -----------------------------------------------------
         # Return Result
         # -----------------------------------------------------
-
         return AgentResult(
             agent=self.agent_name,
             status="SUCCESS",
@@ -155,9 +227,12 @@ class MedicalKnowledgeAgent(BaseAgent):
             evidence=evidence,
             metadata={
                 "query": query,
+                "disease_detected": disease,
                 "documents_found": len(unique_knowledge),
                 "citations": citations,
-                "similarity_scores": [entry.get("similarity_score") for entry in unique_knowledge],
+                "references": references,
+                "similarity_scores": [e.get("similarity_score") for e in unique_knowledge],
+                "relevance_scores": [e.get("relevance_score") for e in unique_knowledge],
             },
         )
 
@@ -168,5 +243,4 @@ class MedicalKnowledgeAgent(BaseAgent):
         """
         Optional validation.
         """
-
-        return
+        return

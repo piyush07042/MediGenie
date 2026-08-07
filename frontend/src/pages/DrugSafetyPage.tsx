@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -9,8 +9,20 @@ import { drugSafetySchema } from "../utils/validation";
 import { analyzeDrugSafety } from "../api/drugSafety";
 import type { DrugSafetyFormValues } from "../types/form";
 
+type ParsedDrugSafety = {
+  overall_risk?: string;
+  recommendation?: string;
+  interactions?: Array<Record<string, any>>;
+  contraindications?: Array<Record<string, any>>;
+  allergies?: Array<Record<string, any>>;
+  monitoring_advice?: string;
+  medications_checked?: string[];
+  pregnancy?: Record<string, any>;
+};
+
 export default function DrugSafetyPage() {
   const [result, setResult] = useState<string | null>(null);
+  const [parsedResult, setParsedResult] = useState<ParsedDrugSafety | null>(null);
   const {
     register,
     handleSubmit,
@@ -26,12 +38,41 @@ export default function DrugSafetyPage() {
         allergies: data.allergies ? data.allergies.split(",").map((item) => item.trim()) : [],
       });
       const value = response.data;
-      setResult(typeof value === "string" ? value : JSON.stringify(value, null, 2));
+      if (typeof value === "string") {
+        setResult(value);
+        setParsedResult(null);
+      } else {
+        const parsed = value as Record<string, any>;
+        setResult(JSON.stringify(parsed, null, 2));
+        setParsedResult({
+          overall_risk: parsed?.overall_risk || parsed?.status || parsed?.assessment?.overall_risk,
+          recommendation: parsed?.recommendation || parsed?.assessment?.recommendation || parsed?.summary,
+          interactions: parsed?.interactions || parsed?.assessment?.interactions || [],
+          contraindications: parsed?.contraindications || parsed?.assessment?.contraindications || [],
+          allergies: parsed?.allergies || parsed?.assessment?.allergies || [],
+          monitoring_advice: parsed?.monitoring_advice || parsed?.assessment?.monitoring_advice,
+          medications_checked: parsed?.medications_checked || parsed?.assessment?.medications_checked || [],
+          pregnancy: parsed?.pregnancy || parsed?.assessment?.pregnancy,
+        });
+      }
       toast.success("Drug safety analysis complete.");
     } catch (error) {
       toast.error("Unable to analyze medications.");
     }
   };
+
+  const severityTone = (severity?: string) => {
+    const value = (severity || "").toLowerCase();
+    if (value.includes("high") || value.includes("contraindicated")) return "border-red-200 bg-red-50 text-red-700";
+    if (value.includes("moderate") || value.includes("warning")) return "border-amber-200 bg-amber-50 text-amber-700";
+    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+  };
+
+  const summaryCards = useMemo(() => [
+    { label: "Overall risk", value: parsedResult?.overall_risk || "Pending" },
+    { label: "Medication count", value: parsedResult?.medications_checked?.length ? String(parsedResult.medications_checked.length) : "0" },
+    { label: "Interactions", value: parsedResult?.interactions?.length ? String(parsedResult.interactions.length) : "0" },
+  ], [parsedResult]);
 
   return (
     <div className="space-y-10">
@@ -49,7 +90,56 @@ export default function DrugSafetyPage() {
 
         <Card title="Assessment result">
           {result ? (
-            <p className="text-sm text-slate-700">{result}</p>
+            <div className="space-y-5">
+              <div className="grid gap-3 sm:grid-cols-3">
+                {summaryCards.map((item) => (
+                  <div key={item.label} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {parsedResult?.recommendation ? (
+                <div className="rounded-3xl border border-brand-200 bg-brand-50 p-4 text-sm text-slate-700">
+                  <p className="font-semibold text-slate-900">Clinical recommendation</p>
+                  <p className="mt-2">{parsedResult.recommendation}</p>
+                </div>
+              ) : null}
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900">Interactions</p>
+                {parsedResult?.interactions?.length ? parsedResult.interactions.map((interaction, index) => (
+                  <div key={index} className={`rounded-3xl border p-4 ${severityTone(interaction.severity)}`}>
+                    <p className="font-semibold">{interaction.drugs_involved?.join(" + ") || "Interaction"}</p>
+                    <p className="mt-2 text-sm">{interaction.explanation || interaction.recommendation}</p>
+                    {interaction.recommendation ? <p className="mt-2 text-sm font-medium">{interaction.recommendation}</p> : null}
+                  </div>
+                )) : <p className="text-sm text-slate-500">No interactions detected.</p>}
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-slate-900">Contraindications</p>
+                {parsedResult?.contraindications?.length ? parsedResult.contraindications.map((item, index) => (
+                  <div key={index} className={`rounded-3xl border p-4 ${severityTone(item.severity)}`}>
+                    <p className="font-semibold">{item.medication || item.condition}</p>
+                    <p className="mt-2 text-sm">{item.explanation || item.recommendation}</p>
+                  </div>
+                )) : <p className="text-sm text-slate-500">No contraindications flagged.</p>}
+              </div>
+
+              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
+                <p className="font-semibold text-slate-900">Printable interaction report</p>
+                <p className="mt-2">Use this summary to share or print a concise medication-risk review for the care team.</p>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="mt-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Print report
+                </button>
+              </div>
+            </div>
           ) : (
             <p className="text-sm text-slate-500">Enter medications to receive a safety assessment from the backend.</p>
           )}

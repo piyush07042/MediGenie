@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PageHeading from "../../components/PageHeading";
 import Card from "../../components/Card";
@@ -9,6 +10,8 @@ export default function ReportPreviewPage() {
   const state = location.state as { result?: UploadReportResponse; fileName?: string } | null;
   const result = state?.result;
   const fileName = state?.fileName;
+  const [editedText, setEditedText] = useState("");
+  const [savedCorrection, setSavedCorrection] = useState(false);
 
   if (!result) {
     return (
@@ -29,6 +32,38 @@ export default function ReportPreviewPage() {
   }
 
   const workflow = result.workflow_state;
+  const ocrText = useMemo(() => {
+    const rawText = workflow?.report_text ?? workflow?.ocr_result?.text ?? workflow?.ocr_result?.full_text ?? "";
+    if (typeof rawText === "string") {
+      return rawText;
+    }
+    return JSON.stringify(rawText, null, 2);
+  }, [workflow]);
+
+  useMemo(() => {
+    setEditedText(ocrText);
+  }, [ocrText]);
+
+  const handleSaveCorrection = () => {
+    setSavedCorrection(true);
+    const nextWorkflow = {
+      ...(workflow ?? {}),
+      report_text: editedText,
+      metadata: {
+        ...(workflow?.metadata ?? {}),
+        ocr_correction_saved: true,
+      },
+    };
+
+    localStorage.setItem("medigenie_ocr_correction", JSON.stringify({ fileName, editedText, savedAt: new Date().toISOString() }));
+    navigate("/upload-report/preview", {
+      state: {
+        result: { ...result, workflow_state: nextWorkflow },
+        fileName,
+      },
+      replace: true,
+    });
+  };
 
   return (
     <div className="space-y-10">
@@ -50,7 +85,7 @@ export default function ReportPreviewPage() {
               <span className="font-semibold">Errors</span>: {workflow?.errors?.length ?? 0}
             </p>
             <p>
-              <span className="font-semibold">Extracted metrics</span>: {Object.keys(workflow?.extracted_metrics ?? {}).length}
+              <span className="font-semibold">Extracted metrics</span>: {Object.keys((workflow?.extracted_metrics ?? {}) as Record<string, unknown>).length}
             </p>
           </div>
         </Card>
@@ -78,13 +113,32 @@ export default function ReportPreviewPage() {
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card title="OCR result">
-          {workflow?.ocr_result ? (
-            <pre className="max-h-[320px] overflow-auto rounded-3xl bg-slate-950 p-4 text-sm text-slate-100">
-              {JSON.stringify(workflow.ocr_result, null, 2)}
-            </pre>
-          ) : (
-            <p className="text-sm text-slate-500">No OCR output was extracted from this report.</p>
-          )}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm text-slate-500">Edit extracted OCR text before moving to the next step.</p>
+              <button
+                type="button"
+                onClick={handleSaveCorrection}
+                className="rounded-2xl border border-brand-600 bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
+              >
+                Save correction
+              </button>
+            </div>
+            {ocrText ? (
+              <textarea
+                rows={12}
+                value={editedText}
+                onChange={(event) => {
+                  setEditedText(event.target.value);
+                  setSavedCorrection(false);
+                }}
+                className="min-h-[260px] w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
+              />
+            ) : (
+              <p className="text-sm text-slate-500">No OCR output was extracted from this report.</p>
+            )}
+            {savedCorrection ? <p className="text-sm text-emerald-600">Correction saved locally for this session.</p> : null}
+          </div>
         </Card>
 
         <Card title="Recommendations">

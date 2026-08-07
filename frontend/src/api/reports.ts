@@ -6,6 +6,7 @@ export const getReportHtmlUrl = (patientId: number, template = "report_template.
 };
 
 export const getReportPdfUrl = (patientId: number) => `/reports/${patientId}/pdf`;
+export const getReportPdfDownloadUrl = (patientId: number) => `/reports/medigenie/${patientId}/pdf`;
 
 export type ReportTemplateResponse = {
   templates: string[];

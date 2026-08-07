@@ -65,6 +65,7 @@ def generate_clinical_pdf_report(report: dict[str, Any]) -> bytes:
     recommendations = report.get("recommendations") or []
     follow_up = report.get("follow_up") or []
     clinical_summary = report.get("clinical_summary") or "No clinical summary available."
+    clinical_intelligence = report.get("clinical_intelligence") or {}
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -202,6 +203,19 @@ def generate_clinical_pdf_report(report: dict[str, Any]) -> bytes:
     else:
         story.append(Paragraph("No follow-up actions provided.", body_style))
     story.append(Spacer(1, 16))
+
+    if clinical_intelligence:
+        story.append(Paragraph("Clinical Intelligence", heading_style))
+        for key, value in clinical_intelligence.items():
+            if isinstance(value, list):
+                story.append(Paragraph(f"<b>{key}:</b>", body_style))
+                for item in value:
+                    story.append(Paragraph(f"• {item}", body_style))
+                    story.append(Spacer(1, 2))
+            else:
+                story.append(Paragraph(f"<b>{key}:</b> {value}", body_style))
+            story.append(Spacer(1, 6))
+        story.append(Spacer(1, 10))
 
     generated_at = _safe_text(report.get("generated_at"), "Unknown")
     story.append(Paragraph(f"Report generated at: {generated_at}", body_style))

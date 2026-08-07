@@ -19,7 +19,7 @@ const iconMap: Record<string, ReactNode> = {
 
 export default function SystemStatus({ data, loading }: { data: SystemStatusItem[]; loading: boolean }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-soft">
+    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-soft sm:p-6">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.28em] text-slate-400">System Health</p>
@@ -29,7 +29,7 @@ export default function SystemStatus({ data, loading }: { data: SystemStatusItem
       <div className="grid gap-4 sm:grid-cols-2">
         {loading
           ? Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-24 rounded-3xl bg-slate-100" />
+              <div key={index} className="h-24 animate-pulse rounded-3xl bg-slate-100" />
             ))
           : data.map((item) => (
               <div key={item.service} className="flex items-center justify-between rounded-3xl bg-slate-50 px-4 py-4">

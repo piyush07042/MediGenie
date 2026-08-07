@@ -11,6 +11,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.agents.base.agent_state import AgentState
+from app.clinical_intelligence.engine import generate_clinical_intelligence
 from app.models.models import AIReport
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,71 @@ def build_final_report(state: AgentState) -> dict[str, Any]:
         "metadata": metadata,
     }
 
+    # Attach Clinical Intelligence (guideline-derived summary) when possible
+    # Prefer clinical_intelligence already present (from persisted summary) so PDF/UI use single source of truth
+    clinical_intel = None
+    if isinstance(state.metadata, dict) and state.metadata.get("clinical_intelligence"):
+        clinical_intel = state.metadata.get("clinical_intelligence")
+    elif isinstance(state.final_report, dict) and state.final_report.get("clinical_intelligence"):
+        clinical_intel = state.final_report.get("clinical_intelligence")
+    else:
+        # try common locations for disease identifier
+        disease_key = (
+            state.metadata.get("disease")
+            or state.disease_risk.get("disease")
+            or state.disease_risk.get("label")
+            or state.disease_risk.get("prediction")
+            or recommendation_output.get("disease")
+            or None
+        )
+        try:
+            clinical_intel = generate_clinical_intelligence(str(disease_key) if disease_key else "", state.disease_risk or {}, state.patient or {})
+        except Exception:
+            clinical_intel = {}
+
+    # ── Section 9: References ── built from RAG citations ────────────────
+    references: list[dict[str, Any]] = []
+    for kr in (state.knowledge_results or []):
+        if not isinstance(kr, dict):
+            continue
+        meta = kr.get("metadata") or {}
+        src = meta.get("source") or meta.get("title") or "Clinical guideline"
+        doc_excerpt = str(kr.get("document", ""))[:200]
+        if src or doc_excerpt:
+            references.append({"source": src, "excerpt": doc_excerpt, "similarity_score": kr.get("similarity_score")})
+    # Also pull guideline reference from CI
+    ci_guideline = (clinical_intel or {}).get("Guideline") or (clinical_intel or {}).get("Guideline Source")
+    if ci_guideline and not any(r.get("source") == ci_guideline for r in references):
+        references.append({"source": ci_guideline, "excerpt": "Official clinical guideline referenced by Clinical Intelligence engine.", "similarity_score": None})
+
+    report["references"] = references
+
+    # ── Guarantee all 9 mandatory sections are present ───────────────────
+    report.setdefault("patient_information", report.get("patient_summary") or {"name": "Unknown", "age": None, "gender": None})
+    report.setdefault("prediction_results", report.get("prediction") or {})
+    report.setdefault("clinical_intelligence", clinical_intel or {})
+    report.setdefault("guideline_recommendations", (
+        recommendation_output.get("guideline_actions") or []
+        if isinstance(recommendation_output, dict) else []
+    ))
+    report.setdefault("drug_safety", state.drug_analysis or {})
+    report.setdefault("risk_assessment", {
+        "risk_category": state.disease_risk.get("risk_category") or state.disease_risk.get("risk_level") or "Unknown",
+        "probability": state.disease_risk.get("probability") or state.disease_risk.get("risk_score"),
+        "confidence_label": state.disease_risk.get("confidence_label"),
+        "top_factors": state.disease_risk.get("top_factors") or state.disease_risk.get("drivers") or [],
+    })
+    report.setdefault("ai_summary", report.get("clinical_summary") or "")
+    report.setdefault("follow_up_plan", report.get("follow_up") or [])
+    report.setdefault("references", references)
+
+    # ── Section manifest ─────────────────────────────────────────────────
+    report["sections"] = [
+        "patient_information", "prediction_results", "clinical_intelligence",
+        "guideline_recommendations", "drug_safety", "risk_assessment",
+        "ai_summary", "follow_up_plan", "references",
+    ]
+
     report["structured_recommendation"] = recommendation_output
     report["recommendation_summary"] = recommendation_output.get("recommendation_summary") if isinstance(recommendation_output, dict) else None
     report["drug_safety_summary"] = recommendation_output.get("drug_safety_summary") if isinstance(recommendation_output, dict) else {}
@@ -67,6 +133,7 @@ def build_final_report(state: AgentState) -> dict[str, Any]:
     report["recommendation_priority"] = recommendation_output.get("recommendation_priority") if isinstance(recommendation_output, dict) else None
 
     return report
+
 
 
 def get_patient_id_from_context(patient: dict[str, Any] | None) -> int | None:
@@ -86,12 +153,28 @@ def get_patient_id_from_context(patient: dict[str, Any] | None) -> int | None:
 def save_ai_report(db: Session, patient_id: int, final_state: AgentState) -> AIReport:
     logger.info("Saving report... Patient ID=%s", patient_id)
 
+    # Build the final report dict to capture any computed fields (but prefer stored clinical_intelligence when present)
+    try:
+        final_report_dict = build_final_report(final_state)
+    except Exception:
+        final_report_dict = {}
+
+    clinical_intel = None
+    # Prefer any clinical_intelligence already present on the AgentState metadata/final_report
+    if isinstance(final_state.metadata, dict) and final_state.metadata.get("clinical_intelligence"):
+        clinical_intel = final_state.metadata.get("clinical_intelligence")
+    elif isinstance(final_state.final_report, dict) and final_state.final_report.get("clinical_intelligence"):
+        clinical_intel = final_state.final_report.get("clinical_intelligence")
+    else:
+        clinical_intel = final_report_dict.get("clinical_intelligence")
+
     report_payload = AIReport(
         patient_id=patient_id,
         risk_assessment=final_state.disease_risk or {},
         rag_evidence=final_state.knowledge_results or [],
         drug_safety_alerts=final_state.drug_analysis or {},
-        clinical_summary=(final_state.final_report or {}).get("clinical_summary", "") or "",
+        clinical_summary=(final_report_dict or {}).get("clinical_summary", "") or "",
+        clinical_intelligence=clinical_intel,
     )
 
     db.add(report_payload)
@@ -299,6 +382,9 @@ def build_report_from_storage(
     state.warnings = summary.get("warnings") or []
     state.errors = summary.get("errors") or []
     state.metadata = summary.get("metadata") or {}
+    # If the persisted AIReport includes a clinical_intelligence section, preserve it
+    if isinstance(summary, dict) and summary.get("clinical_intelligence"):
+        state.metadata["clinical_intelligence"] = summary.get("clinical_intelligence")
 
     if generated_at:
         state.metadata["generated_at"] = generated_at

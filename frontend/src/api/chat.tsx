@@ -22,3 +22,13 @@ export const sendChat = async (payload: ChatPayload): Promise<ApiResponse<ChatRe
   const response = await api.post<ApiResponse<ChatResponseData>>("/chat/", payload);
   return response.data;
 };
+
+export const storeConversation = async (payload: { patient_id?: number; title?: string; messages: Array<{ role: string; text: string; timestamp?: string; metadata?: Record<string, any> }>; metadata?: Record<string, any> }) => {
+  const response = await api.post<ApiResponse<Record<string, any>>>("/chat/store", payload);
+  return response.data;
+};
+
+export const getConversationsForPatient = async (patientId: number) => {
+  const response = await api.get<ApiResponse<any[]>>(`/chat/patient/${patientId}/conversations`);
+  return response.data;
+};

@@ -56,7 +56,7 @@ function formatDrugName(value: string) {
 export default function DrugSafetyPage() {
   const [searchParams] = useSearchParams();
   const queryPatientId = searchParams.has("patientId") ? Number(searchParams.get("patientId")) : null;
-  const patientId = Number.isInteger(queryPatientId) && queryPatientId > 0 ? queryPatientId : null;
+  const patientId = queryPatientId !== null && Number.isInteger(queryPatientId) && queryPatientId > 0 ? queryPatientId : null;
 
   const [selectedMedications, setSelectedMedications] = useState<string[]>([]);
   const [allergies, setAllergies] = useState("");
@@ -82,7 +82,7 @@ export default function DrugSafetyPage() {
   });
 
   const patient = patientQuery.data as Patient | null;
-  const history = historyQuery.data?.data ?? [] as DrugSafetyStoredAssessment[];
+  const history = (historyQuery.data?.data ?? []) as DrugSafetyStoredAssessment[];
 
   const hasSelectedMedications = selectedMedications.length > 0;
 
@@ -178,7 +178,7 @@ export default function DrugSafetyPage() {
           .map((item) => item.trim())
           .filter(Boolean),
       });
-      await queryClient.invalidateQueries(["drugSafetyHistory", patientId]);
+      await queryClient.invalidateQueries({ queryKey: ["drugSafetyHistory", patientId] });
     } catch {
       // Fail silently, current UI remains usable.
     } finally {

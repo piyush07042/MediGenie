@@ -4,8 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 import PageHeading from "../components/PageHeading";
 import Card from "../components/Card";
 import { listPatients } from "../api/patients";
-import { getReportHtmlUrl, getReportPdfUrl, listReportTemplates } from "../api/reports";
-import type { Patient, ReportTemplateResponse } from "../types/api";
+import { getReportHtmlUrl, getReportPdfDownloadUrl, listReportTemplates } from "../api/reports";
+import type { ReportTemplateResponse } from "../types/api";
+import { clearReportHistory, loadReportHistory, saveReportHistoryEntry } from "../utils/reportHistory";
+import type { Patient } from "../types/api";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
 
@@ -18,13 +20,15 @@ export default function ReportsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<string>("report_template.html");
   const [reportMode, setReportMode] = useState<"html" | "pdf">("html");
   const [filter, setFilter] = useState("");
+  const [history, setHistory] = useState(loadReportHistory());
+  const [versionNote, setVersionNote] = useState("Clinical summary update");
 
-  const patientsQuery = useQuery({ queryKey: ["patients"], queryFn: listPatients, staleTime: 1000 * 60 * 5 });
+  const patientsQuery = useQuery({ queryKey: ["patients"], queryFn: () => listPatients(), staleTime: 1000 * 60 * 5 });
   const templatesQuery = useQuery<ReportTemplateResponse>({ queryKey: ["reportTemplates"], queryFn: listReportTemplates, staleTime: 1000 * 60 * 10 });
 
-  const patients = patientsQuery.data?.data ?? [];
+  const patients: Patient[] = patientsQuery.data?.data ?? [];
   const selectedPatient = useMemo(
-    () => patients.find((patient) => patient.id === selectedPatientId) ?? null,
+    () => patients.find((patient: Patient) => patient.id === selectedPatientId) ?? null,
     [patients, selectedPatientId]
   );
 
@@ -43,7 +47,7 @@ export default function ReportsPage() {
   const filteredPatients = useMemo(() => {
     if (!filter.trim()) return patients;
     const text = filter.toLowerCase();
-    return patients.filter((patient) => {
+    return patients.filter((patient: Patient) => {
       const fullName = `${patient.first_name} ${patient.last_name}`.toLowerCase();
       return (
         fullName.includes(text) ||
@@ -56,7 +60,7 @@ export default function ReportsPage() {
   const reportUrl = useMemo(() => {
     if (!selectedPatientId) return null;
     if (reportMode === "pdf") {
-      return `${API_BASE_URL}${getReportPdfUrl(selectedPatientId)}`;
+      return `${API_BASE_URL}${getReportPdfDownloadUrl(selectedPatientId)}`;
     }
     return `${API_BASE_URL}${getReportHtmlUrl(selectedPatientId, selectedTemplate)}`;
   }, [reportMode, selectedPatientId, selectedTemplate]);
@@ -64,6 +68,41 @@ export default function ReportsPage() {
   const handlePatientSelect = (patientId: number) => {
     setSelectedPatientId(patientId);
     setSearchParams({ patientId: String(patientId) });
+  };
+
+  const handleShare = async () => {
+    if (!selectedPatient) {
+      return;
+    }
+
+    const nextHistory = saveReportHistoryEntry({
+      patientId: selectedPatient.id,
+      patientName: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+      template: selectedTemplate,
+      mode: reportMode,
+      url: reportUrl ?? "",
+      viewedAt: new Date().toISOString(),
+      summary: `${selectedPatient.first_name} ${selectedPatient.last_name} • ${reportMode.toUpperCase()} report`,
+    });
+    setHistory(nextHistory);
+    navigator.clipboard.writeText(reportUrl ?? "").catch(() => undefined);
+  };
+
+  const handleVersionSave = () => {
+    if (!selectedPatient) {
+      return;
+    }
+
+    const nextHistory = saveReportHistoryEntry({
+      patientId: selectedPatient.id,
+      patientName: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
+      template: selectedTemplate,
+      mode: reportMode,
+      url: reportUrl ?? "",
+      viewedAt: new Date().toISOString(),
+      summary: `${versionNote || "Version update"} · ${selectedPatient.first_name} ${selectedPatient.last_name}`,
+    });
+    setHistory(nextHistory);
   };
 
   return (
@@ -97,7 +136,7 @@ export default function ReportsPage() {
               <p className="text-sm text-slate-500">No patients found. Add a patient or upload a report to see available reports.</p>
             ) : (
               <div className="space-y-3">
-                {filteredPatients.slice(0, 20).map((patient) => (
+                {filteredPatients.slice(0, 20).map((patient: Patient) => (
                   <button
                     key={patient.id}
                     type="button"
@@ -178,8 +217,24 @@ export default function ReportsPage() {
 
                     <div className="space-y-2">
                       <p className="text-sm font-medium text-slate-700">Actions</p>
+                      <label className="block text-sm font-medium text-slate-700">
+                        Version note
+                        <input
+                          value={versionNote}
+                          onChange={(event) => setVersionNote(event.target.value)}
+                          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
+                          placeholder="Clinical summary update"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleVersionSave}
+                        className="inline-flex min-w-[160px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Save version
+                      </button>
                       <a
-                        href={selectedPatientId ? `${API_BASE_URL}${getReportPdfUrl(selectedPatientId)}` : "#"}
+                        href={selectedPatientId ? `${API_BASE_URL}${getReportPdfDownloadUrl(selectedPatientId)}` : "#"}
                         target="_blank"
                         rel="noreferrer"
                         className={`inline-flex min-w-[160px] items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold text-white transition ${
@@ -189,6 +244,13 @@ export default function ReportsPage() {
                       >
                         Download PDF
                       </a>
+                      <button
+                        type="button"
+                        onClick={handleShare}
+                        className="inline-flex min-w-[160px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Share link
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -213,10 +275,34 @@ export default function ReportsPage() {
             </div>
           </Card>
 
-          <Card title="Report notes">
-            <p className="text-sm text-slate-500">
-              Use this page to review AI-generated clinical notes and export finished reports. For the best experience, upload or analyze a patient record first so the backend can save the corresponding AI summary.
-            </p>
+          <Card title="Recent report history">
+            {history.length ? (
+              <div className="space-y-3">
+                {history.map((item) => (
+                  <div key={item.id} className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-slate-900">{item.patientName}</p>
+                        <p className="mt-1 text-sm text-slate-500">{item.mode.toUpperCase()} • {item.template}</p>
+                      </div>
+                      <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-brand-700">
+                        v{item.version}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm text-slate-600">{item.summary}</p>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setHistory(clearReportHistory())}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  Clear history
+                </button>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No report history yet. Preview a report to add it here.</p>
+            )}
           </Card>
         </div>
       </div>

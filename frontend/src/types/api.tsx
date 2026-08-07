@@ -28,7 +28,25 @@ export type Patient = {
   medical_history?: Record<string, any>;
   allergies?: string[];
   current_medications?: string[];
+  avatar_url?: string | null;
   created_at: string;
+};
+
+export type PatientTimelineEvent = {
+  id: string;
+  title: string;
+  description: string;
+  event_type: string;
+  date: string;
+  source: string;
+};
+
+export type PatientVisitRecord = {
+  id: string;
+  date: string;
+  visit_type: string;
+  summary: string;
+  status: string;
 };
 
 export type HeartDiseasePredictionRequest = {

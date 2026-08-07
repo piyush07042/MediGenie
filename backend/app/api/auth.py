@@ -4,7 +4,7 @@ Authentication API
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,8 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models.models import User
+from app.models.models import UserSession, LoginEvent
+import uuid
 from app.schemas.common import ApiResponse
 from app.schemas.schemas import LoginResponse, Token, UserCreate, UserResponse
 from app.core.logging import get_logger
@@ -101,6 +103,7 @@ def register_user(
 def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
+    request: Request = None,
 ):
     logger.info("Login attempt for username=%s", form_data.username)
     user = (
@@ -116,6 +119,18 @@ def login(
             user.hashed_password,
         )
     ):
+        # record failed login event
+        try:
+            ip = None
+            device = None
+            if request is not None and request.client:
+                ip = request.client.host
+            device = request.headers.get("user-agent") if request is not None else None
+            evt = LoginEvent(user_id=user.id if user else None or 0, ip_address=ip, device_info=device, successful=0)
+            db.add(evt)
+            db.commit()
+        except Exception:
+            db.rollback()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
@@ -129,6 +144,21 @@ def login(
     )
 
     token = _build_token_payload(user, access_token)
+
+    # record successful login and create session
+    try:
+        ip = None
+        device = None
+        if request is not None and request.client:
+            ip = request.client.host
+        device = request.headers.get("user-agent") if request is not None else None
+        evt = LoginEvent(user_id=user.id, ip_address=ip, device_info=device, successful=1)
+        db.add(evt)
+        session = UserSession(user_id=user.id, session_token=access_token, device_info=device, ip_address=ip)
+        db.add(session)
+        db.commit()
+    except Exception:
+        db.rollback()
 
     return LoginResponse(
         access_token=access_token,
@@ -145,6 +175,7 @@ def login(
 def login_json(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
+    request: Request = None,
 ):
     logger.info("JSON login attempt for username=%s", form_data.username)
     user = (
@@ -160,6 +191,18 @@ def login_json(
             user.hashed_password,
         )
     ):
+        # record failed login event
+        try:
+            ip = None
+            device = None
+            if request is not None and request.client:
+                ip = request.client.host
+            device = request.headers.get("user-agent") if request is not None else None
+            evt = LoginEvent(user_id=user.id if user else None or 0, ip_address=ip, device_info=device, successful=0)
+            db.add(evt)
+            db.commit()
+        except Exception:
+            db.rollback()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password.",
@@ -173,6 +216,21 @@ def login_json(
     )
 
     token = _build_token_payload(user, access_token)
+
+    # record successful login and create session
+    try:
+        ip = None
+        device = None
+        if request is not None and request.client:
+            ip = request.client.host
+        device = request.headers.get("user-agent") if request is not None else None
+        evt = LoginEvent(user_id=user.id, ip_address=ip, device_info=device, successful=1)
+        db.add(evt)
+        session = UserSession(user_id=user.id, session_token=access_token, device_info=device, ip_address=ip)
+        db.add(session)
+        db.commit()
+    except Exception:
+        db.rollback()
 
     return ApiResponse(
         message="Login successful.",

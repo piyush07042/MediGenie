@@ -205,6 +205,7 @@ class DrugSafetyService:
         assessment = {
             "status": "PASS" if overall_risk == "Low" else "FLAGGED",
             "overall_risk": overall_risk,
+            "severity_score": self._calculate_severity_score(interactions, contraindications, allergies),
             "medications_checked": [self._render_medication(med) for med in medications_clean],
             "interactions": interactions,
             "contraindications": contraindications,
@@ -213,6 +214,7 @@ class DrugSafetyService:
             "renal_adjustment": renal_adjustment,
             "liver_adjustment": liver_adjustment,
             "patient_conditions": sorted(list(conditions)),
+            "alternative_medications": self._suggest_alternatives(medications_clean, interactions, contraindications, conditions),
             "recommendation": self._build_overall_recommendation(
                 overall_risk,
                 interactions,
@@ -225,6 +227,86 @@ class DrugSafetyService:
         }
 
         return {"drug_safety_assessment": assessment}
+
+    def _calculate_severity_score(
+        self,
+        interactions: List[Dict[str, Any]],
+        contraindications: List[Dict[str, Any]],
+        allergies: List[Dict[str, Any]],
+    ) -> int:
+        """Return a 0–10 composite severity score for the full drug safety assessment."""
+        score = 0
+        severity_weights = {"Major": 3, "Moderate": 2, "Minor": 1}
+        for item in (interactions + contraindications + allergies):
+            sev = item.get("severity", "Minor")
+            score += severity_weights.get(sev, 1)
+        return min(score, 10)
+
+    def _suggest_alternatives(
+        self,
+        medications: List[str],
+        interactions: List[Dict[str, Any]],
+        contraindications: List[Dict[str, Any]],
+        conditions: set,
+    ) -> List[Dict[str, Any]]:
+        """Suggest safer alternative medications for flagged drugs."""
+        _ALTERNATIVES: Dict[str, Dict[str, str]] = {
+            "ibuprofen": {
+                "alternative": "Acetaminophen",
+                "reason": "Safer analgesic/antipyretic without cardiovascular or renal risk.",
+            },
+            "naproxen": {
+                "alternative": "Acetaminophen",
+                "reason": "Avoids NSAID-related cardiovascular and renal concerns.",
+            },
+            "warfarin": {
+                "alternative": "Direct oral anticoagulant (DOAC, e.g., apixaban)",
+                "reason": "DOACs have a more predictable pharmacokinetic profile and fewer interactions.",
+            },
+            "metformin": {
+                "alternative": "SGLT-2 inhibitor or GLP-1 agonist",
+                "reason": "Preferred in patients with moderate-to-severe renal impairment.",
+            },
+            "ciprofloxacin": {
+                "alternative": "Azithromycin or doxycycline",
+                "reason": "Avoids fluoroquinolone-associated drug interactions and tendinopathy risk.",
+            },
+            "diazepam": {
+                "alternative": "Short-acting benzodiazepine (e.g., lorazepam 0.5 mg) or melatonin",
+                "reason": "Reduces fall and cognitive impairment risk in elderly patients.",
+            },
+            "propranolol": {
+                "alternative": "Cardioselective beta-blocker (e.g., bisoprolol or metoprolol)",
+                "reason": "Avoids bronchospasm risk in asthma and masks hypoglycemia less in diabetes.",
+            },
+        }
+
+        flagged_drugs: set = set()
+        for item in interactions:
+            for d in item.get("drugs_involved", []):
+                flagged_drugs.add(d.lower().replace(" ", "_").replace("-", "_"))
+        for item in contraindications:
+            med = item.get("medication", "")
+            if med:
+                flagged_drugs.add(med.lower().replace(" ", "_").replace("-", "_"))
+
+        suggestions: List[Dict[str, Any]] = []
+        seen: set = set()
+        for drug in flagged_drugs:
+            norm_drug = drug.replace("_", "")
+            for key, alt_info in _ALTERNATIVES.items():
+                if key.replace("_", "") in norm_drug or norm_drug in key.replace("_", ""):
+                    if key not in seen:
+                        suggestions.append({
+                            "original_medication": self._render_medication(drug),
+                            "suggested_alternative": alt_info["alternative"],
+                            "reason": alt_info["reason"],
+                        })
+                        seen.add(key)
+                    break
+
+        return suggestions
+
 
     def build_agent_output(self, assessment: Dict[str, Any]) -> tuple[List[str], List[str]]:
         warnings: List[str] = []

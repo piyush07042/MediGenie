@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { Camera, FileText, History, Users } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import toast from "react-hot-toast";
@@ -7,10 +8,11 @@ import PageHeading from "../components/PageHeading";
 import Card from "../components/Card";
 import FormField from "../components/FormField";
 import { patientSchema } from "../utils/validation";
-import { createPatient, deletePatient, listPatients, updatePatient } from "../api/patients";
+import { createPatient, deletePatient, getPatientTimeline, getPatientVisits, listPatients, updatePatient, uploadPatientAvatar } from "../api/patients";
 import type { PatientFormValues } from "../types/form";
 import type { Patient, ApiResponse } from "../types/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { invalidateDashboardCache } from "../services/dashboardService";
 
 type PatientSortKey = "created_at" | "first_name" | "age" | "gender";
 const PAGE_SIZE_OPTIONS = [5, 8, 12];
@@ -31,14 +33,47 @@ function formatPatientNotes(patient: Patient) {
   return JSON.stringify(patient.medical_history, null, 2);
 }
 
+function formatHistoryValue(value: unknown) {
+  if (typeof value === "string") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(", ");
+  }
+
+  if (value && typeof value === "object") {
+    return JSON.stringify(value, null, 2);
+  }
+
+  return "No additional details recorded.";
+}
+
+function buildTimelineEvents(patient: Patient, events: any[]) {
+  if (events.length) {
+    return events;
+  }
+
+  const note = formatPatientNotes(patient);
+  if (note && note !== "No medical history recorded.") {
+    return [
+      {
+        id: `patient-note-${patient.id}`,
+        title: "Clinical summary",
+        description: note,
+        event_type: "summary",
+        date: patient.created_at,
+        source: "Patient record",
+      },
+    ];
+  }
+
+  return [];
+}
+
 export default function PatientsPage() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery<ApiResponse<Patient[]>>({
-    queryKey: ["patients"],
-    queryFn: listPatients,
-    staleTime: 1000 * 60 * 5,
-  });
-
+  const [searchInput, setSearchInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
   const [sortKey, setSortKey] = useState<PatientSortKey>("created_at");
@@ -46,9 +81,17 @@ export default function PatientsPage() {
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[1]);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
-  const [patientOverrides, setPatientOverrides] = useState<Record<number, Patient>>({});
-  const [deletedPatientIds, setDeletedPatientIds] = useState<Set<number>>(new Set());
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [timeline, setTimeline] = useState<any[]>([]);
+  const [visits, setVisits] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  const { data, isLoading } = useQuery<ApiResponse<Patient[]>>({
+    queryKey: ["patients"],
+    queryFn: () => listPatients({ search: searchTerm, gender: genderFilter, sort_by: sortKey, sort_dir: sortDirection, page: currentPage, page_size: pageSize }),
+    staleTime: 1000 * 60 * 5,
+  });
 
   const createForm = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -66,24 +109,18 @@ export default function PatientsPage() {
 
   const patients = data?.data ?? [];
 
-  const mergedPatients = useMemo(() => {
-    const active: Patient[] = [];
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchTerm(searchInput.trim());
+    }, 250);
 
-    patients.forEach((patient) => {
-      if (deletedPatientIds.has(patient.id)) {
-        return;
-      }
-
-      active.push(patientOverrides[patient.id] ?? patient);
-    });
-
-    return active;
-  }, [patients, patientOverrides, deletedPatientIds]);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   const filteredPatients = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return mergedPatients
+    return patients
       .filter((patient) => {
         const matchesSearch = normalizedSearch
           ? `${patient.first_name} ${patient.last_name}`.toLowerCase().includes(normalizedSearch) ||
@@ -108,10 +145,26 @@ export default function PatientsPage() {
 
         return direction * a[sortKey].toString().localeCompare(b[sortKey].toString(), undefined, { numeric: true });
       });
-  }, [mergedPatients, searchTerm, genderFilter, sortKey, sortDirection]);
+  }, [patients, searchTerm, genderFilter, sortKey, sortDirection]);
 
   const pageCount = Math.max(1, Math.ceil(filteredPatients.length / pageSize));
   const pagedPatients = filteredPatients.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const pageNumbers = useMemo(() => {
+    if (pageCount <= 1) {
+      return [1];
+    }
+
+    const maxButtons = 5;
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(pageCount, start + maxButtons - 1);
+
+    if (end - start + 1 < maxButtons) {
+      start = Math.max(1, end - maxButtons + 1);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [currentPage, pageCount]);
+  const selectedPatient = selectedPatientId ? filteredPatients.find((patient) => patient.id === selectedPatientId) : filteredPatients[0] ?? null;
 
   useEffect(() => {
     if (currentPage > pageCount) {
@@ -134,10 +187,31 @@ export default function PatientsPage() {
   }, [filteredPatients, selectedPatientId]);
 
   useEffect(() => {
-    if (!selectedPatientId && filteredPatients.length > 0) {
-      setSelectedPatientId(filteredPatients[0].id);
+    if (!selectedPatient?.id) {
+      setTimeline([]);
+      setVisits([]);
+      return;
     }
-  }, [filteredPatients, selectedPatientId]);
+
+    const loadHistory = async () => {
+      setIsLoadingHistory(true);
+      try {
+        const [timelineResponse, visitsResponse] = await Promise.all([
+          getPatientTimeline(selectedPatient.id),
+          getPatientVisits(selectedPatient.id),
+        ]);
+        setTimeline(timelineResponse.data ?? []);
+        setVisits(visitsResponse.data ?? []);
+      } catch {
+        setTimeline([]);
+        setVisits([]);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [selectedPatient?.id]);
 
   useEffect(() => {
     if (selectedPatientId && !isEditing) {
@@ -156,23 +230,21 @@ export default function PatientsPage() {
     }
   }, [selectedPatientId, filteredPatients, editForm, isEditing]);
 
-  const selectedPatient = selectedPatientId ? filteredPatients.find((patient) => patient.id === selectedPatientId) : filteredPatients[0] ?? null;
-
-  const totalPatients = mergedPatients.length;
-  const recentlyAddedCount = mergedPatients.filter((patient) => Date.now() - new Date(patient.created_at).getTime() <= 1000 * 60 * 60 * 24 * 30).length;
-  const highRiskCount = mergedPatients.filter((patient) => patient.age >= 65).length;
+  const totalPatients = patients.length;
+  const recentlyAddedCount = patients.filter((patient) => Date.now() - new Date(patient.created_at).getTime() <= 1000 * 60 * 60 * 24 * 30).length;
+  const highRiskCount = patients.filter((patient) => patient.age >= 65).length;
 
   const recentPatients = useMemo(
     () =>
-      [...mergedPatients]
+      [...patients]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5),
-    [mergedPatients]
+    [patients]
   );
 
   const genderOptions = useMemo(
-    () => ["all", ...Array.from(new Set(mergedPatients.map((patient) => patient.gender || "Unknown")))],
-    [mergedPatients]
+    () => ["all", ...Array.from(new Set(patients.map((patient) => patient.gender || "Unknown")))],
+    [patients]
   );
 
   const handleCreatePatient = async (values: PatientFormValues) => {
@@ -189,6 +261,8 @@ export default function PatientsPage() {
       toast.success("Patient record created.");
       createForm.reset({ gender: "Male" });
       queryClient.invalidateQueries({ queryKey: ["patients"] });
+      invalidateDashboardCache();
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
       toast.error("Unable to create patient. Please try again.");
     }
@@ -216,25 +290,13 @@ export default function PatientsPage() {
 
     try {
       await updatePatient(selectedPatient.id, payload);
-      setPatientOverrides((prev) => ({
-        ...prev,
-        [selectedPatient.id]: {
-          ...selectedPatient,
-          ...payload,
-        },
-      }));
       toast.success("Patient updated successfully.");
       setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      invalidateDashboardCache();
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
-      setPatientOverrides((prev) => ({
-        ...prev,
-        [selectedPatient.id]: {
-          ...selectedPatient,
-          ...payload,
-        },
-      }));
-      toast.success("Patient updated locally. Backend update not available yet.");
-      setIsEditing(false);
+      toast.error("Unable to update patient. Please try again.");
     }
   };
 
@@ -245,13 +307,13 @@ export default function PatientsPage() {
 
     try {
       await deletePatient(patientId);
-      setDeletedPatientIds((prev) => new Set(prev).add(patientId));
       toast.success("Patient deleted successfully.");
       setSelectedPatientId(null);
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      invalidateDashboardCache();
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     } catch (error) {
-      setDeletedPatientIds((prev) => new Set(prev).add(patientId));
-      toast.success("Patient removed locally. Backend delete not available yet.");
-      setSelectedPatientId(null);
+      toast.error("Unable to delete patient. Please try again.");
     }
   };
 
@@ -267,6 +329,27 @@ export default function PatientsPage() {
         current_medications: selectedPatient.current_medications?.join(", ") ?? "",
         medical_history: selectedPatient.medical_history?.notes ? String(selectedPatient.medical_history.notes) : "",
       });
+    }
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !selectedPatient) {
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+      await uploadPatientAvatar(selectedPatient.id, file);
+      toast.success("Patient avatar updated.");
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      invalidateDashboardCache();
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    } catch {
+      toast.error("Unable to upload avatar. Please try again.");
+    } finally {
+      setIsUploadingAvatar(false);
+      event.target.value = "";
     }
   };
 
@@ -297,8 +380,8 @@ export default function PatientsPage() {
                 <label className="block">
                   <span className="mb-2 block text-sm font-medium text-slate-700">Search</span>
                   <input
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
+                    value={searchInput}
+                    onChange={(event) => setSearchInput(event.target.value)}
                     placeholder="Name, allergy, medication"
                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
                   />
@@ -338,7 +421,7 @@ export default function PatientsPage() {
                 </label>
               </div>
 
-              <div className="overflow-hidden rounded-3xl border border-slate-200">
+              <div className="overflow-x-auto rounded-3xl border border-slate-200">
                 <table className="min-w-full border-collapse text-left text-sm text-slate-700">
                   <thead className="bg-slate-50 text-slate-500">
                     <tr>
@@ -372,16 +455,29 @@ export default function PatientsPage() {
                           <td className="px-4 py-4">{patient.allergies?.join(", ") || "None"}</td>
                           <td className="px-4 py-4">{new Date(patient.created_at).toLocaleDateString()}</td>
                           <td className="px-4 py-4">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                handleSelectPatient(patient.id);
-                              }}
-                              className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
-                            >
-                              View
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleSelectPatient(patient.id);
+                                }}
+                                className="rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-200"
+                              >
+                                View
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  handleDeletePatient(patient.id);
+                                }}
+                                className="rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-700"
+                                aria-label={`Delete patient ${patient.first_name} ${patient.last_name}`}
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -399,6 +495,7 @@ export default function PatientsPage() {
               <div className="flex flex-col gap-4 border-t border-slate-200 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-slate-500">
                   Showing {pagedPatients.length} of {filteredPatients.length} patients.
+                  {searchTerm ? ` · Search active: “${searchTerm}”` : ""}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -409,6 +506,16 @@ export default function PatientsPage() {
                   >
                     Previous
                   </button>
+                  {pageNumbers.map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`h-10 min-w-10 rounded-2xl border px-3 text-sm font-semibold transition ${currentPage === pageNumber ? "border-brand-600 bg-brand-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
                   <button
                     type="button"
                     disabled={currentPage >= pageCount}
@@ -483,8 +590,17 @@ export default function PatientsPage() {
                 {!isEditing ? (
                   <div className="space-y-5">
                     <div className="rounded-3xl bg-slate-50 p-5">
-                      <p className="text-lg font-semibold text-slate-900">{selectedPatient.first_name} {selectedPatient.last_name}</p>
-                      <p className="text-sm text-slate-500">Age {selectedPatient.age} • {selectedPatient.gender}</p>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <p className="text-lg font-semibold text-slate-900">{selectedPatient.first_name} {selectedPatient.last_name}</p>
+                          <p className="text-sm text-slate-500">Age {selectedPatient.age} • {selectedPatient.gender}</p>
+                        </div>
+                        <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                          <Camera className="h-4 w-4" />
+                          {isUploadingAvatar ? "Uploading..." : "Upload avatar"}
+                          <input type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
+                        </label>
+                      </div>
                       <p className="mt-4 text-sm leading-7 text-slate-700">{formatPatientNotes(selectedPatient)}</p>
                     </div>
 
@@ -496,6 +612,57 @@ export default function PatientsPage() {
                       <div className="rounded-3xl bg-slate-50 p-5">
                         <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Medications</p>
                         <p className="mt-3 text-sm text-slate-700">{selectedPatient.current_medications?.join(", ") || "No active medications"}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 lg:grid-cols-2">
+                      <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                        <div className="mb-4 flex items-center gap-2">
+                          <History className="h-4 w-4 text-brand-600" />
+                          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Timeline</p>
+                        </div>
+                        {isLoadingHistory ? (
+                          <p className="text-sm text-slate-500">Loading timeline…</p>
+                        ) : buildTimelineEvents(selectedPatient, timeline).length ? (
+                          <div className="space-y-3">
+                            {buildTimelineEvents(selectedPatient, timeline).slice(0, 4).map((event) => (
+                              <div key={event.id} className="rounded-2xl bg-slate-50 p-3">
+                                <p className="text-sm font-semibold text-slate-900">{event.title}</p>
+                                <p className="mt-1 text-sm text-slate-600">{formatHistoryValue(event.description)}</p>
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <p className="text-xs uppercase tracking-[0.22em] text-slate-400">{event.date}</p>
+                                  {event.source ? <span className="rounded-full bg-brand-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-700">{event.source}</span> : null}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">No timeline events recorded yet.</p>
+                        )}
+                      </div>
+                      <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                        <div className="mb-4 flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-brand-600" />
+                          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">Visit history</p>
+                        </div>
+                        {isLoadingHistory ? (
+                          <p className="text-sm text-slate-500">Loading visits…</p>
+                        ) : visits.length ? (
+                          <div className="space-y-3">
+                            {visits.slice(0, 4).map((visit) => (
+                              <div key={visit.id} className="rounded-2xl bg-slate-50 p-3">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className="text-sm font-semibold text-slate-900">{visit.visit_type}</p>
+                                  <span className="rounded-full bg-brand-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-700">{visit.status}</span>
+                                </div>
+                                <p className="mt-1 text-sm text-slate-600">{formatHistoryValue(visit.summary)}</p>
+                                <p className="mt-2 text-xs uppercase tracking-[0.22em] text-slate-400">{visit.date}</p>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-slate-500">No visit history yet. New encounters will appear here automatically.</p>
+                        )}
                       </div>
                     </div>
 
@@ -542,9 +709,6 @@ export default function PatientsPage() {
                       </button>
                     </div>
 
-                    <div className="rounded-3xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-700">
-                      Note: Edit and delete are applied locally when backend endpoints are unavailable.
-                    </div>
                   </div>
                 ) : (
                   <form onSubmit={editForm.handleSubmit(handleEditPatient)} className="space-y-5">

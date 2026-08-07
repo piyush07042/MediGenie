@@ -60,6 +60,29 @@
       {% endif %}
     </div>
 
+    <div class="section">
+      <h2>Clinical Intelligence</h2>
+      {% if report.clinical_intelligence %}
+        <ul>
+        {% for key, value in report.clinical_intelligence.items() %}
+          <li><strong>{{ key }}:</strong> 
+            {% if value is iterable and value is not string %}
+              <ul>
+              {% for item in value %}
+                <li>{{ item }}</li>
+              {% endfor %}
+              </ul>
+            {% else %}
+              {{ value }}
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <p>No clinical intelligence data available.</p>
+      {% endif %}
+    </div>
+
     <footer style="margin-top:28px; font-size:0.9rem; color:#6b7280;">MediGenie — Clinical Decision Support</footer>
   </body>
 </html>

@@ -12,6 +12,7 @@ from app.services.recommendation.knowledge_evidence import (
     build_citations_from_knowledge,
     summarize_evidence,
 )
+from app.clinical_intelligence.engine import generate_clinical_intelligence
 
 
 def _normalize_probability(value: Any) -> float:
@@ -532,6 +533,39 @@ def generate_recommendation(state: AgentState) -> dict[str, Any]:
     drug_analysis = state.drug_analysis or {}
     extracted_metrics = state.extracted_metrics or {}
 
+    # ── Pull Clinical Intelligence (Phase B) ──────────────────────────
+    clinical_intelligence: dict[str, Any] = {}
+    if isinstance(state.metadata, dict) and state.metadata.get("clinical_intelligence"):
+        clinical_intelligence = state.metadata["clinical_intelligence"]
+    elif isinstance(state.final_report, dict) and state.final_report.get("clinical_intelligence"):
+        clinical_intelligence = state.final_report["clinical_intelligence"]
+    else:
+        disease_key = (
+            disease_risk.get("disease")
+            or disease_risk.get("condition")
+            or disease_risk.get("label")
+            or disease_risk.get("prediction")
+            or disease_risk.get("risk_category")
+        )
+        if disease_key:
+            try:
+                clinical_intelligence = generate_clinical_intelligence(
+                    str(disease_key), disease_risk, patient
+                )
+            except Exception:
+                clinical_intelligence = {}
+
+    # ── Lab values from extracted metrics ────────────────────────────
+    lab_values: dict[str, Any] = {}
+    for lab_key in (
+        "glucose", "systolic_bp", "diastolic_bp", "heart_rate", "bmi",
+        "cholesterol", "hemoglobin", "creatinine", "alt", "ast",
+        "hba1c", "tsh", "potassium", "sodium",
+    ):
+        val = extracted_metrics.get(lab_key)
+        if val is not None:
+            lab_values[lab_key] = val
+
     risk_summary = {
         "prediction": str(
             disease_risk.get("risk_category")
@@ -575,7 +609,41 @@ def generate_recommendation(state: AgentState) -> dict[str, Any]:
         patient,
         extracted_metrics,
     )
+
+    # ── Inject CI-derived guideline actions as additional recommendations ──
+    guideline_actions: list[str] = []
+    guideline_ref: str = ""
+    if clinical_intelligence:
+        guideline_ref = clinical_intelligence.get("Guideline", "")
+        for key in ("Recommended Next Steps", "Recommended Actions", "Treatment Recommendations"):
+            if isinstance(clinical_intelligence.get(key), list):
+                guideline_actions = clinical_intelligence[key]
+                break
+        # Add a CI recommendation entry
+        if guideline_ref or guideline_actions:
+            priority = _determine_recommendation_priority(risk_summary, drug_safety_payload)
+            recommendations.append({
+                "title": "Clinical Intelligence – Guideline Recommendations",
+                "recommendation": (
+                    f"Per {guideline_ref}: " if guideline_ref else ""
+                ) + (guideline_actions[0] if guideline_actions else "Follow disease-specific clinical guidelines."),
+                "priority": priority,
+                "category": "Clinical Intelligence",
+                "guideline": guideline_ref,
+                "guideline_actions": guideline_actions[:4],
+            })
+
     follow_up = _build_follow_up(risk_summary, drug_safety_payload, patient)
+
+    # ── Augment follow-up with CI monitoring schedule ─────────────────
+    if clinical_intelligence:
+        monitoring = clinical_intelligence.get("Monitoring Schedule", "")
+        if monitoring and str(monitoring) not in follow_up:
+            follow_up.append(str(monitoring))
+        emergency = clinical_intelligence.get("Emergency Warning Signs", [])
+        if isinstance(emergency, list) and emergency:
+            follow_up.append("Watch for: " + "; ".join(str(e) for e in emergency[:3]))
+
     clinical_summary = _build_clinical_summary(
         patient,
         risk_summary,
@@ -599,6 +667,10 @@ def generate_recommendation(state: AgentState) -> dict[str, Any]:
         "recommendations": recommendations,
         "follow_up": follow_up,
         "evidence_summary": summarize_evidence(knowledge_results),
+        "clinical_intelligence": clinical_intelligence,
+        "lab_values": lab_values,
+        "guideline_reference": guideline_ref,
+        "guideline_actions": guideline_actions,
     }
 
 

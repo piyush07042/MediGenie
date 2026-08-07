@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { type DefaultValues, type FieldValues, useForm } from "react-hook-form";
 import toast from "react-hot-toast";
+import { Info } from "lucide-react";
 import PageHeading from "../../components/PageHeading";
 import Card from "../../components/Card";
 import PredictionForm from "./PredictionForm";
@@ -11,6 +13,8 @@ import PredictionHistory from "./PredictionHistory";
 import { usePredictionContext } from "../../hooks/usePredictionContext";
 import { addPredictionHistory, getPredictionHistory } from "../../utils/predictionHistory";
 import { buildPredictionFormValues } from "../../utils/predictionPrefill";
+import { saveDashboardPrediction } from "../../api/dashboard";
+import { invalidateDashboardCache } from "../../services/dashboardService";
 import type { PredictionHistoryItem } from "../../utils/predictionHistory";
 import type { Patient } from "../../types/api";
 import type { ZodType } from "zod";
@@ -20,6 +24,8 @@ export type PredictionField<TValues extends FieldValues> = {
   label: string;
   placeholder?: string;
   type?: "text" | "number";
+  tooltip?: string;
+  range?: string;
 };
 
 type PredictionPageShellProps<TValues extends FieldValues, TResponse extends Record<string, any>> = {
@@ -72,6 +78,7 @@ export default function PredictionPageShell<
     return buildPredictionFormValues(defaultValues, extractedMetrics, patientContext);
   }, [defaultValues, extractedMetrics, patientContext]);
 
+  const queryClient = useQueryClient();
   const { register, handleSubmit, reset, formState } = useForm<TValues>({
     defaultValues: prefillValues as DefaultValues<TValues>,
     resolver: zodResolver(schema),
@@ -118,6 +125,21 @@ export default function PredictionPageShell<
 
         addPredictionHistory(historyItem);
         setHistory((current) => [historyItem, ...current]);
+
+        try {
+          await saveDashboardPrediction({
+            patient_id: patientId,
+            risk_assessment: prediction,
+            rag_evidence: Array.isArray(prediction.evidence) ? prediction.evidence : [],
+            drug_safety_alerts: prediction.drug_safety ?? {},
+            clinical_summary: prediction.final_report?.clinical_summary ?? "",
+            clinical_intelligence: prediction.final_report?.clinical_intelligence ?? prediction.clinical_intelligence ?? {},
+          });
+          invalidateDashboardCache();
+          queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        } catch (innerError) {
+          console.warn("Unable to persist prediction to dashboard:", innerError);
+        }
       }
     } catch (error) {
       toast.error("Prediction failed. Check inputs or backend status.");
@@ -139,7 +161,18 @@ export default function PredictionPageShell<
             <div className="grid gap-5">
               {fields.map((field) => (
                 <div key={String(field.name)}>
-                  <label className="block text-sm font-medium text-slate-700">{field.label}</label>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-sm font-medium text-slate-700">{field.label}</label>
+                    {field.tooltip ? (
+                      <div className="group relative">
+                        <Info className="h-4 w-4 text-slate-400" />
+                        <div className="pointer-events-none absolute left-0 top-6 z-10 hidden w-64 rounded-2xl border border-slate-200 bg-white p-3 text-xs text-slate-600 shadow-lg group-hover:block">
+                          {field.tooltip}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                  {field.range ? <p className="mt-1 text-xs text-slate-500">Range: {field.range}</p> : null}
                   <input
                     type={field.type ?? "text"}
                     placeholder={field.placeholder}
@@ -184,7 +217,13 @@ export default function PredictionPageShell<
 
       <PredictionPanel title="Prediction result">
         {result ? (
-          <PredictionResultView result={result} patient={patient} timestamp={new Date().toLocaleString()} onNewPrediction={onReset} />
+          <PredictionResultView
+            result={result}
+            patient={patient}
+            patientId={patientId}
+            timestamp={new Date().toLocaleString()}
+            onNewPrediction={onReset}
+          />
         ) : (
           <p className="text-sm text-slate-500">Submit the form to run a prediction and view the model result, recommendations, and report output here.</p>
         )}

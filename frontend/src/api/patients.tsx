@@ -1,6 +1,6 @@
 import axios from "axios";
 import api from "./client";
-import { ApiResponse, Patient } from "../types/api";
+import { ApiResponse, Patient, PatientTimelineEvent, PatientVisitRecord } from "../types/api";
 
 export type CreatePatientPayload = {
   first_name: string;
@@ -14,9 +14,34 @@ export type CreatePatientPayload = {
 
 export type UpdatePatientPayload = Partial<CreatePatientPayload>;
 
-export const listPatients = async (): Promise<ApiResponse<Patient[]>> => {
-  const response = await api.get<ApiResponse<Patient[]>>("/patients/");
-  return response.data;
+export type PatientListQuery = {
+  search?: string;
+  gender?: string;
+  sort_by?: string;
+  sort_dir?: string;
+  page?: number;
+  page_size?: number;
+};
+
+export const listPatients = async (query: PatientListQuery = {}): Promise<ApiResponse<Patient[]>> => {
+  const response = await api.get<ApiResponse<any>>("/patients/", {
+    params: {
+      search: query.search ?? "",
+      gender: query.gender ?? "all",
+      sort_by: query.sort_by ?? "created_at",
+      sort_dir: query.sort_dir ?? "desc",
+      page: query.page ?? 1,
+      page_size: query.page_size ?? 8,
+    },
+  });
+
+  const payload = response.data.data;
+  const items = Array.isArray(payload) ? payload : payload?.items ?? [];
+
+  return {
+    ...response.data,
+    data: items as Patient[],
+  };
 };
 
 export const createPatient = async (payload: CreatePatientPayload): Promise<ApiResponse<Patient>> => {
@@ -47,5 +72,28 @@ export const updatePatient = async (
 
 export const deletePatient = async (patientId: number): Promise<ApiResponse<null>> => {
   const response = await api.delete<ApiResponse<null>>(`/patients/${patientId}`);
+  return response.data;
+};
+
+export const uploadPatientAvatar = async (patientId: number, file: File): Promise<ApiResponse<Patient>> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post<ApiResponse<Patient>>(`/patients/${patientId}/avatar`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+};
+
+export const getPatientTimeline = async (patientId: number): Promise<ApiResponse<PatientTimelineEvent[]>> => {
+  const response = await api.get<ApiResponse<PatientTimelineEvent[]>>(`/patients/${patientId}/timeline`);
+  return response.data;
+};
+
+export const getPatientVisits = async (patientId: number): Promise<ApiResponse<PatientVisitRecord[]>> => {
+  const response = await api.get<ApiResponse<PatientVisitRecord[]>>(`/patients/${patientId}/visits`);
   return response.data;
 };

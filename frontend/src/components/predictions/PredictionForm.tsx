@@ -21,6 +21,10 @@ export default function PredictionForm<T extends FieldValues>({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {children}
+      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+        <p className="font-semibold">Clinical note</p>
+        <p className="mt-1">Input values should reflect the latest patient measurements. Predictions are supportive only and should be reviewed by a clinician.</p>
+      </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="submit"

@@ -34,6 +34,54 @@ from app.services.report.report_service import get_patient_id_from_context, save
 
 logger = logging.getLogger(__name__)
 
+
+def normalize_workflow_state(state: AgentState, file_name: str) -> dict:
+    """Convert workflow state into a preview-friendly payload for the UI."""
+    metadata = dict(getattr(state, "metadata", {}) or {})
+    metadata.setdefault("file_name", file_name)
+    metadata.setdefault("workflow_status", metadata.get("workflow_status") or "completed")
+
+    report_text = getattr(state, "report_text", "") or ""
+    if not report_text.strip():
+        report_text = "No OCR text was extracted from the uploaded file."
+
+    warnings = list(getattr(state, "warnings", []) or [])
+    if not warnings and metadata.get("workflow_status") != "completed":
+        warnings.append("The workflow completed with non-standard status.")
+
+    processing_notes = []
+    if warnings:
+        processing_notes.extend(warnings)
+    if not getattr(state, "ocr_result", None):
+        processing_notes.append("No structured OCR output was produced for this upload.")
+    if not getattr(state, "extracted_metrics", None):
+        processing_notes.append("No extracted metrics were available for preview.")
+
+    metadata["processing_notes"] = processing_notes
+
+    normalized = {
+        "patient": getattr(state, "patient", {}) or {},
+        "patient_summary": getattr(state, "patient_summary", None) or {},
+        "patient_history": getattr(state, "patient_history", {}) or {},
+        "symptoms": list(getattr(state, "symptoms", []) or []),
+        "medications": list(getattr(state, "medications", []) or []),
+        "allergies": list(getattr(state, "allergies", []) or []),
+        "uploaded_reports": list(getattr(state, "uploaded_reports", []) or []),
+        "report_text": report_text,
+        "ocr_result": getattr(state, "ocr_result", {}) or {},
+        "extracted_metrics": getattr(state, "extracted_metrics", {}) or {},
+        "disease_risk": getattr(state, "disease_risk", {}) or {},
+        "knowledge_results": list(getattr(state, "knowledge_results", []) or []),
+        "drug_analysis": getattr(state, "drug_analysis", {}) or {},
+        "recommendations": list(getattr(state, "recommendations", []) or []),
+        "final_report": getattr(state, "final_report", {}) or {},
+        "metadata": metadata,
+        "warnings": warnings,
+        "errors": list(getattr(state, "errors", []) or []),
+    }
+    return normalized
+
+
 router = APIRouter(
     prefix="/upload",
     tags=["Medical Report Upload"],
@@ -117,12 +165,14 @@ async def upload_report(
             # non-fatal
             pass
 
+        workflow_state = normalize_workflow_state(final_state, file.filename)
+
         return ApiResponse(
             message="Medical report processed successfully.",
             data={
-                "workflow_state": final_state,
-                "agent_results": results,
-                "workflow_metrics": metrics,
+                "workflow_state": workflow_state,
+                "agent_results": [result.to_dict() for result in results],
+                "workflow_metrics": metrics.to_dict(),
             },
         )
 
