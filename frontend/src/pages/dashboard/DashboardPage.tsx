@@ -11,7 +11,6 @@ import ReportsChart from "../../components/dashboard/ReportsChart";
 import RecentPatients from "../../components/dashboard/RecentPatients";
 import RecentReports from "../../components/dashboard/RecentReports";
 import RecentPredictions from "../../components/dashboard/RecentPredictions";
-import SystemStatus from "../../components/dashboard/SystemStatus";
 import ActivityTimeline from "../../components/dashboard/ActivityTimeline";
 import { DashboardHeaderSkeleton, StatsSkeleton } from "../../components/dashboard/DashboardSkeleton";
 import toast from "react-hot-toast";
@@ -68,17 +67,7 @@ export default function DashboardPage() {
       {isLoading ? (
         <DashboardHeaderSkeleton />
       ) : (
-        <DashboardHeader greeting={greeting} subtitle={`Current date: ${currentDate}`} summary={summary} onRefresh={handleRefresh}>
-          {/* KPI badges */}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {(data?.stats ?? []).filter(s => ["Total Patients","AI Reports Generated","Total Disease Predictions"].includes(s.title)).map((s) => (
-              <div key={s.title} className="inline-flex items-center gap-3 rounded-full bg-white px-3 py-1.5 shadow-sm ring-1 ring-slate-100">
-                <div className="text-sm font-medium text-slate-600">{s.title}</div>
-                <div className="rounded-full bg-emerald-50 px-3 py-0.5 text-sm font-semibold text-emerald-700">{s.value}</div>
-              </div>
-            ))}
-          </div>
-        </DashboardHeader>
+        <DashboardHeader greeting={greeting} subtitle={`Current date: ${currentDate}`} summary={summary} onRefresh={handleRefresh} />
       )}
 
       <section className="grid gap-5 xl:grid-cols-[1.5fr_1fr]">
@@ -130,7 +119,6 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <SystemStatus data={data?.system_status ?? []} loading={isLoading} />
           <ActivityTimeline data={data?.activity ?? []} loading={isLoading} />
         </div>
       </section>

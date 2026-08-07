@@ -215,7 +215,7 @@ export default function PredictionPageShell<
         </div>
       </div>
 
-      <PredictionPanel title="Prediction result">
+      <div className="mt-8">
         {result ? (
           <PredictionResultView
             result={result}
@@ -225,9 +225,11 @@ export default function PredictionPageShell<
             onNewPrediction={onReset}
           />
         ) : (
-          <p className="text-sm text-slate-500">Submit the form to run a prediction and view the model result, recommendations, and report output here.</p>
+          <PredictionPanel title="Prediction result">
+            <p className="text-sm text-slate-500">Submit the form to run a prediction and view the model result, recommendations, and report output here.</p>
+          </PredictionPanel>
         )}
-      </PredictionPanel>
+      </div>
     </div>
   );
 }

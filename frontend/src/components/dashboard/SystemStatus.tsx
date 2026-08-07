@@ -32,19 +32,19 @@ export default function SystemStatus({ data, loading }: { data: SystemStatusItem
               <div key={index} className="h-24 animate-pulse rounded-3xl bg-slate-100" />
             ))
           : data.map((item) => (
-              <div key={item.service} className="flex items-center justify-between rounded-3xl bg-slate-50 px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-3xl bg-slate-100 text-brand-600">
-                    {iconMap[item.service] ?? <ShieldCheck className="h-4 w-4" />}
-                  </div>
-                  <div>
+              <div key={item.service} className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-sm">
+                      {iconMap[item.service] ?? <ShieldCheck className="h-4 w-4" />}
+                    </div>
                     <p className="text-sm font-semibold text-slate-900">{item.service}</p>
-                    <p className="text-sm text-slate-500">{item.description}</p>
                   </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
+                    {item.status}
+                  </span>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
-                  {item.status}
-                </span>
+                <p className="text-sm text-slate-500">{item.description}</p>
               </div>
             ))}
       </div>

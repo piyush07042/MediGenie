@@ -7,7 +7,7 @@ def test_create_database_initializes_tables(monkeypatch):
     calls = {}
 
     class DummyEngine:
-        pass
+        url = "sqlite:///dummy.db"
 
     def fake_create_all(bind=None):
         calls["bind"] = bind

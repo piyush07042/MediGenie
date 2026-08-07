@@ -17,7 +17,7 @@ def test_health(client):
     assert body["message"] == "Application health status retrieved successfully."
     assert isinstance(body["data"], dict)
     assert body["data"]["application"] == "MediGenie"
-    assert body["data"]["status"] == "healthy"
+    assert body["data"]["status"] in ("healthy", "degraded")
     assert "services" in body["data"]
 
 

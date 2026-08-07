@@ -38,16 +38,8 @@ export default function PredictionResultView({
         toast.error("Patient ID not available for PDF generation.");
         return;
       }
-      const resp = await api.get(getReportPdfDownloadUrl(reportPatientId), { responseType: "blob" });
-      const blob = resp.data;
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `MediGenie_Report_${reportPatientId}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api/v1";
+      window.open(`${API_BASE_URL}/reports/medigenie/${reportPatientId}/pdf`, "_blank");
     } catch (e) {
       toast.error("Unable to download PDF report.");
     }
@@ -60,7 +52,7 @@ export default function PredictionResultView({
   return (
     <div className="space-y-6">
       <PredictionPanel title="Prediction summary">
-        <div className="grid gap-4 sm:grid-cols-2 items-start">
+        <div className="flex flex-col gap-6">
           <div className="space-y-3">
             <p className="text-sm text-slate-500">Disease</p>
             <p className="text-lg font-semibold text-slate-900">{result.disease ?? "Unknown"}</p>

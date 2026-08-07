@@ -21,17 +21,17 @@ export default function DashboardHeader({
         <h1 className="mt-3 text-2xl font-semibold text-slate-950 sm:text-4xl">{greeting}</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">{subtitle}</p>
       </div>
-      <div className="rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6 flex items-center justify-between">
-        <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-500">Today</p>
-        <div className="ml-4">
-          <p className="text-lg font-semibold text-slate-900 sm:text-2xl">{summary}</p>
-          <p className="mt-1 text-xs text-slate-500">Workspace summary — refresh to sync live data.</p>
-        </div>
-        <div className="ml-4">
-          <button id="dashboard-refresh" type="button" onClick={onRefresh} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-            <RefreshCw className="h-4 w-4 text-slate-600" />
-            <span className="hidden sm:inline">Refresh</span>
+      <div className="flex flex-col justify-center rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Today</p>
+          <button id="dashboard-refresh" type="button" onClick={onRefresh} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-50">
+            <RefreshCw className="h-3.5 w-3.5 text-slate-600" />
+            <span>Refresh</span>
           </button>
+        </div>
+        <div>
+          <p className="text-lg font-semibold leading-snug text-slate-900 sm:text-xl">{summary}</p>
+          <p className="mt-2 text-xs text-slate-500">Workspace summary — refresh to sync live data.</p>
         </div>
       </div>
       {children ? <div className="sm:col-span-2">{children}</div> : null}
