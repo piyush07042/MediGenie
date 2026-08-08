@@ -34,8 +34,13 @@ from app.api.v1.breast_cancer import router as breast_cancer_router
 from app.api.v1.parkinsons import router as parkinsons_router
 from app.api.v1.hepatitis import router as hepatitis_router
 from app.api.v1.stroke import router as stroke_router
+from app.api.guidelines import router as guidelines_router
+from app.api.multi_disease import router as multi_disease_router
+from app.api.workflow import router as workflow_router
 
 api_router = APIRouter()
+
+
 
 # =====================================================
 # Authentication
@@ -55,8 +60,13 @@ api_router.include_router(dashboard_router)
 # =====================================================
 # Clinical Decision Support
 # =====================================================
-
+ 
 api_router.include_router(clinical_router)
+api_router.include_router(guidelines_router)
+api_router.include_router(multi_disease_router)
+api_router.include_router(workflow_router)
+
+
 
 # =====================================================
 # Medical Report Upload
@@ -124,6 +134,10 @@ api_router.include_router(hepatitis_router)
 api_router.include_router(stroke_router)
 api_router.include_router(diagnostics_router, prefix="/diagnostics")
 
+from evaluation.routes import router as evaluation_router
+
+api_router.include_router(evaluation_router)
+
 # =====================================================
 # Miscellaneous / General Endpoints
 # =====================================================
@@ -131,4 +145,4 @@ api_router.include_router(diagnostics_router, prefix="/diagnostics")
 api_router.include_router(
     endpoints_router,
     tags=["General"],
-)
+)

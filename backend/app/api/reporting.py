@@ -59,67 +59,51 @@ def generate_pdf(
     db: Session = Depends(get_db),
 ):
     """
-    Generate a clinical PDF report for a patient.
+    Generate a clinical PDF report for a patient (or report ID).
+    If no AI report exists yet for a valid patient, generates a baseline patient clinical report.
     """
+    logger.info("Searching report for target_id=%s", patient_id)
 
-    logger.info("Searching report for patient_id=%s", patient_id)
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    summary = None
 
-    patient = (
-        db.query(Patient)
-        .filter(Patient.id == patient_id)
-        .first()
-    )
+    if patient is not None:
+        summary = (
+            db.query(AIReport)
+            .filter(AIReport.patient_id == patient.id)
+            .order_by(AIReport.id.desc())
+            .first()
+        )
+
+    # Fallback: Check if target_id is actually an AIReport ID
+    if summary is None:
+        summary = db.query(AIReport).filter(AIReport.id == patient_id).first()
+        if summary is not None:
+            patient = db.query(Patient).filter(Patient.id == summary.patient_id).first()
 
     if patient is None:
-        logger.info("Patient not found for patient_id=%s", patient_id)
+        logger.info("Patient not found for id=%s", patient_id)
         raise HTTPException(
             status_code=404,
             detail="Patient not found",
         )
 
-    summary = (
-        db.query(AIReport)
-        .filter(
-            AIReport.patient_id == patient.id
-        )
-        .order_by(AIReport.id.desc())
-        .first()
-    )
-
-    if summary is None:
-        logger.info("No AIReport row found for patient_id=%s", patient_id)
-        raise HTTPException(
-            status_code=404,
-            detail="Clinical report not found for this patient.",
-        )
-
-    logger.info(
-        "Found report=%s for patient_id=%s",
-        getattr(summary, "id", None),
-        patient_id,
-    )
-
+    summary_dict = _serialize_model(summary) if summary else {}
     report = build_report_from_storage(
         patient=_serialize_model(patient),
-        summary=_serialize_model(summary),
+        summary=summary_dict,
         generated_at=summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
     )
 
     pdf_bytes = generate_clinical_pdf_report(report)
 
-    filename = (
-        f"MediGenie_Report_{patient.id}.pdf"
-    )
-
-    output_path = os.path.join(
-        TEMP_DIR,
-        filename,
-    )
+    filename = f"MediGenie_Report_{patient.id}.pdf"
+    output_path = os.path.join(TEMP_DIR, filename)
 
     with open(output_path, "wb") as fp:
         fp.write(pdf_bytes)
 
-    logger.info("Generated PDF report output path=%s for patient_id=%s", output_path, patient_id)
+    logger.info("Generated PDF report output path=%s for patient_id=%s", output_path, patient.id)
 
     return FileResponse(
         output_path,
@@ -135,29 +119,33 @@ def generate_medigenie_pdf(
 ):
     """
     Generate a MediGenie-styled clinical PDF report for a patient using the ReportLab template.
+    Accepts patient_id or report_id as target_id.
+    If no AI report exists yet for a valid patient, generates a baseline patient clinical report.
     """
-    patient = (
-        db.query(Patient)
-        .filter(Patient.id == patient_id)
-        .first()
-    )
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    summary = None
+
+    if patient is not None:
+        summary = (
+            db.query(AIReport)
+            .filter(AIReport.patient_id == patient.id)
+            .order_by(AIReport.id.desc())
+            .first()
+        )
+
+    # Fallback: Check if target_id is actually an AIReport ID
+    if summary is None:
+        summary = db.query(AIReport).filter(AIReport.id == patient_id).first()
+        if summary is not None:
+            patient = db.query(Patient).filter(Patient.id == summary.patient_id).first()
 
     if patient is None:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    summary = (
-        db.query(AIReport)
-        .filter(AIReport.patient_id == patient.id)
-        .order_by(AIReport.id.desc())
-        .first()
-    )
-
-    if summary is None:
-        raise HTTPException(status_code=404, detail="Clinical report not found for this patient.")
-
+    summary_dict = _serialize_model(summary) if summary else {}
     report = build_report_from_storage(
         patient=_serialize_model(patient),
-        summary=_serialize_model(summary),
+        summary=summary_dict,
         generated_at=summary.created_at.isoformat() if getattr(summary, 'created_at', None) else None,
     )
 

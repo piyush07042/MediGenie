@@ -1,0 +1,26 @@
+{
+  "model_key": "kidney_disease",
+  "model_name": "Kidney Disease",
+  "test_samples": 240,
+  "positive_samples": 211,
+  "negative_samples": 29,
+  "cv_roc_auc_mean": 0.9675,
+  "cv_roc_auc_std": 0.0145,
+  "accuracy": 0.9333,
+  "balanced_accuracy": 0.7688,
+  "precision": 0.9412,
+  "recall": 0.9858,
+  "specificity": 0.5517,
+  "f1_score": 0.963,
+  "roc_auc": 0.9727,
+  "pr_auc": 0.9962,
+  "mcc": 0.6489,
+  "cohen_kappa": 0.6314,
+  "brier_score": 0.0447,
+  "confusion_matrix": {
+    "TN": 16,
+    "FP": 13,
+    "FN": 3,
+    "TP": 208
+  }
+}

@@ -1,1 +1,7 @@
-["age", "creatinine", "blood_urea", "sgpt", "albumin"]
+[
+  "age",
+  "creatinine",
+  "blood_urea",
+  "sgpt",
+  "albumin"
+]

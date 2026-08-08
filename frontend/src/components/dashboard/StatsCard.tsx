@@ -14,19 +14,20 @@ export default function StatsCard({
   positive: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-center justify-between gap-3">
+    <div className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-500/10 hover:border-brand-200">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-white/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="relative flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold text-slate-500">{title}</p>
-          <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
+          <p className="text-sm font-semibold tracking-wide text-slate-500">{title}</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 transition-colors group-hover:text-brand-900">{value}</p>
         </div>
-        <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
-          {positive ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+        <div className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110 ${positive ? "bg-emerald-50 text-emerald-600 ring-4 ring-emerald-50/50" : "bg-rose-50 text-rose-600 ring-4 ring-rose-50/50"}`}>
+          {positive ? <ArrowUp className="h-6 w-6" /> : <ArrowDown className="h-6 w-6" />}
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-between">
-        <p className="text-xs text-slate-500">{label}</p>
-        <p className={`text-xs font-semibold ${positive ? "text-emerald-700" : "text-rose-700"}`}>{trend}</p>
+      <div className="relative mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        <p className={`rounded-full px-2.5 py-1 text-xs font-bold tracking-wide ${positive ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{trend}</p>
       </div>
     </div>
   );

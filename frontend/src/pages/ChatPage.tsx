@@ -396,12 +396,24 @@ export default function ChatPage() {
                             <div className="mt-3 whitespace-pre-wrap text-sm leading-6">
                               {item.role === "assistant" ? (
                                 <div className="space-y-3">
-                                  <div className="rounded-2xl bg-slate-50 p-3 text-sm leading-6 text-slate-700">
-                                    {item.text.split(/\n{2,}/).map((paragraph, index) => (
-                                      <p key={index} className="mt-2 first:mt-0">
-                                        {paragraph.replace(/`([^`]+)`/g, "’$1’")}
-                                      </p>
-                                    ))}
+                                  <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-7 text-slate-800 border border-slate-100">
+                                    {item.text.split(/\n{2,}/).map((paragraph, index) => {
+                                      // Render basic bold syntax **text** and inline code
+                                      const parts = paragraph.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+                                      return (
+                                        <p key={index} className="mt-3 first:mt-0">
+                                          {parts.map((part, i) => {
+                                            if (part.startsWith("**") && part.endsWith("**")) {
+                                              return <strong key={i} className="font-semibold text-slate-900">{part.slice(2, -2)}</strong>;
+                                            }
+                                            if (part.startsWith("`") && part.endsWith("`")) {
+                                              return <code key={i} className="rounded bg-slate-200 px-1.5 py-0.5 font-mono text-xs text-brand-700">{part.slice(1, -1)}</code>;
+                                            }
+                                            return part;
+                                          })}
+                                        </p>
+                                      );
+                                    })}
                                   </div>
                                   <div className="mt-2 flex items-center gap-2">
                                     <button onClick={() => handleCopy(item.text)} className="text-xs text-slate-500 hover:text-slate-700">Copy</button>
@@ -430,12 +442,14 @@ export default function ChatPage() {
                     )}
                     {isSending ? (
                       <div className="flex justify-start">
-                        <div className="max-w-[70%] rounded-[2rem] bg-slate-200 p-5 shadow-sm">
-                          <div className="h-3 w-24 animate-pulse rounded-full bg-slate-300" />
-                          <div className="mt-3 grid gap-2">
-                            <div className="h-3 rounded-full bg-slate-300" />
-                            <div className="h-3 rounded-full bg-slate-300" />
-                            <div className="h-3 rounded-full bg-slate-300" />
+                        <div className="max-w-[70%] rounded-[2rem] bg-white border border-slate-200 p-4 shadow-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-500 mr-2">MediGenie is thinking</span>
+                            <div className="flex space-x-1">
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.3s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-brand-500 [animation-delay:-0.15s]" />
+                              <div className="h-2 w-2 animate-bounce rounded-full bg-brand-500" />
+                            </div>
                           </div>
                         </div>
                       </div>

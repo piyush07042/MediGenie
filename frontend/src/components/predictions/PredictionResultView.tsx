@@ -9,7 +9,9 @@ import ConfidenceMeter from "./ConfidenceMeter";
 import RecommendationPanel from "./RecommendationPanel";
 import ExplainabilityPanel from "./ExplainabilityPanel";
 import DrugSafetyPanel from "./DrugSafetyPanel";
+import ClinicalGuidelineCard from "./ClinicalGuidelineCard";
 import { getGuidelineFor } from "../../utils/guidelines";
+
 
 import type { Patient } from "../../types/api";
 
@@ -151,21 +153,25 @@ export default function PredictionResultView({
           ) : null}
 
           <div className="grid gap-6 xl:grid-cols-2">
-            <PredictionPanel title="Explainability & feature importance">
-              <ExplainabilityPanel explanations={result.explanations} />
-              {result.feature_importance ? (
-                <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-900">Feature importance</p>
-                  <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{JSON.stringify(result.feature_importance, null, 2)}</pre>
-                </div>
-              ) : null}
-              {result.shap || result.shap_values ? (
-                <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-sm font-semibold text-slate-900">SHAP explanation</p>
-                  <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{JSON.stringify(result.shap || result.shap_values, null, 2)}</pre>
-                </div>
-              ) : null}
-            </PredictionPanel>
+            <div className="space-y-6">
+              <ClinicalGuidelineCard clinicalIntel={result.clinical_intelligence || result.final_report?.clinical_intelligence} />
+              <PredictionPanel title="Explainability & feature importance">
+                <ExplainabilityPanel explanations={result.explanations} />
+                {result.feature_importance ? (
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">Feature importance</p>
+                    <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{JSON.stringify(result.feature_importance, null, 2)}</pre>
+                  </div>
+                ) : null}
+                {result.shap || result.shap_values ? (
+                  <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-900">SHAP explanation</p>
+                    <pre className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{JSON.stringify(result.shap || result.shap_values, null, 2)}</pre>
+                  </div>
+                ) : null}
+              </PredictionPanel>
+            </div>
+
 
             <PredictionPanel title="Recommendations & drug safety">
               <RecommendationPanel recommendations={result.recommendations} />

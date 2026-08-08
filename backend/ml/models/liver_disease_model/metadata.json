@@ -1,0 +1,20 @@
+{
+  "model_name": "Liver Disease",
+  "model_key": "liver_disease",
+  "algorithm": "RandomForestClassifier",
+  "version": "1.0.0",
+  "dataset_samples": 800,
+  "features": [
+    "age",
+    "bilirubin",
+    "alk_phosphatase",
+    "sgpt",
+    "sgot"
+  ],
+  "target": "target",
+  "train_test_split": "70/30 stratified",
+  "random_state": 42,
+  "cross_validation": "5-fold stratified",
+  "cv_roc_auc_mean": 0.9138,
+  "cv_roc_auc_std": 0.0235
+}

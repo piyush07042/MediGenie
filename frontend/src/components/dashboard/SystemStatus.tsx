@@ -32,15 +32,16 @@ export default function SystemStatus({ data, loading }: { data: SystemStatusItem
               <div key={index} className="h-24 animate-pulse rounded-3xl bg-slate-100" />
             ))
           : data.map((item) => (
-              <div key={item.service} className="flex flex-col gap-3 rounded-3xl bg-slate-50 p-4">
+              <div key={item.service} className="group flex flex-col gap-3 rounded-3xl bg-slate-50 p-4 transition-all duration-300 hover:bg-slate-100 hover:shadow-sm">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-sm">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-brand-600 shadow-sm transition-transform duration-300 group-hover:scale-110">
                       {iconMap[item.service] ?? <ShieldCheck className="h-4 w-4" />}
                     </div>
                     <p className="text-sm font-semibold text-slate-900">{item.service}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
+                  <span className={`shrink-0 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
+                    {item.status === "Online" && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />}
                     {item.status}
                   </span>
                 </div>

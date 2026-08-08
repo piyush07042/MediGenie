@@ -1,1 +1,10 @@
-{"required_columns": ["age", "bmi", "glucose", "systolic_bp", "insulin"], "target_column": "target"}
+{
+  "required_columns": [
+    "age",
+    "bmi",
+    "glucose",
+    "systolic_bp",
+    "insulin"
+  ],
+  "target_column": "target"
+}

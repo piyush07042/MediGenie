@@ -25,6 +25,11 @@ import ReportsPage from "../pages/ReportsPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import SettingsPage from "../pages/settings/SettingsPage";
 import ProfilePage from "../pages/settings/ProfilePage";
+import ModelEvaluationPage from "../pages/dashboard/ModelEvaluationPage";
+import XaiDashboardPage from "../pages/dashboard/XaiDashboardPage";
+import GuidelinesPage from "../pages/dashboard/GuidelinesPage";
+import WorkflowPage from "../pages/dashboard/WorkflowPage";
+
 
 export const routes: RouteObject[] = [
   {
@@ -57,6 +62,11 @@ export const routes: RouteObject[] = [
           { path: "reports", element: <ReportsPage /> },
           { path: "settings", element: <SettingsPage /> },
           { path: "settings/profile", element: <ProfilePage /> },
+          { path: "model-evaluation", element: <ModelEvaluationPage /> },
+          { path: "xai", element: <XaiDashboardPage /> },
+          { path: "guidelines", element: <GuidelinesPage /> },
+          { path: "workflow", element: <WorkflowPage /> },
+
         ],
       },
       { path: "*", element: <NotFoundPage /> },

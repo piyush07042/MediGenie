@@ -73,6 +73,7 @@ class Predictor:
         if not model_path.exists():
             raise ModelNotLoadedError(model_path)
 
+        self._inject_unpickle_helpers()
         self.model = joblib.load(model_path)
         logger.info("Model loaded.")
 
@@ -86,6 +87,7 @@ class Predictor:
             )
             return
 
+        self._inject_unpickle_helpers()
         self.pipeline = joblib.load(pipeline_path)
         logger.info("Pipeline loaded.")
 
@@ -114,6 +116,16 @@ class Predictor:
         self.load_schema()
         self.load_feature_names()
         logger.info("Inference engine initialized.")
+
+    def _inject_unpickle_helpers(self) -> None:
+        """Inject helper functions used during training into __main__."""
+        import __main__
+        import numpy as np
+        
+        if not hasattr(__main__, "_to_array"):
+            def _to_array(x):
+                return np.array(x)
+            setattr(__main__, "_to_array", _to_array)
 
     def validate_input(self, patient_data: dict[str, Any]) -> None:
         """Validate patient input against schema."""

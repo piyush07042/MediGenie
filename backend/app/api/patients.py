@@ -93,7 +93,7 @@ def list_patients(
     sort_by: str = Query("created_at", description="Sort field"),
     sort_dir: str = Query("desc", description="Sort direction"),
     page: int = Query(1, ge=1),
-    page_size: int = Query(8, ge=1, le=50),
+    page_size: int = Query(8, ge=1, le=500),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

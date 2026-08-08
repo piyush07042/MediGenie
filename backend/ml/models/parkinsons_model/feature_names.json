@@ -1,1 +1,7 @@
-["age", "motor_UPDRS", "total_UPDRS", "Jitter_local", "Shimmer_local"]
+[
+  "age",
+  "motor_UPDRS",
+  "total_UPDRS",
+  "Jitter_local",
+  "Shimmer_local"
+]

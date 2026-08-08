@@ -156,18 +156,29 @@ def generate_medigenie_report(report: Dict[str, Any]) -> bytes:
 
     # Prediction Result large colored box
     result = report.get("result", {}) or {}
-    pred = result.get("prediction") or result.get("label") or "N/A"
-    risk = (result.get("risk") or result.get("risk_level") or result.get("confidence_label") or "Unknown").upper()
+    pred = result.get("prediction") or result.get("label") or "Pending ML Screening"
+    if str(pred) == "N/A":
+        pred = "Pending ML Screening"
+
+    raw_risk = result.get("risk") or result.get("risk_level") or result.get("confidence_label") or "Pending ML Evaluation"
+    if str(raw_risk).upper() in ("UNKNOWN", "N/A"):
+        risk = "PENDING ML EVALUATION"
+    else:
+        risk = str(raw_risk).upper()
+
     prob = result.get("probability")
     try:
-        prob_text = f"{float(prob) * 100:.1f}%" if prob is not None else "N/A"
+        prob_text = f"{float(prob) * 100:.1f}%" if prob is not None else "Pending Screening"
     except Exception:
-        prob_text = str(prob)
+        prob_text = str(prob) if prob is not None else "Pending Screening"
+
     conf = result.get("confidence")
     try:
-        conf_text = f"{float(conf) * 100:.0f}%" if conf is not None and isinstance(conf, (int, float)) and float(conf) <= 1 else (f"{float(conf):.0f}%" if isinstance(conf, (int, float)) else str(conf))
+        conf_text = f"{float(conf) * 100:.0f}%" if conf is not None and isinstance(conf, (int, float)) and float(conf) <= 1 else (f"{float(conf):.0f}%" if isinstance(conf, (int, float)) else str(conf or "Baseline"))
     except Exception:
-        conf_text = str(conf)
+        conf_text = str(conf) if conf is not None else "Baseline"
+    if conf_text in ("None", "N/A"):
+        conf_text = "Baseline Intake"
 
     # color by risk
     if "HIGH" in risk:

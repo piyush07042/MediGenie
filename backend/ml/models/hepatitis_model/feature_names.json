@@ -1,1 +1,7 @@
-["age", "bilirubin", "alk_phosphatase", "sgpt", "sgot"]
+[
+  "age",
+  "bilirubin",
+  "alk_phosphatase",
+  "sgpt",
+  "sgot"
+]

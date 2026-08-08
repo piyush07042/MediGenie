@@ -6,6 +6,7 @@ import type { User } from "../types/api";
 type AuthState = {
   user: User | null;
   token: string | null;
+  refreshToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (payload: { email: string; password: string; rememberMe?: boolean }) => Promise<void>;
@@ -15,9 +16,9 @@ type AuthState = {
   initialize: () => Promise<void>;
 };
 
-const persistAuth = (token: string | null, user: User | null) => {
+const persistAuth = (token: string | null, refreshToken: string | null, user: User | null) => {
   if (token && user) {
-    localStorage.setItem("medigenie_auth", JSON.stringify({ token, user }));
+    localStorage.setItem("medigenie_auth", JSON.stringify({ token, refresh_token: refreshToken, user }));
   } else {
     localStorage.removeItem("medigenie_auth");
   }
@@ -26,22 +27,29 @@ const persistAuth = (token: string | null, user: User | null) => {
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
+  refreshToken: null,
   isAuthenticated: false,
   isLoading: true,
   setUser: (user) => {
     set({ user, isAuthenticated: Boolean(user) });
-    persistAuth(get().token, user);
+    persistAuth(get().token, get().refreshToken, user);
   },
   setToken: (token) => {
     set({ token, isAuthenticated: Boolean(token) });
-    persistAuth(token, get().user);
+    persistAuth(token, get().refreshToken, get().user);
   },
   login: async (payload) => {
     set({ isLoading: true });
     try {
       const session: AuthSession = await login(payload);
-      set({ user: session.user, token: session.access_token, isAuthenticated: true, isLoading: false });
-      persistAuth(session.access_token, session.user);
+      set({
+        user: session.user,
+        token: session.access_token,
+        refreshToken: session.refresh_token ?? null,
+        isAuthenticated: true,
+        isLoading: false,
+      });
+      persistAuth(session.access_token, session.refresh_token ?? null, session.user);
       api.defaults.headers.common.Authorization = `Bearer ${session.access_token}`;
     } catch (error) {
       set({ isLoading: false, isAuthenticated: false });
@@ -49,7 +57,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
   logout: async () => {
-    set({ user: null, token: null, isAuthenticated: false, isLoading: false });
+    set({ user: null, token: null, refreshToken: null, isAuthenticated: false, isLoading: false });
     logoutClientSession();
     delete api.defaults.headers.common.Authorization;
   },
@@ -57,11 +65,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     const snapshot = await refreshAuth();
     if (snapshot.token && snapshot.user) {
-      set({ token: snapshot.token, user: snapshot.user, isAuthenticated: true, isLoading: false });
+      set({
+        token: snapshot.token,
+        refreshToken: snapshot.refresh_token ?? null,
+        user: snapshot.user,
+        isAuthenticated: true,
+        isLoading: false,
+      });
       api.defaults.headers.common.Authorization = `Bearer ${snapshot.token}`;
-      persistAuth(snapshot.token, snapshot.user);
+      persistAuth(snapshot.token, snapshot.refresh_token ?? null, snapshot.user);
     } else {
-      set({ token: null, user: null, isAuthenticated: false, isLoading: false });
+      set({ token: null, refreshToken: null, user: null, isAuthenticated: false, isLoading: false });
       logoutClientSession();
       delete api.defaults.headers.common.Authorization;
     }

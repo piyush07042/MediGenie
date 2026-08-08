@@ -177,8 +177,17 @@ export default function PredictionPageShell<
                     type={field.type ?? "text"}
                     placeholder={field.placeholder}
                     {...register(field.name as any)}
-                    className="mt-2 block w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                    className={`mt-2 block w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition ${
+                      formState.errors[field.name] 
+                        ? "border-rose-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-100" 
+                        : "border-slate-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                    }`}
                   />
+                  {formState.errors[field.name] && (
+                    <p className="mt-1.5 text-xs font-medium text-rose-600">
+                      {formState.errors[field.name]?.message as string}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

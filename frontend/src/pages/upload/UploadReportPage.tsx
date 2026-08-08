@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, Upload, FileText } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 import toast from "react-hot-toast";
 import PageHeading from "../../components/PageHeading";
@@ -128,21 +128,34 @@ export default function UploadReportPage() {
         <Card title="Upload report">
           <div
             {...getRootProps()}
-            className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center transition hover:border-brand-400 hover:bg-slate-100"
+            className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-10 text-center transition-all duration-300 ${
+              isDragActive ? "border-brand-500 bg-brand-50/50 scale-[1.02]" : "border-slate-300 bg-slate-50 hover:border-brand-400 hover:bg-slate-100"
+            }`}
           >
             <input {...getInputProps()} />
-            <p className="text-sm text-slate-600">
-              Drag and drop a PDF, PNG, or JPEG file here, or click to choose a file.
-            </p>
-            {file ? (
-              <div className="mt-4 text-left text-sm text-slate-900">
-                <p className="font-semibold">Selected file</p>
-                <p>{file.name}</p>
-                <p>{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+            <div className={`mb-4 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-300 ${isDragActive ? "bg-brand-100 text-brand-600" : "bg-white text-slate-400 group-hover:text-brand-500 shadow-sm"}`}>
+              <Upload className="h-8 w-8" />
+            </div>
+            {isDragActive ? (
+              <p className="text-sm font-semibold text-brand-600">Drop the medical report here...</p>
+            ) : (
+              <div>
+                <p className="text-sm font-semibold text-slate-700">Click to upload or drag and drop</p>
+                <p className="mt-1 text-xs text-slate-500">PDF, PNG, or JPEG (max 10MB)</p>
               </div>
-            ) : isDragActive ? (
-              <p className="mt-4 text-sm font-semibold text-brand-600">Drop the report to upload it.</p>
-            ) : null}
+            )}
+            
+            {file && !isDragActive && (
+              <div className="mt-6 w-full rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-8 w-8 text-brand-500" />
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 truncate">{file.name}</p>
+                    <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 space-y-4">
@@ -165,12 +178,15 @@ export default function UploadReportPage() {
           </div>
 
           {uploading ? (
-            <div className="mt-4 rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
-              <p className="font-medium">Processing report</p>
-              <div className="mt-3 h-3 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} />
+            <div className="mt-4 rounded-3xl border border-brand-100 bg-brand-50/30 p-5 text-sm text-slate-700 shadow-sm">
+              <div className="flex items-center justify-between font-semibold text-brand-900">
+                <p>{progress < 20 ? "Uploading file..." : progress < 80 ? "Running OCR & extraction..." : "Finalizing AI analysis..."}</p>
+                <p>{progress}%</p>
               </div>
-              <p className="mt-2 text-xs text-slate-500">{progress}% complete</p>
+              <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-200">
+                <div className="h-full rounded-full bg-brand-600 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(37,99,235,0.5)]" style={{ width: `${progress}%` }} />
+              </div>
+              <p className="mt-3 text-xs text-slate-500">Please do not close this page while processing.</p>
             </div>
           ) : null}
 

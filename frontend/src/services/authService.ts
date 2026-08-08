@@ -18,12 +18,14 @@ export type RegisterPayload = {
 
 export type AuthSession = {
   access_token: string;
+  refresh_token?: string;
   token_type: string;
   user: User;
 };
 
 export type AuthStateSnapshot = {
   token: string | null;
+  refresh_token?: string | null;
   user: User | null;
 };
 
@@ -31,9 +33,11 @@ type LoginApiResponse = {
   success: boolean;
   message: string;
   access_token: string;
+  refresh_token?: string;
   token_type: string;
   data: {
     access_token: string;
+    refresh_token?: string;
     token_type: string;
     user: User;
   };
@@ -115,6 +119,7 @@ export async function login(payload: LoginPayload): Promise<AuthSession> {
 
     return {
       access_token: response.data.data.access_token,
+      refresh_token: response.data.data.refresh_token,
       token_type: response.data.data.token_type,
       user: response.data.data.user,
     };
@@ -138,21 +143,55 @@ export async function register(payload: RegisterPayload): Promise<User> {
   }
 }
 
+export async function requestTokenRefresh(refreshTokenValue: string): Promise<AuthSession> {
+  try {
+    const response = await api.post<LoginApiResponse>("/auth/refresh", {
+      refresh_token: refreshTokenValue,
+    });
+    return {
+      access_token: response.data.data.access_token,
+      refresh_token: response.data.data.refresh_token,
+      token_type: response.data.data.token_type,
+      user: response.data.data.user,
+    };
+  } catch (error) {
+    throw new Error(extractErrorMessage(error));
+  }
+}
+
 export async function refreshAuth(): Promise<AuthStateSnapshot> {
   const raw = localStorage.getItem("medigenie_auth");
 
   if (!raw) {
-    return { token: null, user: null };
+    return { token: null, refresh_token: null, user: null };
   }
 
   try {
     const parsed = JSON.parse(raw) as AuthStateSnapshot;
+    if (parsed.refresh_token) {
+      try {
+        const newSession = await requestTokenRefresh(parsed.refresh_token);
+        return {
+          token: newSession.access_token,
+          refresh_token: newSession.refresh_token ?? parsed.refresh_token,
+          user: newSession.user,
+        };
+      } catch {
+        // Fallback to cached token if refresh endpoint fails temporarily
+        return {
+          token: parsed.token ?? null,
+          refresh_token: parsed.refresh_token ?? null,
+          user: parsed.user ?? null,
+        };
+      }
+    }
     return {
       token: parsed.token ?? null,
+      refresh_token: parsed.refresh_token ?? null,
       user: parsed.user ?? null,
     };
   } catch {
-    return { token: null, user: null };
+    return { token: null, refresh_token: null, user: null };
   }
 }
 

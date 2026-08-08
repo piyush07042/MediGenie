@@ -75,7 +75,7 @@ export default function PredictionHomePage() {
   return (
     <div className="space-y-10">
       <PageHeading title="Disease Prediction Center" description="Choose a model and run a clinical prediction using your patient data." />
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {predictions.map((prediction) => (
           <DiseaseCard key={prediction.title} {...prediction} state={location.state} />
         ))}

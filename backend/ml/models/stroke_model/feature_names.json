@@ -1,1 +1,7 @@
-["age", "bmi", "hypertension", "heart_disease", "avg_glucose_level"]
+[
+  "age",
+  "hypertension",
+  "heart_disease",
+  "avg_glucose_level",
+  "bmi"
+]

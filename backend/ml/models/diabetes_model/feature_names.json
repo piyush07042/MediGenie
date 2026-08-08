@@ -1,1 +1,7 @@
-["age", "bmi", "glucose", "systolic_bp", "insulin"]
+[
+  "age",
+  "bmi",
+  "glucose",
+  "systolic_bp",
+  "insulin"
+]

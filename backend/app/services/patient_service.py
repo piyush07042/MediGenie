@@ -100,7 +100,7 @@ def list_patients_paginated(
 
     total = query.count()
     safe_page = max(page, 1)
-    safe_page_size = min(max(page_size, 1), 50)
+    safe_page_size = min(max(page_size, 1), 500)
     items = query.offset((safe_page - 1) * safe_page_size).limit(safe_page_size).all()
 
     return PaginatedPatientsSchema(

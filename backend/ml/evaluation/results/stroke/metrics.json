@@ -1,0 +1,26 @@
+{
+  "model_key": "stroke",
+  "model_name": "Stroke",
+  "test_samples": 300,
+  "positive_samples": 227,
+  "negative_samples": 73,
+  "cv_roc_auc_mean": 0.903,
+  "cv_roc_auc_std": 0.0299,
+  "accuracy": 0.8533,
+  "balanced_accuracy": 0.773,
+  "precision": 0.8828,
+  "recall": 0.9295,
+  "specificity": 0.6164,
+  "f1_score": 0.9056,
+  "roc_auc": 0.8852,
+  "pr_auc": 0.9555,
+  "mcc": 0.5821,
+  "cohen_kappa": 0.5782,
+  "brier_score": 0.1053,
+  "confusion_matrix": {
+    "TN": 45,
+    "FP": 28,
+    "FN": 16,
+    "TP": 211
+  }
+}

@@ -132,6 +132,10 @@ def build_final_report(state: AgentState) -> dict[str, Any]:
     report["confidence_label"] = state.disease_risk.get("confidence_label") or state.disease_risk.get("risk_level")
     report["recommendation_priority"] = recommendation_output.get("recommendation_priority") if isinstance(recommendation_output, dict) else None
 
+    # ── Digital Signature ────────────────────────────────────────────────
+    from app.services.report.digital_signature import generate_digital_signature
+    report["digital_signature"] = generate_digital_signature(report)
+
     return report
 
 
@@ -243,13 +247,28 @@ def _build_ocr_findings(state: AgentState) -> dict[str, Any]:
 
 
 def _build_prediction(disease_risk: dict[str, Any]) -> dict[str, Any]:
+    if not disease_risk:
+        return {
+            "risk_category": "Pending ML Evaluation",
+            "risk_score": 0.0,
+            "probability": None,
+            "confidence": None,
+            "confidence_label": "Baseline Intake",
+            "prediction": "Pending ML Screening",
+            "class_probabilities": {"0": 1.0, "1": 0.0},
+        }
+
+    risk_cat = disease_risk.get("risk_category") or disease_risk.get("risk_level") or "Low"
+    if str(risk_cat).lower() in ("unknown", "n/a", "none"):
+        risk_cat = "Low"
+
     return {
-        "risk_category": disease_risk.get("risk_category") or disease_risk.get("risk_level") or "Unknown",
+        "risk_category": risk_cat,
         "risk_score": _safe_float(disease_risk.get("risk_score") or disease_risk.get("estimated_risk_score_percent") or disease_risk.get("probability") or disease_risk.get("confidence")),
         "probability": _safe_float(disease_risk.get("probability") or disease_risk.get("risk_score") or disease_risk.get("confidence")),
         "confidence": _safe_float(disease_risk.get("confidence") or disease_risk.get("probability") or disease_risk.get("risk_score")),
-        "confidence_label": disease_risk.get("confidence_label") or disease_risk.get("risk_level") or None,
-        "prediction": disease_risk.get("prediction") if disease_risk.get("prediction") is not None else int(_safe_float(disease_risk.get("probability", disease_risk.get("risk_score", 0.0))) >= 0.5),
+        "confidence_label": disease_risk.get("confidence_label") or disease_risk.get("risk_level") or risk_cat,
+        "prediction": disease_risk.get("prediction") if disease_risk.get("prediction") is not None else (1 if _safe_float(disease_risk.get("probability", disease_risk.get("risk_score", 0.0))) >= 0.5 else 0),
         "class_probabilities": disease_risk.get("class_probabilities") or {
             "0": round(max(0.0, 1.0 - _safe_float(disease_risk.get("probability", disease_risk.get("risk_score", 0.0)))), 3),
             "1": round(min(1.0, _safe_float(disease_risk.get("probability", disease_risk.get("risk_score", 0.0)))), 3),

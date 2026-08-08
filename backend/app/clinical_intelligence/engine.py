@@ -2,6 +2,16 @@
 Clinical Intelligence Engine
 """
 from typing import Any
+import sys
+from pathlib import Path
+
+# Add backend directory to sys.path if not present to ensure knowledge module is importable
+repo_root = str(Path(__file__).resolve().parents[2])
+if repo_root not in sys.path:
+    sys.path.append(repo_root)
+
+from knowledge.guideline_service import get_clinical_recommendations
+
 from app.clinical_intelligence import (
     diabetes,
     heart,
@@ -19,6 +29,11 @@ def generate_clinical_intelligence(disease_key: str, prediction: dict[str, Any],
         return {}
     
     key = disease_key.lower()
+    
+    # Attempt to load structured recommendations from clinical guideline engine
+    structured_guideline = get_clinical_recommendations(disease_key, prediction, patient)
+    if structured_guideline:
+        return structured_guideline
     
     if "diabet" in key:
         return diabetes.generate_guidance(prediction, patient)
@@ -58,3 +73,4 @@ def generate_clinical_intelligence(disease_key: str, prediction: dict[str, Any],
         "Patient Education": ["General health counseling"],
         "References": ["Standard Clinical Guidelines"]
     }
+

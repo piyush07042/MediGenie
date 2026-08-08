@@ -10,6 +10,8 @@ from sqlalchemy.orm import Session
 
 from app.core.security import (
     create_access_token,
+    create_refresh_token,
+    decode_refresh_token,
     get_password_hash,
     verify_password,
 )
@@ -18,7 +20,7 @@ from app.models.models import User
 from app.models.models import UserSession, LoginEvent
 import uuid
 from app.schemas.common import ApiResponse
-from app.schemas.schemas import LoginResponse, Token, UserCreate, UserResponse
+from app.schemas.schemas import LoginResponse, Token, UserCreate, UserResponse, RefreshTokenRequest
 from app.core.logging import get_logger
 
 router = APIRouter(
@@ -29,9 +31,10 @@ router = APIRouter(
 logger = get_logger("app.api.auth")
 
 
-def _build_token_payload(user: User, access_token: str) -> Token:
+def _build_token_payload(user: User, access_token: str, refresh_token: str | None = None) -> Token:
     return Token(
         access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         user=user,
     )
@@ -142,8 +145,14 @@ def login(
             "role": user.role.value,
         }
     )
+    refresh_token = create_refresh_token(
+        {
+            "sub": str(user.id),
+            "role": user.role.value,
+        }
+    )
 
-    token = _build_token_payload(user, access_token)
+    token = _build_token_payload(user, access_token, refresh_token)
 
     # record successful login and create session
     try:
@@ -162,10 +171,64 @@ def login(
 
     return LoginResponse(
         access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
         message="Login successful.",
         data=token,
     )
+
+
+@router.post(
+    "/refresh",
+    response_model=LoginResponse,
+)
+def refresh_token_endpoint(
+    payload: RefreshTokenRequest,
+    db: Session = Depends(get_db),
+):
+    """Exchange a valid refresh token for a new access token."""
+    try:
+        data = decode_refresh_token(payload.refresh_token)
+        user_id = data.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token.",
+            )
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found.",
+            )
+
+        new_access_token = create_access_token(
+            {
+                "sub": str(user.id),
+                "role": user.role.value,
+            }
+        )
+        new_refresh_token = create_refresh_token(
+            {
+                "sub": str(user.id),
+                "role": user.role.value,
+            }
+        )
+        token_data = _build_token_payload(user, new_access_token, new_refresh_token)
+
+        return LoginResponse(
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+            token_type="bearer",
+            message="Token refreshed successfully.",
+            data=token_data,
+        )
+    except Exception as e:
+        logger.warning("Token refresh failed: %s", str(e))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not refresh access token. Please log in again.",
+        )
 
 
 @router.post(

@@ -18,6 +18,14 @@ from app.agents.supervisor.executor import WorkflowExecutor
 from app.agents.supervisor.metrics import WorkflowMetrics
 from app.core.config import settings
 
+# Phase 8 — Memory Manager
+try:
+    from app.workflow.memory_manager import memory_manager
+    from app.workflow.agent_evaluator import agent_evaluator
+    _MEMORY_ENABLED = True
+except ImportError:
+    _MEMORY_ENABLED = False
+
 
 class WorkflowOrchestrator:
     """
@@ -69,6 +77,10 @@ class WorkflowOrchestrator:
         results: list[AgentResult] = []
 
         for group in self._build_execution_groups(agents_to_run, state):
+            # Phase 8: Optimize memory before each group
+            if _MEMORY_ENABLED:
+                memory_manager.optimize(state)
+
             if len(group) == 1:
                 result = await self._execute_agent(group[0], state, metrics)
                 results.append(result)
@@ -103,6 +115,17 @@ class WorkflowOrchestrator:
             "successful_agents": state.metadata["successful_agents"],
             "failed_agents": state.metadata["failed_agents"],
             "status": state.metadata["workflow_status"],
+            # Phase 8: quality telemetry
+            "quality_scores": {
+                r.agent: r.quality_score for r in results if r.quality_score > 0
+            },
+            "guardrail_violations": [
+                {"agent": r.agent, "violations": r.guardrail_violations}
+                for r in results if r.guardrail_violations
+            ],
+            "evaluation": {
+                r.agent: r.evaluation for r in results if r.evaluation
+            },
         }
         state.mark_workflow_completed(state.metadata["workflow_status"])
 

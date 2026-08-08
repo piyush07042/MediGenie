@@ -1,0 +1,26 @@
+{
+  "model_key": "parkinsons",
+  "model_name": "Parkinson's",
+  "test_samples": 240,
+  "positive_samples": 157,
+  "negative_samples": 83,
+  "cv_roc_auc_mean": 0.8881,
+  "cv_roc_auc_std": 0.018,
+  "accuracy": 0.8,
+  "balanced_accuracy": 0.7705,
+  "precision": 0.8344,
+  "recall": 0.8662,
+  "specificity": 0.6747,
+  "f1_score": 0.85,
+  "roc_auc": 0.8648,
+  "pr_auc": 0.9256,
+  "mcc": 0.5512,
+  "cohen_kappa": 0.5503,
+  "brier_score": 0.1442,
+  "confusion_matrix": {
+    "TN": 56,
+    "FP": 27,
+    "FN": 21,
+    "TP": 136
+  }
+}

@@ -73,3 +73,41 @@ def decode_access_token(
             settings.ALGORITHM,
         ],
     )
+
+
+def create_refresh_token(
+    data: dict[str, Any],
+    expires_delta: timedelta | None = None,
+) -> str:
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        # Default refresh token expiry: 7 days
+        expire = datetime.now(timezone.utc) + timedelta(days=7)
+
+    payload = data.copy()
+    payload.update(
+        {
+            "exp": expire,
+            "type": "refresh",
+        }
+    )
+
+    return jwt.encode(
+        payload,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM,
+    )
+
+
+def decode_refresh_token(
+    token: str,
+) -> dict[str, Any]:
+    payload = jwt.decode(
+        token,
+        settings.SECRET_KEY,
+        algorithms=[settings.ALGORITHM],
+    )
+    if payload.get("type") != "refresh":
+        raise ValueError("Invalid token type for refresh operation")
+    return payload

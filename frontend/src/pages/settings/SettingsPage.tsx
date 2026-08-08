@@ -82,15 +82,15 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <SessionCard user={user} token={token} />
           <AccountInformation user={user} />
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Backend support required</h2>
-            <div className="mt-4 space-y-3 text-sm text-slate-600">
-              <p>Features below are disabled until backend support is added:</p>
-              <ul className="list-inside list-disc space-y-2">
-                <li>Edit profile</li>
-                <li>Avatar upload</li>
-                <li>Login history</li>
-                <li>Device management</li>
+          <div className="rounded-3xl border border-amber-200 bg-amber-50/50 p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-amber-900">Backend Feature Notice</h2>
+            <div className="mt-4 space-y-3 text-sm text-amber-800">
+              <p>The following account options will become available when backend endpoint upgrades complete:</p>
+              <ul className="list-inside list-disc space-y-2 font-medium">
+                <li>Edit profile details</li>
+                <li>Custom avatar upload</li>
+                <li>Security audit & login history</li>
+                <li>Active session device management</li>
               </ul>
             </div>
           </div>

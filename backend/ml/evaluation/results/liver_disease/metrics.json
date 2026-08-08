@@ -1,0 +1,26 @@
+{
+  "model_key": "liver_disease",
+  "model_name": "Liver Disease",
+  "test_samples": 240,
+  "positive_samples": 214,
+  "negative_samples": 26,
+  "cv_roc_auc_mean": 0.9138,
+  "cv_roc_auc_std": 0.0235,
+  "accuracy": 0.9292,
+  "balanced_accuracy": 0.7238,
+  "precision": 0.9378,
+  "recall": 0.986,
+  "specificity": 0.4615,
+  "f1_score": 0.9613,
+  "roc_auc": 0.9464,
+  "pr_auc": 0.9924,
+  "mcc": 0.5746,
+  "cohen_kappa": 0.5497,
+  "brier_score": 0.0509,
+  "confusion_matrix": {
+    "TN": 12,
+    "FP": 14,
+    "FN": 3,
+    "TP": 211
+  }
+}
