@@ -316,17 +316,72 @@ def run_full_ml_lifecycle():
         with open(model_dir / "feature_names.json", "w", encoding="utf-8") as f:
             json.dump(cfg["features"], f, indent=2)
 
+        dataset_info = {
+            "heart_disease": {
+                "name": "Cleveland Heart Disease Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/heart+disease"
+            },
+            "diabetes": {
+                "name": "Pima Indians Diabetes Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/pima+indians+diabetes"
+            },
+            "kidney_disease": {
+                "name": "Chronic Kidney Disease Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/chronic_kidney_disease"
+            },
+            "liver_disease": {
+                "name": "Indian Liver Patient Dataset (ILPD)",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/ILPD+(Indian+Liver+Patient+Dataset)"
+            },
+            "breast_cancer": {
+                "name": "Breast Cancer Wisconsin (Diagnostic) Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic)"
+            },
+            "parkinsons": {
+                "name": "Parkinsons Telemonitoring Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/Parkinsons+Telemonitoring"
+            },
+            "hepatitis": {
+                "name": "Hepatitis Dataset",
+                "source": "UCI Machine Learning Repository",
+                "url": "https://archive.ics.uci.edu/ml/datasets/hepatitis"
+            },
+            "heart_failure": {
+                "name": "Heart Failure Clinical Records Dataset",
+                "source": "UCI Machine Learning Repository / Chicco & Jurman",
+                "url": "https://archive.ics.uci.edu/ml/datasets/Heart+failure+clinical+records"
+            },
+            "stroke": {
+                "name": "Stroke Prediction Dataset",
+                "source": "Kaggle",
+                "url": "https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset"
+            }
+        }
+        info = dataset_info.get(model_key, {"name": "Unknown", "source": "Unknown", "url": "Unknown"})
         metadata = {
             "model_name": model_name,
             "model_key": model_key,
             "algorithm": "RandomForestClassifier",
-            "version": "1.0.0",
-            "dataset_samples": cfg["n_samples"],
-            "features": cfg["features"],
-            "target": "target",
-            "train_test_split": "70/30 stratified",
+            "dataset_name": info["name"],
+            "dataset_source": info["source"],
+            "dataset_url": info["url"],
+            "real_or_synthetic": "synthetic (clinical reference distribution)",
+            "total_samples": cfg["n_samples"],
+            "train_samples": len(y_train),
+            "test_samples": len(y_test),
+            "feature_count": len(cfg["features"]),
+            "target_column": "target",
             "random_state": 42,
+            "features": cfg["features"],
+            "train_test_split": "70/30 stratified",
             "cross_validation": "5-fold stratified",
+            "version": "1.0.0",
             "cv_roc_auc_mean": round(cv_auc_mean, 4),
             "cv_roc_auc_std": round(cv_auc_std, 4),
         }

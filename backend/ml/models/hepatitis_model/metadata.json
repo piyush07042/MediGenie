@@ -2,8 +2,16 @@
   "model_name": "Hepatitis",
   "model_key": "hepatitis",
   "algorithm": "RandomForestClassifier",
-  "version": "1.0.0",
-  "dataset_samples": 800,
+  "dataset_name": "Hepatitis Dataset",
+  "dataset_source": "UCI Machine Learning Repository",
+  "dataset_url": "https://archive.ics.uci.edu/ml/datasets/hepatitis",
+  "real_or_synthetic": "synthetic (clinical reference distribution)",
+  "total_samples": 800,
+  "train_samples": 560,
+  "test_samples": 240,
+  "feature_count": 5,
+  "target_column": "target",
+  "random_state": 42,
   "features": [
     "age",
     "bilirubin",
@@ -11,10 +19,9 @@
     "sgpt",
     "sgot"
   ],
-  "target": "target",
   "train_test_split": "70/30 stratified",
-  "random_state": 42,
   "cross_validation": "5-fold stratified",
+  "version": "1.0.0",
   "cv_roc_auc_mean": 0.8308,
   "cv_roc_auc_std": 0.0354
 }
